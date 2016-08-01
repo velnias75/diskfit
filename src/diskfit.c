@@ -1,3 +1,22 @@
+/*
+ * Copyright 2016 by Heiko Schäfer <heiko@rangun.de>
+ *
+ * This file is part of DiskFit.
+ *
+ * DiskFit is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation, either version 3 of
+ * the License, or (at your option) any later version.
+ *
+ * DiskFit is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with DiskFit.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -12,7 +31,7 @@
 #endif
 
 typedef struct {
-  char *fname;
+  const char *fname;
   off_t fsize;
 } FITEM;
 
@@ -22,12 +41,12 @@ typedef struct {
   off_t total;
 } FITEMLIST;
 
-typedef void (*FUN)(FITEM *array, int len, off_t total);
+typedef void (*ADDFUN)(FITEM *array, int len, off_t total);
 
 FITEMLIST *CANDIDATES = NULL;
 size_t CANDIDATES_NUM = 0;
 
-off_t sum(FITEM *item, int n) {
+off_t sum(const FITEM *item, int n) {
   
   int i;
   off_t sum = 0;
@@ -39,16 +58,14 @@ off_t sum(FITEM *item, int n) {
 
 void swap(FITEM *a, FITEM *b) {
   
-  FITEM h = { b->fname, b->fsize };
+  FITEM h;
   
-  b->fname = a->fname;
-  b->fsize = a->fsize;
-  
-  a->fname = h.fname;
-  a->fsize = h.fsize;
+  memcpy(&h, b, sizeof(FITEM));
+  memcpy(b,  a, sizeof(FITEM));
+  memcpy(a, &h, sizeof(FITEM));
 }
 
-void permute(FITEM *array, int i, int length, off_t target, FUN foo) { 
+void permute(FITEM *array, int i, int length, off_t target, ADDFUN adder) { 
   
   if(length == i) {
     
@@ -57,7 +74,7 @@ void permute(FITEM *array, int i, int length, off_t target, FUN foo) {
     
     while(k >= 0 && (s = sum(array, k + 1)) > target) --k;
     
-    if(s <= target) foo(array, k + 1, s);
+    if(s <= target) adder(array, k + 1, s);
     
     return;
   }
@@ -66,7 +83,7 @@ void permute(FITEM *array, int i, int length, off_t target, FUN foo) {
   
   for(j = i; j < length; ++j) { 
     swap(array + i, array + j);
-    permute(array, i + 1, length, target, foo);
+    permute(array, i + 1, length, target, adder);
     swap(array + i, array + j);
   }
   
@@ -75,14 +92,6 @@ void permute(FITEM *array, int i, int length, off_t target, FUN foo) {
 
 int fitem_cmp(const void *a, const void *b) {
   return strcmp(((FITEM *)a)->fname, ((FITEM *)b)->fname);
-}
-
-int cand_cmp(const void *a, const void *b) {
-  
-  if(((FITEMLIST *)a)->total < ((FITEMLIST *)b)->total) return -1;
-  if(((FITEMLIST *)a)->total > ((FITEMLIST *)b)->total) return 1;
-  
-  return 0;
 }
 
 void addCandidate(FITEM *array, int len, off_t total) {
@@ -108,14 +117,14 @@ void addCandidate(FITEM *array, int len, off_t total) {
     for(j = 0; j < CANDIDATES_NUM; ++j) {
       
       if(CANDIDATES[j].size == l.size && CANDIDATES[j].total == l.total) {
-	
+
 	int dup = 0;
-	
+
 	for(k = 0; k < l.size; ++k) {
 	  dup |= (CANDIDATES[j].entries[k].fsize == l.entries[k].fsize && 
 	  !strcmp(CANDIDATES[j].entries[k].fname, l.entries[k].fname));
 	}
-	
+
 	if(dup) {
 	  free(l.entries);
 	  return;
@@ -149,6 +158,14 @@ const char *hrsize(off_t s) {
   return r;
 }
 
+int cand_cmp(const void *a, const void *b) {
+  
+  if(((FITEMLIST *)a)->total < ((FITEMLIST *)b)->total) return -1;
+  if(((FITEMLIST *)a)->total > ((FITEMLIST *)b)->total) return 1;
+  
+  return 0;
+}
+
 int main(int argc, char *argv[]) {
   
   fprintf(stderr, PACKAGE_STRING " - (c) 2016 by Heiko Schaefer <heiko@rangun.de>\n");
@@ -173,19 +190,19 @@ int main(int argc, char *argv[]) {
     
     for(i = 0; i < argc - 2; ++i) wordexp(argv[i+2], &p, WRDE_NOCMD|WRDE_APPEND);
     
-    fitems = calloc(p.we_wordc, sizeof(FITEM));
+    fitems = malloc(p.we_wordc * sizeof(FITEM));
     
     for(j = 0; j < p.we_wordc; ++j) {
       
       struct stat st;
       
       if(!stat(p.we_wordv[j], &st)) {
-	
+
 	tsize += st.st_size;
-	
+
 	fitems[j].fname = p.we_wordv[j];
 	fitems[j].fsize = st.st_size;
-	
+
 	++nitems;
       }
     }
