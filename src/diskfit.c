@@ -27,24 +27,6 @@ typedef void (*FUN)(FITEM *array, int len, off_t total);
 FITEMLIST *CANDIDATES = NULL;
 size_t CANDIDATES_NUM = 0;
 
-const char *hrsize(off_t s) {
-  
-  char *r = malloc(1024 * sizeof(char));
-  const double d = log(s)/M_LN2;
-  
-  if(d >= 30.0) {
-    snprintf(r, 1023, "%.2f GByte", (float)s/1073741824.0f);
-  } else if(d >= 20.0) {
-    snprintf(r, 1023, "%.2f MByte", (float)s/1048576.0f);
-  } else if(d >= 10.0) {
-    snprintf(r, 1023, "%.2f KByte", (float)s/1024.0f);
-  } else {
-    snprintf(r, 1023, "%ld Byte", s);
-  }
-  
-  return r;
-}
-
 off_t sum(FITEM *item, int n) {
   
   int i;
@@ -58,7 +40,7 @@ off_t sum(FITEM *item, int n) {
 void swap(FITEM *a, FITEM *b) {
   
   FITEM h = { b->fname, b->fsize };
-
+  
   b->fname = a->fname;
   b->fsize = a->fsize;
   
@@ -68,10 +50,10 @@ void swap(FITEM *a, FITEM *b) {
 
 void permute(FITEM *array, int i, int length, off_t target, FUN foo) { 
   
-  int k = length - 1;
-  off_t s = 0;
-  
   if(length == i) {
+    
+    int k = length - 1;
+    off_t s = 0;
     
     while(k >= 0 && (s = sum(array, k + 1)) > target) --k;
     
@@ -96,7 +78,6 @@ int fitem_cmp(const void *a, const void *b) {
 }
 
 int cand_cmp(const void *a, const void *b) {
-  //return strcmp(((FITEM *)a)->fname, ((FITEM *)b)->fname);
   
   if(((FITEMLIST *)a)->total < ((FITEMLIST *)b)->total) return -1;
   if(((FITEMLIST *)a)->total > ((FITEMLIST *)b)->total) return 1;
@@ -109,7 +90,7 @@ void addCandidate(FITEM *array, int len, off_t total) {
   if(total == 0) return;
   
   int i;
-  size_t j, k;
+  
   FITEMLIST l = { malloc(len * sizeof(FITEM)), len, total };
   
   for(i = 0; i < len; ++i) {
@@ -122,6 +103,8 @@ void addCandidate(FITEM *array, int len, off_t total) {
     CANDIDATES = malloc(sizeof(FITEMLIST));
   } else {
     
+    size_t j, k;
+    
     for(j = 0; j < CANDIDATES_NUM; ++j) {
       
       if(CANDIDATES[j].size == l.size && CANDIDATES[j].total == l.total) {
@@ -130,7 +113,7 @@ void addCandidate(FITEM *array, int len, off_t total) {
 	
 	for(k = 0; k < l.size; ++k) {
 	  dup |= (CANDIDATES[j].entries[k].fsize == l.entries[k].fsize && 
-		  !strcmp(CANDIDATES[j].entries[k].fname, l.entries[k].fname));
+	  !strcmp(CANDIDATES[j].entries[k].fname, l.entries[k].fname));
 	}
 	
 	if(dup) {
@@ -148,14 +131,25 @@ void addCandidate(FITEM *array, int len, off_t total) {
   ++CANDIDATES_NUM;
 }
 
-int main(int argc, char *argv[]) {
+const char *hrsize(off_t s) {
   
-  size_t j, l;
-  int i, nitems = 0;
-  FITEM *fitems = NULL;
-  off_t tsize = 0, tg = argc > 1 ? atol(argv[1]) : 0L;
-  const char *hr_tot, *hr_tg;
-  struct stat st;
+  char *r = malloc(1024 * sizeof(char));
+  const double d = log(s)/M_LN2;
+  
+  if(d >= 30.0) {
+    snprintf(r, 1023, "%.2f GByte", (float)s/1073741824.0f);
+  } else if(d >= 20.0) {
+    snprintf(r, 1023, "%.2f MByte", (float)s/1048576.0f);
+  } else if(d >= 10.0) {
+    snprintf(r, 1023, "%.2f KByte", (float)s/1024.0f);
+  } else {
+    snprintf(r, 1023, "%ld Byte", s);
+  }
+  
+  return r;
+}
+
+int main(int argc, char *argv[]) {
   
   fprintf(stderr, PACKAGE_STRING " - (c) 2016 by Heiko Schaefer <heiko@rangun.de>\n");
   
@@ -166,6 +160,11 @@ int main(int argc, char *argv[]) {
     
   } else {
     
+    size_t j;
+    int i, nitems = 0;
+    FITEM *fitems = NULL;
+    off_t tsize = 0, tg = argc > 1 ? atol(argv[1]) : 0L;
+    const char *hr_tot, *hr_tg;
     wordexp_t p;
     
     memset(&p, 0, sizeof(wordexp_t));
@@ -175,11 +174,13 @@ int main(int argc, char *argv[]) {
     for(i = 0; i < argc - 2; ++i) wordexp(argv[i+2], &p, WRDE_NOCMD|WRDE_APPEND);
     
     fitems = calloc(p.we_wordc, sizeof(FITEM));
-      
+    
     for(j = 0; j < p.we_wordc; ++j) {
       
-      if(!stat(p.we_wordv[j], &st)) {
+      struct stat st;
       
+      if(!stat(p.we_wordv[j], &st)) {
+	
 	tsize += st.st_size;
 	
 	fitems[j].fname = p.we_wordv[j];
@@ -190,15 +191,15 @@ int main(int argc, char *argv[]) {
     }
     
     permute(fitems, 0, nitems, tg, addCandidate);
-    
     qsort(CANDIDATES, CANDIDATES_NUM, sizeof(FITEMLIST), cand_cmp);
     
     for(j = 0; j < CANDIDATES_NUM; ++j) {
       
       const char *hrs;
+      size_t l;
       
       fprintf(stdout, "[ ");
-	
+      
       for(l = 0; l < CANDIDATES[j].size; ++l) {
 	fprintf(stdout, "'%s' ", CANDIDATES[j].entries[l].fname);
       }
