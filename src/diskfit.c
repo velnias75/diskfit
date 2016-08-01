@@ -16,6 +16,17 @@ typedef struct {
   off_t fsize;
 } FITEM;
 
+typedef struct {
+  FITEM *entries;
+  size_t size;
+  off_t total;
+} FITEMLIST;
+
+typedef void (*FUN)(FITEM *array, int len, off_t total);
+
+FITEMLIST *CANDIDATES = NULL;
+size_t CANDIDATES_NUM = 0;
+
 const char *hrsize(off_t s) {
   
   char *r = malloc(1024 * sizeof(char));
@@ -55,22 +66,16 @@ void swap(FITEM *a, FITEM *b) {
   a->fsize = h.fsize;
 }
 
-void permute(FITEM *array, int i, int length, off_t target) { 
+void permute(FITEM *array, int i, int length, off_t target, FUN foo) { 
   
-  int l, k = length - 1;
-  const char *hrs;
+  int k = length - 1;
   off_t s = 0;
   
   if(length == i) {
     
     while(k >= 0 && (s = sum(array, k + 1)) > target) --k;
     
-    if(s <= target) {
-      fprintf(stdout, "[ ");
-      for(l = 0; l < k + 1; ++l) fprintf(stdout, "'%s' ", array[l].fname);
-      fprintf(stdout, "] = %s\n", (hrs = hrsize(s)));
-      free((void *)hrs);
-    }
+    if(s <= target) foo(array, k + 1, s);
     
     return;
   }
@@ -79,16 +84,73 @@ void permute(FITEM *array, int i, int length, off_t target) {
   
   for(j = i; j < length; ++j) { 
     swap(array + i, array + j);
-    permute(array, i + 1, length, target);
+    permute(array, i + 1, length, target, foo);
     swap(array + i, array + j);
   }
   
   return;
 }
 
+int fitem_cmp(const void *a, const void *b) {
+  return strcmp(((FITEM *)a)->fname, ((FITEM *)b)->fname);
+}
+
+int cand_cmp(const void *a, const void *b) {
+  //return strcmp(((FITEM *)a)->fname, ((FITEM *)b)->fname);
+  
+  if(((FITEMLIST *)a)->total < ((FITEMLIST *)b)->total) return -1;
+  if(((FITEMLIST *)a)->total > ((FITEMLIST *)b)->total) return 1;
+  
+  return 0;
+}
+
+void addCandidate(FITEM *array, int len, off_t total) {
+  
+  if(total == 0) return;
+  
+  int i;
+  size_t j, k;
+  FITEMLIST l = { malloc(len * sizeof(FITEM)), len, total };
+  
+  for(i = 0; i < len; ++i) {
+    memcpy(&(l.entries[i]), &(array[i]), sizeof(FITEM));
+  }
+  
+  qsort(l.entries, l.size, sizeof(FITEM), fitem_cmp);
+  
+  if(!CANDIDATES) {
+    CANDIDATES = malloc(sizeof(FITEMLIST));
+  } else {
+    
+    for(j = 0; j < CANDIDATES_NUM; ++j) {
+      
+      if(CANDIDATES[j].size == l.size && CANDIDATES[j].total == l.total) {
+	
+	int dup = 0;
+	
+	for(k = 0; k < l.size; ++k) {
+	  dup |= (CANDIDATES[j].entries[k].fsize == l.entries[k].fsize && 
+		  !strcmp(CANDIDATES[j].entries[k].fname, l.entries[k].fname));
+	}
+	
+	if(dup) {
+	  free(l.entries);
+	  return;
+	}
+      }
+    }
+    
+    CANDIDATES = realloc(CANDIDATES, (CANDIDATES_NUM + 1) * sizeof(FITEMLIST));
+  }
+  
+  memcpy(&(CANDIDATES[CANDIDATES_NUM]), &l, sizeof(FITEMLIST));
+  
+  ++CANDIDATES_NUM;
+}
+
 int main(int argc, char *argv[]) {
   
-  size_t j;
+  size_t j, l;
   int i, nitems = 0;
   FITEM *fitems = NULL;
   off_t tsize = 0, tg = argc > 1 ? atol(argv[1]) : 0L;
@@ -124,13 +186,32 @@ int main(int argc, char *argv[]) {
 	fitems[j].fsize = st.st_size;
 	
 	++nitems;
-
       }
     }
     
-    permute(fitems, 0, nitems, tg);
+    permute(fitems, 0, nitems, tg, addCandidate);
+    
+    qsort(CANDIDATES, CANDIDATES_NUM, sizeof(FITEMLIST), cand_cmp);
+    
+    for(j = 0; j < CANDIDATES_NUM; ++j) {
+      
+      const char *hrs;
+      
+      fprintf(stdout, "[ ");
+	
+      for(l = 0; l < CANDIDATES[j].size; ++l) {
+	fprintf(stdout, "'%s' ", CANDIDATES[j].entries[l].fname);
+      }
+      
+      fprintf(stdout, "] = %s\n", (hrs = hrsize(CANDIDATES[j].total)));
+      
+      free((void *)hrs);
+      free(CANDIDATES[j].entries);
+    }
     
     free(fitems);
+    free(CANDIDATES);
+    
     wordfree(&p);
     
     fprintf(stderr, "Total size: %s - Target size: %s\n", 
