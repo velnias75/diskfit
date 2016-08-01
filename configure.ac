@@ -20,7 +20,10 @@ AC_CHECK_HEADERS([stdlib.h string.h unistd.h])
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_TYPE_OFF_T
+AC_TYPE_SIZE_T
 
 # Checks for library functions.
+AC_CHECK_FUNCS([memset])
+AC_FUNC_MALLOC
 
 AC_OUTPUT([Makefile src/Makefile])
