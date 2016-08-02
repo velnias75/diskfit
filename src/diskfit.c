@@ -25,14 +25,16 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include <math.h>
+
 #include <wordexp.h>
+#include <libgen.h>
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
 
 typedef struct {
-  const char *fname;
+  char *fname;
   off_t fsize;
 } FITEM;
 
@@ -199,7 +201,9 @@ int main(int argc, char *argv[]) {
   
   if(argc < 3) {
     
-    fprintf(stderr, "Usage: %s (cd|dvd|target_size[G|M|K]) file_pattern...\n", argv[0]);
+    fprintf(stdout, "Usage: %s (cd|dvd|target_size[G|M|K]) file_pattern...\n\n", argv[0]);
+    fprintf(stdout, "Set environment variable DISKFIT_STRIPDIR to any value to strip directories.\n");
+    
     return EXIT_FAILURE;
     
   } else {
@@ -236,6 +240,8 @@ int main(int argc, char *argv[]) {
     permute(fitems, 0, nitems, tg, addCandidate);
     qsort(CANDIDATES, CANDIDATES_NUM, sizeof(FITEMLIST), cand_cmp);
     
+    const int stripdir = getenv("DISKFIT_STRIPDIR") != NULL;
+    
     for(j = 0; j < CANDIDATES_NUM; ++j) {
       
       const char *hrs;
@@ -244,7 +250,12 @@ int main(int argc, char *argv[]) {
       fprintf(stdout, "[ ");
       
       for(l = 0; l < CANDIDATES[j].size; ++l) {
-	fprintf(stdout, "'%s' ", CANDIDATES[j].entries[l].fname);
+	
+	char *bc = stripdir ? strdup(CANDIDATES[j].entries[l].fname) : CANDIDATES[j].entries[l].fname;
+	
+	fprintf(stdout, "'%s' ", stripdir ? basename(bc) : bc);
+	
+	if(stripdir) free(bc);
       }
       
       fprintf(stdout, "] = %s\n", (hrs = hrsize(CANDIDATES[j].total)));
