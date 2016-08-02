@@ -51,11 +51,15 @@ size_t CANDIDATES_NUM = 0;
 
 off_t target_size(const char *tgs) {
   
-  char suff = tgs[strlen(tgs) - 1];
-  off_t fac = 1L;
+  char suff = '\0';
+  double fac = 1.0;
   
   if(!strncasecmp(tgs, "dvd", 3)) return 4724464025L;
   if(!strncasecmp(tgs, "cd", 2)) return 734003200L;
+  
+  double b = 0.0;
+  
+  sscanf(tgs, "%lf%c", &b, &suff);
   
   switch(suff) {
     case 'G':
@@ -72,7 +76,7 @@ off_t target_size(const char *tgs) {
       break;
   }
   
-  return atol(tgs) * fac;
+  return b * fac;
 }
 
 off_t sum(const FITEM *item, int n) {
@@ -86,12 +90,14 @@ off_t sum(const FITEM *item, int n) {
 }
 
 void swap(FITEM *a, FITEM *b) {
-  
-  FITEM h;
-  
-  memcpy(&h, b, sizeof(FITEM));
-  memcpy(b,  a, sizeof(FITEM));
-  memcpy(a, &h, sizeof(FITEM));
+ 
+  if(a != b) {
+    FITEM h;
+    
+    memcpy(&h, b, sizeof(FITEM));
+    memcpy(b,  a, sizeof(FITEM));
+    memcpy(a, &h, sizeof(FITEM));
+  }
 }
 
 void permute(FITEM *array, int i, int length, off_t target, ADDFUN adder) { 
@@ -218,7 +224,8 @@ int main(int argc, char *argv[]) {
     
     memset(&p, 0, sizeof(wordexp_t));
     
-    for(i = 0; i < argc - 2; ++i) wordexp(argv[i+2], &p, WRDE_NOCMD|WRDE_APPEND);
+    for(i = 0; i < argc - 2; ++i) 
+      wordexp(argv[i+2], &p, WRDE_NOCMD|WRDE_APPEND);
     
     fitems = malloc(p.we_wordc * sizeof(FITEM));
     
