@@ -25,5 +25,6 @@ AC_TYPE_SIZE_T
 # Checks for library functions.
 AC_CHECK_FUNCS([memset])
 AC_FUNC_MALLOC
+AC_CHECK_LIB([m],[log], [], [AC_MSG_ERROR([Could not find log in 'm'])])
 
 AC_OUTPUT([Makefile src/Makefile])
