@@ -20,6 +20,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <strings.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
@@ -45,6 +46,32 @@ typedef void (*ADDFUN)(FITEM *array, int len, off_t total);
 
 FITEMLIST *CANDIDATES = NULL;
 size_t CANDIDATES_NUM = 0;
+
+off_t target_size(const char *tgs) {
+  
+  char suff = tgs[strlen(tgs) - 1];
+  off_t fac = 1L;
+  
+  if(!strncasecmp(tgs, "dvd", 3)) return 4724464025L;
+  if(!strncasecmp(tgs, "cd", 2)) return 734003200L;
+  
+  switch(suff) {
+    case 'G':
+    case 'g':
+      fac = 1073741824L;
+      break;
+    case 'M':
+    case 'm':
+      fac = 1048576L;
+      break;
+    case 'K':
+    case 'k':
+      fac = 1024L;
+      break;
+  }
+  
+  return atol(tgs) * fac;
+}
 
 off_t sum(const FITEM *item, int n) {
   
@@ -172,7 +199,7 @@ int main(int argc, char *argv[]) {
   
   if(argc < 3) {
     
-    fprintf(stderr, "Usage: %s target_size files...\n", argv[0]);
+    fprintf(stderr, "Usage: %s (cd|dvd|target_size[G|M|K]) file_pattern...\n", argv[0]);
     return EXIT_FAILURE;
     
   } else {
@@ -180,13 +207,12 @@ int main(int argc, char *argv[]) {
     size_t j;
     int i, nitems = 0;
     FITEM *fitems = NULL;
-    off_t tsize = 0, tg = argc > 1 ? atol(argv[1]) : 0L;
+    off_t tsize = 0;
+    const off_t tg = target_size(argc > 1 ? argv[1] : "dvd");
     const char *hr_tot, *hr_tg;
     wordexp_t p;
     
     memset(&p, 0, sizeof(wordexp_t));
-    
-    tg = tg == 0 ? 4724464025 : tg;
     
     for(i = 0; i < argc - 2; ++i) wordexp(argv[i+2], &p, WRDE_NOCMD|WRDE_APPEND);
     
