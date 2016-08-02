@@ -54,7 +54,7 @@ off_t target_size(const char *tgs) {
   char suff = '\0';
   double fac = 1.0;
   
-  if(!strncasecmp(tgs, "dvd", 3)) return 4724464025L;
+  if(!strncasecmp(tgs, "dvd", 3)) return 4707319808L;
   if(!strncasecmp(tgs, "cd", 2)) return 734003200L;
   
   double b = 0.0;
