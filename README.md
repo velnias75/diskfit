@@ -1,5 +1,5 @@
 # DiskFit
-A Simple disk fit calculator
+A simple disk fit calculator
 
 -
 This crude tool calculates the optimal file selection to a given target size.
