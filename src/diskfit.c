@@ -44,8 +44,6 @@ typedef struct {
   off_t total;
 } FITEMLIST;
 
-typedef void (*ADDFUN)(FITEM *array, int len, off_t total);
-
 FITEMLIST *CANDIDATES = NULL;
 size_t CANDIDATES_NUM = 0;
 
@@ -100,31 +98,6 @@ void swap(FITEM *a, FITEM *b) {
   }
 }
 
-void permute(FITEM *array, int i, int length, off_t target, ADDFUN adder) {
-
-  if(length == i) {
-
-    int k = length - 1;
-    off_t s = 0;
-
-    while(k >= 0 && (s = sum(array, k + 1)) > target) --k;
-
-    if(s <= target) adder(array, k + 1, s);
-
-    return;
-  }
-
-  int j = i;
-
-  for(j = i; j < length; ++j) {
-    swap(array + i, array + j);
-    permute(array, i + 1, length, target, adder);
-    swap(array + i, array + j);
-  }
-
-  return;
-}
-
 int fitem_cmp(const void *a, const void *b) {
   return strcmp(((FITEM *)a)->fname, ((FITEM *)b)->fname);
 }
@@ -173,6 +146,31 @@ void addCandidate(FITEM *array, int len, off_t total) {
   memcpy(&(CANDIDATES[CANDIDATES_NUM]), &l, sizeof(FITEMLIST));
 
   ++CANDIDATES_NUM;
+}
+
+void permute(FITEM *array, int i, int length, off_t target) {
+
+  if(length == i) {
+
+    int k = length - 1;
+    off_t s = 0;
+
+    while(k >= 0 && (s = sum(array, k + 1)) > target) --k;
+
+    if(s <= target) addCandidate(array, k + 1, s);
+
+    return;
+  }
+
+  int j = i;
+
+  for(j = i; j < length; ++j) {
+    swap(array + i, array + j);
+    permute(array, i + 1, length, target);
+    swap(array + i, array + j);
+  }
+
+  return;
 }
 
 const char *hrsize(off_t s) {
@@ -244,7 +242,7 @@ int main(int argc, char *argv[]) {
       }
     }
 
-    permute(fitems, 0, nitems, tg, addCandidate);
+    permute(fitems, 0, nitems, tg);
     qsort(CANDIDATES, CANDIDATES_NUM, sizeof(FITEMLIST), cand_cmp);
 
     const int stripdir = getenv("DISKFIT_STRIPDIR") != NULL;
