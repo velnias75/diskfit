@@ -24,6 +24,8 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <error.h>
+#include <errno.h>
 #include <math.h>
 
 #include <wordexp.h>
@@ -57,21 +59,22 @@ off_t target_size(const char *tgs) {
 
   double b = 0.0;
 
-  sscanf(tgs, "%lf%c", &b, &suff);
+  if(sscanf(tgs, "%lf%c", &b, &suff) != EOF) {
 
-  switch(suff) {
-    case 'G':
-    case 'g':
-      fac = 1073741824L;
-      break;
-    case 'M':
-    case 'm':
-      fac = 1048576L;
-      break;
-    case 'K':
-    case 'k':
-      fac = 1024L;
-      break;
+    switch(suff) {
+      case 'G':
+      case 'g':
+	fac = 1073741824L;
+	break;
+      case 'M':
+      case 'm':
+	fac = 1048576L;
+	break;
+      case 'K':
+      case 'k':
+	fac = 1024L;
+	break;
+    }
   }
 
   return b * fac;
@@ -87,7 +90,7 @@ off_t sum(const FITEM *item, int n) {
   return sum;
 }
 
-void swap(FITEM *a, FITEM *b) {
+void swap(FITEM * restrict a, FITEM * restrict b) {
 
   if(a != b) {
     FITEM h;
@@ -106,46 +109,59 @@ void addCandidate(FITEM *array, int len, off_t total) {
 
   if(total == 0) return;
 
-  int i;
-
   FITEMLIST l = { malloc(len * sizeof(FITEM)), len, total };
 
-  for(i = 0; i < len; ++i) {
-    memcpy(&(l.entries[i]), &(array[i]), sizeof(FITEM));
-  }
+  if(l.entries) {
 
-  qsort(l.entries, l.size, sizeof(FITEM), fitem_cmp);
+    int i;
 
-  if(!CANDIDATES) {
-    CANDIDATES = malloc(sizeof(FITEMLIST));
-  } else {
+    for(i = 0; i < len; ++i) {
+      memcpy(&(l.entries[i]), &(array[i]), sizeof(FITEM));
+    }
 
-    size_t j, k;
+    qsort(l.entries, l.size, sizeof(FITEM), fitem_cmp);
 
-    for(j = 0; j < CANDIDATES_NUM; ++j) {
+    if(!CANDIDATES) {
+      CANDIDATES = malloc(sizeof(FITEMLIST));
+    } else {
 
-      if(CANDIDATES[j].size == l.size && CANDIDATES[j].total == l.total) {
+      size_t j, k;
 
-	int dup = 0;
+      for(j = 0; j < CANDIDATES_NUM; ++j) {
 
-	for(k = 0; k < l.size; ++k) {
-	  dup |= (CANDIDATES[j].entries[k].fsize == l.entries[k].fsize &&
-	  !strcmp(CANDIDATES[j].entries[k].fname, l.entries[k].fname));
+	if(CANDIDATES[j].size == l.size && CANDIDATES[j].total == l.total) {
+
+	  int dup = 0;
+
+	  for(k = 0; k < l.size; ++k) {
+	    dup |= (CANDIDATES[j].entries[k].fsize == l.entries[k].fsize &&
+	    !strcmp(CANDIDATES[j].entries[k].fname, l.entries[k].fname));
+	  }
+
+	  if(dup) {
+	    free(l.entries);
+	    return;
+	  }
 	}
+      }
 
-	if(dup) {
-	  free(l.entries);
-	  return;
-	}
+      FITEMLIST *fl = realloc(CANDIDATES, (CANDIDATES_NUM + 1) * sizeof(FITEMLIST));
+
+      if(fl) {
+	CANDIDATES = fl;
+      } else {
+	free(CANDIDATES);
+	CANDIDATES = NULL;
       }
     }
 
-    CANDIDATES = realloc(CANDIDATES, (CANDIDATES_NUM + 1) * sizeof(FITEMLIST));
+    if(CANDIDATES) {
+      memcpy(&(CANDIDATES[CANDIDATES_NUM]), &l, sizeof(FITEMLIST));
+      ++CANDIDATES_NUM;
+    } else {
+      error(0, ENOMEM, "%s@%s:%d", __FUNCTION__, __FILE__, __LINE__);
+    }
   }
-
-  memcpy(&(CANDIDATES[CANDIDATES_NUM]), &l, sizeof(FITEMLIST));
-
-  ++CANDIDATES_NUM;
 }
 
 void permute(FITEM *array, int i, int length, off_t target) {
@@ -201,7 +217,7 @@ int cand_cmp(const void *a, const void *b) {
 
 int main(int argc, char *argv[]) {
 
-  fprintf(stderr, PACKAGE_STRING " - (c) 2016 by Heiko Schaefer <heiko@rangun.de>\n");
+  fprintf(stderr, PACKAGE_STRING " - (c) 2016 by Heiko Sch\303\244fer <heiko@rangun.de>\n");
 
   if(argc < 3) {
 
@@ -222,55 +238,63 @@ int main(int argc, char *argv[]) {
 
     memset(&p, 0, sizeof(wordexp_t));
 
-    for(i = 0; i < argc - 2; ++i)
-      wordexp(argv[i+2], &p, WRDE_NOCMD|WRDE_APPEND);
-
-    fitems = malloc(p.we_wordc * sizeof(FITEM));
-
-    for(j = 0; j < p.we_wordc; ++j) {
-
-      struct stat st;
-
-      if(!stat(p.we_wordv[j], &st)) {
-
-	tsize += st.st_size;
-
-	fitems[j].fname = p.we_wordv[j];
-	fitems[j].fsize = st.st_size;
-
-	++nitems;
-      }
+    for(i = 0; i < argc - 2; ++i) {
+      const int wr = wordexp(argv[i+2], &p, WRDE_NOCMD|WRDE_APPEND);
+      if(wr) error(0, wr, "%s@%s:%d", __FUNCTION__, __FILE__, __LINE__);
     }
 
-    permute(fitems, 0, nitems, tg);
-    qsort(CANDIDATES, CANDIDATES_NUM, sizeof(FITEMLIST), cand_cmp);
+    if((fitems = malloc(p.we_wordc * sizeof(FITEM)))) {
 
-    const int stripdir = getenv("DISKFIT_STRIPDIR") != NULL;
+      for(j = 0; j < p.we_wordc; ++j) {
 
-    for(j = 0; j < CANDIDATES_NUM; ++j) {
+	struct stat st;
 
-      const char *hrs;
-      size_t l;
+	if(!stat(p.we_wordv[j], &st)) {
 
-      fprintf(stdout, "[ ");
+	  tsize += st.st_size;
 
-      for(l = 0; l < CANDIDATES[j].size; ++l) {
+	  fitems[j].fname = p.we_wordv[j];
+	  fitems[j].fsize = st.st_size;
 
-	char *bc = stripdir ? strdup(CANDIDATES[j].entries[l].fname) : CANDIDATES[j].entries[l].fname;
-
-	fprintf(stdout, "'%s' ", stripdir ? basename(bc) : bc);
-
-	if(stripdir) free(bc);
+	  ++nitems;
+	} else {
+	  error(0, errno, "%s@%s:%d: %s", __FUNCTION__, __FILE__, __LINE__, p.we_wordv[j]);
+	}
       }
 
-      fprintf(stdout, "] = %s\n", (hrs = hrsize(CANDIDATES[j].total)));
+      permute(fitems, 0, nitems, tg);
+      qsort(CANDIDATES, CANDIDATES_NUM, sizeof(FITEMLIST), cand_cmp);
 
-      free((void *)hrs);
-      free(CANDIDATES[j].entries);
+      const int stripdir = getenv("DISKFIT_STRIPDIR") != NULL;
+
+      for(j = 0; j < CANDIDATES_NUM; ++j) {
+
+	const char *hrs;
+	size_t l;
+
+	fprintf(stdout, "[ ");
+
+	for(l = 0; l < CANDIDATES[j].size; ++l) {
+
+	  char *bc = stripdir ? strdup(CANDIDATES[j].entries[l].fname) : CANDIDATES[j].entries[l].fname;
+
+	  fprintf(stdout, "'%s' ", stripdir ? basename(bc) : bc);
+
+	  if(stripdir) free(bc);
+	}
+
+	fprintf(stdout, "] = %s\n", (hrs = hrsize(CANDIDATES[j].total)));
+
+	free((void *)hrs);
+	free(CANDIDATES[j].entries);
+      }
+
+      free(fitems);
+      free(CANDIDATES);
+
+    } else {
+      error(0, ENOMEM, "%s@%s:%d", __FUNCTION__, __FILE__, __LINE__);
     }
-
-    free(fitems);
-    free(CANDIDATES);
 
     wordfree(&p);
 
