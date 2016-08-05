@@ -49,6 +49,10 @@ typedef struct {
 FITEMLIST *CANDIDATES = NULL;
 size_t CANDIDATES_NUM = 0;
 
+unsigned long FAK_CUR = 0u;
+unsigned long FAK_TOT = 0u;
+unsigned long FAK_LST = 0u;
+
 off_t target_size(const char *tgs) {
 
   char suff = '\0';
@@ -114,6 +118,9 @@ void addCandidate(FITEM *array, int len, off_t total) {
   if(l.entries) {
 
     int i;
+    const unsigned long fc = (++FAK_CUR * 100u)/FAK_TOT;
+
+    if(fc != FAK_LST) fprintf(stderr, "\033[sCalculating: %lu%% ...\033[u", (FAK_LST = fc));
 
     for(i = 0; i < len; ++i) {
       memcpy(&(l.entries[i]), &(array[i]), sizeof(FITEM));
@@ -189,6 +196,16 @@ void permute(FITEM *array, int i, int length, off_t target) {
   return;
 }
 
+unsigned long fak(int n) {
+
+  int i;
+  unsigned long fak;
+
+  for(i = 1, fak = 1; i <= n; ++i) fak *= i;
+
+  return fak;
+}
+
 const char *hrsize(off_t s) {
 
   char *r = malloc(1024 * sizeof(char));
@@ -262,8 +279,13 @@ int main(int argc, char *argv[]) {
 	}
       }
 
+      FAK_TOT = fak(nitems);
+
+      fprintf(stderr, "\033[sCalculating: 0%% ...\033[u");
       permute(fitems, 0, nitems, tg);
       qsort(CANDIDATES, CANDIDATES_NUM, sizeof(FITEMLIST), cand_cmp);
+
+      fprintf(stderr, "\033[k");
 
       const int stripdir = getenv("DISKFIT_STRIPDIR") != NULL;
 
