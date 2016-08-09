@@ -7,11 +7,15 @@ AC_CONFIG_SRCDIR([src/diskfit.c])
 AC_CONFIG_HEADERS([config.h])
 
 LT_INIT
-AM_INIT_AUTOMAKE([foreign])
+AM_INIT_AUTOMAKE([foreign no-dist-gzip dist-xz])
 AC_CONFIG_MACRO_DIR([m4])
+
+AC_SYS_LARGEFILE
 
 # Checks for programs.
 AC_PROG_CC
+
+AC_LANG_PUSH([C])
 
 # Checks for libraries.
 LT_LIB_M
@@ -31,5 +35,7 @@ AC_CHECK_FUNCS([strncasecmp])
 AC_FUNC_MALLOC
 AC_FUNC_REALLOC
 AC_FUNC_ERROR_AT_LINE
+
+AC_LANG_POP([C])
 
 AC_OUTPUT([Makefile src/Makefile])
