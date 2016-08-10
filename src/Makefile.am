@@ -1,6 +1,7 @@
+SUBDIRS = lib
+
 bin_PROGRAMS = diskfit
 
-CFLAGS += -fwhole-program -fstrict-aliasing -ffast-math
-
+diskfit_CPPFLAGS = -Ilib
 diskfit_SOURCES = diskfit.c
-diskfit_LDADD = $(LIBM)
+diskfit_LDADD = lib/libdiskfit.la

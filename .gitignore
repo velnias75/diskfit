@@ -14,7 +14,12 @@ m4
 missing
 Makefile
 libtool
-src/.deps/
+.deps/
 src/diskfit
 *.o
 stamp-h1
+.libs/
+*.lo
+*.la
+.kdev4/
+diskfit.kdev4

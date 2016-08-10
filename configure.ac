@@ -38,4 +38,4 @@ AC_FUNC_ERROR_AT_LINE
 
 AC_LANG_POP([C])
 
-AC_OUTPUT([Makefile src/Makefile])
+AC_OUTPUT([Makefile src/Makefile src/lib/Makefile])
