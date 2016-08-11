@@ -207,7 +207,7 @@ int main(int argc, char *argv[]) {
 
                 diskfit_hrsize(CANDIDATES[j].total, hrs, 1023);
                 fprintf(stdout, "] = %s (%.3f%%)\n", hrs,
-                        (float)(CANDIDATES[j].total * 100u) / (float)tsize);
+                        (float)(CANDIDATES[j].total * 100u) / (float)tg);
                 free(CANDIDATES[j].entries);
             }
 

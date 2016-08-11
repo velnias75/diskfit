@@ -54,7 +54,7 @@ inline static void swap(FITEM *restrict a, FITEM *restrict b) {
 
 static void permute(const PERMUTE_ARGS *const pa, int i) {
 
-    if (pa->length == i || pa->total <= pa->target) {
+    if (pa->length == i) {
 
         int k = pa->length;
         uint64_t s = pa->total;
@@ -98,11 +98,17 @@ void diskfit_get_candidates(FITEM *array, int length, uint64_t total, uint64_t t
 
     if (array) {
 
-        unsigned long cur = 0ul;
+        if (total > target) {
 
-        const PERMUTE_ARGS pa = { array, length, total, target, adder, &cur, fak(length) };
+            unsigned long cur = 0ul;
 
-        permute(&pa, 0);
+            const PERMUTE_ARGS pa = { array, length, total, target, adder, &cur, fak(length) };
+
+            permute(&pa, 0);
+
+        } else {
+            adder(array, length, total, 1, 1);
+        }
     }
 }
 
