@@ -45,7 +45,7 @@ size_t CANDIDATES_NUM = 0;
 unsigned long FAK_LST = 0u;
 
 inline static int fitem_cmp(const void *a, const void *b) {
-    return strcmp(((FITEM *) a)->fname, ((FITEM *) b)->fname);
+    return strcasecmp(((FITEM *) a)->fname, ((FITEM *) b)->fname);
 }
 
 static void addCandidate(FITEM *array, int len, uint64_t total,
@@ -163,14 +163,17 @@ int main(int argc, char *argv[]) {
 
                 struct stat st;
 
-                if (!stat(p.we_wordv[j], &st) && S_ISREG(st.st_mode)) {
+                if (!stat(p.we_wordv[j], &st)) {
 
-                    tsize += st.st_size;
+                    if (S_ISREG(st.st_mode)) {
 
-                    fitems[j].fname = p.we_wordv[j];
-                    fitems[j].fsize = st.st_size;
+                        tsize += st.st_size;
 
-                    ++nitems;
+                        fitems[nitems].fname = p.we_wordv[j];
+                        fitems[nitems].fsize = st.st_size;
+
+                        ++nitems;
+                    }
 
                 } else {
                     error(0, errno, "%s@%s:%d: %s", __FUNCTION__, __FILE__, __LINE__,
