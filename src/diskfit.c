@@ -37,7 +37,7 @@
 typedef struct {
     FITEM *entries;
     size_t size;
-    off_t total;
+    uint64_t total;
 } FITEMLIST;
 
 FITEMLIST *CANDIDATES = NULL;
@@ -48,7 +48,7 @@ int fitem_cmp(const void *a, const void *b) {
     return strcmp(((FITEM *) a)->fname, ((FITEM *) b)->fname);
 }
 
-void addCandidate(FITEM *array, int len, off_t total,
+void addCandidate(FITEM *array, int len, uint64_t total,
                   const unsigned long it_cur, const unsigned long it_tot) {
 
     FITEMLIST l = { malloc(len * sizeof(FITEM)), len, total };
@@ -126,7 +126,7 @@ int cand_cmp(const void *a, const void *b) {
 
 int main(int argc, char *argv[]) {
 
-    fprintf(stderr, PACKAGE_STRING " - (c) 2016 by Heiko Sch\303\244fer <heiko@rangun.de>\n");
+    fprintf(stderr, PACKAGE_STRING " - (c) 2016 by Heiko Sch\u00e4fer <heiko@rangun.de>\n");
 
     if (argc < 3) {
 
@@ -141,14 +141,15 @@ int main(int argc, char *argv[]) {
         size_t j;
         int i, nitems = 0;
         FITEM *fitems = NULL;
-        off_t tsize = 0;
-        const off_t tg = diskfit_target_size(argc > 1 ? argv[1] : "dvd");
-        const char *hr_tot, *hr_tg;
+        uint64_t tsize = 0u;
+        const uint64_t tg = diskfit_target_size(argc > 1 ? argv[1] : "dvd");
+        char hr_tot[1024], hr_tg[1024];
         wordexp_t p;
 
         memset(&p, 0, sizeof(wordexp_t));
 
         for (i = 0; i < argc - 2; ++i) {
+
             const int wr = wordexp(argv[i + 2], &p, WRDE_NOCMD | WRDE_APPEND);
 
             if (wr) {
@@ -187,7 +188,7 @@ int main(int argc, char *argv[]) {
 
             for (j = 0; j < CANDIDATES_NUM; ++j) {
 
-                const char *hrs;
+                char hrs[1024];
                 size_t l;
 
                 fprintf(stdout, "[ ");
@@ -204,9 +205,8 @@ int main(int argc, char *argv[]) {
                     }
                 }
 
-                fprintf(stdout, "] = %s\n", (hrs = diskfit_hrsize(CANDIDATES[j].total)));
-
-                free((void *) hrs);
+                diskfit_hrsize(CANDIDATES[j].total, hrs, 1023);
+                fprintf(stdout, "] = %s\n", hrs);
                 free(CANDIDATES[j].entries);
             }
 
@@ -219,11 +219,9 @@ int main(int argc, char *argv[]) {
 
         wordfree(&p);
 
-        fprintf(stderr, "Total size: %s - Target size: %s\n",
-                (hr_tot = diskfit_hrsize(tsize)), (hr_tg = diskfit_hrsize(tg)));
-
-        free((void *) hr_tot);
-        free((void *) hr_tg);
+        diskfit_hrsize(tsize, hr_tot, 1023);
+        diskfit_hrsize(tg, hr_tg, 1023);
+        fprintf(stderr, "Total size: %s - Target size: %s\n", hr_tot, hr_tg);
     }
 
     return EXIT_SUCCESS;

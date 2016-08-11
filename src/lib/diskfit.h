@@ -23,22 +23,23 @@
 extern "C" {
 #endif
 
-#include <sys/types.h>
+#include <stdint.h>
+#include <stddef.h>
 
-typedef struct {
-    char *fname;
-    off_t fsize;
-} FITEM;
+    typedef struct {
+        char *fname;
+        uint64_t fsize;
+    } FITEM;
 
-typedef void (*ADDER)(FITEM *array, int len, off_t total, 
-                      const unsigned long it_cur, const unsigned long it_tot);
+    typedef void (*INSERTER)(FITEM *fitems, int length, uint64_t total,
+                             const unsigned long it_cur, const unsigned long it_tot);
 
-DISKFIT_EXPORT const char *diskfit_hrsize(off_t s);
-DISKFIT_EXPORT off_t diskfit_target_size(const char *tgs);
-DISKFIT_EXPORT void diskfit_get_candidates(FITEM *array, int length, off_t target, ADDER adder);
+    DISKFIT_EXPORT int diskfit_hrsize(uint64_t size, char *out, size_t len);
+    DISKFIT_EXPORT uint64_t diskfit_target_size(const char *tgs);
+    DISKFIT_EXPORT void diskfit_get_candidates(FITEM *fitems, int length, uint64_t target, INSERTER inserter);
 
 #ifdef _cplusplus
 }
 #endif
-    
+
 // kate: indent-mode cstyle; indent-width 4; replace-tabs on; 
