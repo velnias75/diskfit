@@ -138,8 +138,8 @@ int main(int argc, char *argv[]) {
 
     } else {
 
-        size_t j;
-        int i, nitems = 0;
+        int i;
+        size_t j, nitems = 0;
         FITEM *fitems = NULL;
         uint64_t tsize = 0u;
         const uint64_t tg = diskfit_target_size(argc > 1 ? argv[1] : "dvd");
@@ -178,6 +178,15 @@ int main(int argc, char *argv[]) {
                 } else {
                     error(0, errno, "%s@%s:%d: %s", __FUNCTION__, __FILE__, __LINE__,
                           p.we_wordv[j]);
+                }
+            }
+
+            if (nitems < p.we_wordc) {
+
+                FITEM *f = realloc(fitems, nitems * sizeof(FITEM));
+
+                if (f && f != fitems) {
+                    fitems = f;
                 }
             }
 

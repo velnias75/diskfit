@@ -36,7 +36,7 @@ extern "C" {
 
     DISKFIT_EXPORT int diskfit_hrsize(uint64_t size, char *out, size_t len);
     DISKFIT_EXPORT uint64_t diskfit_target_size(const char *tgs);
-    DISKFIT_EXPORT void diskfit_get_candidates(FITEM *fitems, int length, uint64_t total,
+    DISKFIT_EXPORT void diskfit_get_candidates(FITEM *fitems, size_t length, uint64_t total,
             uint64_t target, INSERTER inserter);
 
 #ifdef _cplusplus

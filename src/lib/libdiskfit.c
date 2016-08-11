@@ -32,7 +32,7 @@
 
 typedef struct {
     FITEM *array;
-    int length;
+    size_t length;
     uint64_t total;
     uint64_t target;
     INSERTER adder;
@@ -52,7 +52,7 @@ inline static void swap(FITEM *restrict a, FITEM *restrict b) {
     }
 }
 
-static void permute(const PERMUTE_ARGS *const pa, int i) {
+static void permute(const PERMUTE_ARGS *const pa, size_t i) {
 
     if (pa->length == i) {
 
@@ -70,7 +70,7 @@ static void permute(const PERMUTE_ARGS *const pa, int i) {
         return;
     }
 
-    int j = i;
+    size_t j = i;
 
     for (j = i; j < pa->length; ++j) {
         swap(pa->array + i, pa->array + j);
@@ -93,7 +93,7 @@ inline static unsigned long fak(int n) {
     return fak;
 }
 
-void diskfit_get_candidates(FITEM *array, int length, uint64_t total, uint64_t target,
+void diskfit_get_candidates(FITEM *array, size_t length, uint64_t total, uint64_t target,
                             INSERTER adder) {
 
     if (array) {
@@ -140,7 +140,7 @@ uint64_t diskfit_target_size(const char *tgs) {
         double fac = 1.0;
 
         if (!strncasecmp(tgs, "dvd", 3)) {
-            return 4707319808u;
+            return 4705954816u;
         }
 
         if (!strncasecmp(tgs, "cd", 2)) {
