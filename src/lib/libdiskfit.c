@@ -30,21 +30,20 @@
 #include "config.h"
 #endif
 
-static uint64_t sum(const FITEM *item, int n) {
+typedef struct {
+    FITEM *array;
+    int length;
+    uint64_t total;
+    uint64_t target;
+    INSERTER adder;
+    unsigned long *it_cur;
+    unsigned long it_tot;
+} PERMUTE_ARGS;
 
-    int i;
-    uint64_t sum = 0;
-
-    for (i = 0; i < n; ++i) {
-        sum += item[i].fsize;
-    }
-
-    return sum;
-}
-
-static void swap(FITEM *restrict a, FITEM *restrict b) {
+inline static void swap(FITEM *restrict a, FITEM *restrict b) {
 
     if (a != b) {
+
         FITEM h;
 
         memcpy(&h, b, sizeof(FITEM));
@@ -53,22 +52,19 @@ static void swap(FITEM *restrict a, FITEM *restrict b) {
     }
 }
 
-static void permute(FITEM *array, int i, int length, uint64_t target, INSERTER adder,
-                    unsigned long *it_cur, unsigned long it_tot) {
+static void permute(const PERMUTE_ARGS *const pa, int i) {
 
-    if (length == i) {
+    if (pa->length == i || pa->total <= pa->target) {
 
-        int k = length - 1;
-        uint64_t s = 0;
+        int k = pa->length;
+        uint64_t s = pa->total;
 
-        while (k >= 0 && (s = sum(array, k + 1)) > target) {
-            --k;
-        }
+        while (k >= 0 && (s -= pa->array[--k].fsize) > pa->target);
 
-        ++(*it_cur);
+        ++(*pa->it_cur);
 
-        if (s != 0 && s <= target) {
-            adder(array, k + 1, s, *it_cur, it_tot);
+        if (pa->adder && s != 0 && s <= pa->target) {
+            pa->adder(pa->array, k, s, *pa->it_cur, pa->it_tot);
         }
 
         return;
@@ -76,16 +72,16 @@ static void permute(FITEM *array, int i, int length, uint64_t target, INSERTER a
 
     int j = i;
 
-    for (j = i; j < length; ++j) {
-        swap(array + i, array + j);
-        permute(array, i + 1, length, target, adder, it_cur, it_tot);
-        swap(array + i, array + j);
+    for (j = i; j < pa->length; ++j) {
+        swap(pa->array + i, pa->array + j);
+        permute(pa, i + 1);
+        swap(pa->array + i, pa->array + j);
     }
 
     return;
 }
 
-static unsigned long fak(int n) {
+inline static unsigned long fak(int n) {
 
     int i;
     unsigned long fak;
@@ -97,13 +93,16 @@ static unsigned long fak(int n) {
     return fak;
 }
 
-void diskfit_get_candidates(FITEM *array, int length, uint64_t target, INSERTER adder) {
+void diskfit_get_candidates(FITEM *array, int length, uint64_t total, uint64_t target,
+                            INSERTER adder) {
 
     if (array) {
 
         unsigned long cur = 0ul;
 
-        permute(array, 0, length, target, adder, &cur, fak(length));
+        const PERMUTE_ARGS pa = { array, length, total, target, adder, &cur, fak(length) };
+
+        permute(&pa, 0);
     }
 }
 

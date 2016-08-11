@@ -44,12 +44,12 @@ FITEMLIST *CANDIDATES = NULL;
 size_t CANDIDATES_NUM = 0;
 unsigned long FAK_LST = 0u;
 
-int fitem_cmp(const void *a, const void *b) {
+inline static int fitem_cmp(const void *a, const void *b) {
     return strcmp(((FITEM *) a)->fname, ((FITEM *) b)->fname);
 }
 
-void addCandidate(FITEM *array, int len, uint64_t total,
-                  const unsigned long it_cur, const unsigned long it_tot) {
+static void addCandidate(FITEM *array, int len, uint64_t total,
+                         const unsigned long it_cur, const unsigned long it_tot) {
 
     FITEMLIST l = { malloc(len * sizeof(FITEM)), len, total };
 
@@ -72,17 +72,17 @@ void addCandidate(FITEM *array, int len, uint64_t total,
             CANDIDATES = malloc(sizeof(FITEMLIST));
         } else {
 
-            size_t j, k;
+            size_t j;
 
             for (j = 0; j < CANDIDATES_NUM; ++j) {
 
                 if (CANDIDATES[j].size == l.size && CANDIDATES[j].total == l.total) {
 
+                    size_t k;
                     int dup = 0;
 
                     for (k = 0; k < l.size; ++k) {
-                        dup |= (CANDIDATES[j].entries[k].fsize == l.entries[k].fsize &&
-                                !strcmp(CANDIDATES[j].entries[k].fname, l.entries[k].fname));
+                        dup |= CANDIDATES[j].entries[k].fname == l.entries[k].fname;
                     }
 
                     if (dup) {
@@ -179,7 +179,7 @@ int main(int argc, char *argv[]) {
             }
 
             fprintf(stderr, "\033[sCalculating: 0%% ...\033[u");
-            diskfit_get_candidates(fitems, nitems, tg, addCandidate);
+            diskfit_get_candidates(fitems, nitems, tsize, tg, addCandidate);
             qsort(CANDIDATES, CANDIDATES_NUM, sizeof(FITEMLIST), cand_cmp);
 
             fprintf(stderr, "\033[k");
@@ -206,7 +206,8 @@ int main(int argc, char *argv[]) {
                 }
 
                 diskfit_hrsize(CANDIDATES[j].total, hrs, 1023);
-                fprintf(stdout, "] = %s\n", hrs);
+                fprintf(stdout, "] = %s (%.3f%%)\n", hrs,
+                        (float)(CANDIDATES[j].total * 100u) / (float)tsize);
                 free(CANDIDATES[j].entries);
             }
 
