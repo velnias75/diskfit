@@ -163,7 +163,7 @@ int main(int argc, char *argv[]) {
 
                 struct stat st;
 
-                if (!stat(p.we_wordv[j], &st)) {
+                if (!stat(p.we_wordv[j], &st) && S_ISREG(st.st_mode)) {
 
                     tsize += st.st_size;
 
