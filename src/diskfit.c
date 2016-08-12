@@ -24,6 +24,7 @@
 #include <errno.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <inttypes.h>
 
 #include <wordexp.h>
 #include <libgen.h>
@@ -115,7 +116,7 @@ static void addCandidate(FITEM *array, int len, uint64_t total,
     }
 }
 
-int cand_cmp(const void *a, const void *b) {
+inline static int cand_cmp(const void *a, const void *b) {
 
     if (((FITEMLIST *) a)->total < ((FITEMLIST *) b)->total) {
         return -1;
@@ -128,18 +129,25 @@ int cand_cmp(const void *a, const void *b) {
     return 0;
 }
 
+static void print_copy() {
+    fprintf(stderr, PACKAGE_STRING " - (c) 2016 by Heiko Sch\u00e4fer <heiko@rangun.de>\n");
+}
+
 int main(int argc, char *argv[]) {
 
-    fprintf(stderr, PACKAGE_STRING " - (c) 2016 by Heiko Sch\u00e4fer <heiko@rangun.de>\n");
+    if (argc < 2) {
 
-    if (argc < 3) {
+        print_copy();
 
-        fprintf(stdout, "Usage: %s (cd|dvd|target_size[G|M|K]) file_pattern...\n\n", argv[0]);
+        fprintf(stdout, "\nUsage: %s (cd|dvd|target_size[G|M|K]) [file_pattern...]\n\n", argv[0]);
+        fprintf(stdout, "Omitting the file_pattern will just print the target size in Bytes.\n\n");
         fprintf(stdout, "Set environment variable DISKFIT_STRIPDIR to any value "
                 "to strip directories.\n");
 
         return EXIT_FAILURE;
-
+    } else if (argc == 2) {
+        fprintf(stdout, "%" PRIu64 "\n", diskfit_target_size(argv[1]));
+        return EXIT_SUCCESS;
     } else {
 
         int i;
@@ -149,6 +157,8 @@ int main(int argc, char *argv[]) {
         const uint64_t tg = diskfit_target_size(argc > 1 ? argv[1] : "dvd");
         char hr_tot[1024], hr_tg[1024];
         wordexp_t p;
+
+        print_copy();
 
         memset(&p, 0, sizeof(wordexp_t));
 
