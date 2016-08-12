@@ -45,7 +45,11 @@ size_t CANDIDATES_NUM = 0;
 unsigned long FAK_LST = 0u;
 
 inline static int fitem_cmp(const void *a, const void *b) {
+#ifdef HAVE_STRCASECMP
     return strcasecmp(((FITEM *) a)->fname, ((FITEM *) b)->fname);
+#else
+    return strcmp(((FITEM *) a)->fname, ((FITEM *) b)->fname);
+#endif
 }
 
 static void addCandidate(FITEM *array, int len, uint64_t total,

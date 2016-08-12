@@ -139,11 +139,12 @@ uint64_t diskfit_target_size(const char *tgs) {
         char suff = '\0';
         double fac = 1.0;
 
-        if (!strncasecmp(tgs, "dvd", 3)) {
+        if ((tgs[0] == 'D' || tgs[0] == 'd') && (tgs[1] == 'V' || tgs[1] == 'v') &&
+                (tgs[2] == 'D' || tgs[2] == 'd')) {
             return 4705954816u;
         }
 
-        if (!strncasecmp(tgs, "cd", 2)) {
+        if ((tgs[0] == 'C' || tgs[0] == 'c') && (tgs[1] == 'D' || tgs[1] == 'd')) {
             return 734003200u;
         }
 
