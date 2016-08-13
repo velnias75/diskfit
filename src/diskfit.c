@@ -195,46 +195,48 @@ int main(int argc, char *argv[]) {
                 }
             }
 
-            if (nitems < p.we_wordc) {
+            if (nitems > 0) {
+                if (nitems < p.we_wordc) {
 
-                FITEM *f = realloc(fitems, nitems * sizeof(FITEM));
+                    FITEM *f = realloc(fitems, nitems * sizeof(FITEM));
 
-                if (f && f != fitems) {
+                    if (f && f != fitems) {
                     fitems = f;
-                }
-            }
-
-            fprintf(stderr, "\033[sCalculating: 0%% ...\033[u");
-            diskfit_get_candidates(fitems, nitems, tsize, tg, addCandidate);
-            qsort(CANDIDATES, CANDIDATES_NUM, sizeof(FITEMLIST), cand_cmp);
-
-            fprintf(stderr, "\033[k");
-
-            const int stripdir = getenv("DISKFIT_STRIPDIR") != NULL;
-
-            for (j = 0; j < CANDIDATES_NUM; ++j) {
-
-                char hrs[1024];
-                size_t l;
-
-                fprintf(stdout, "[ ");
-
-                for (l = 0; l < CANDIDATES[j].size; ++l) {
-
-                    char *bc = stripdir ? strdup(CANDIDATES[j].entries[l].fname) :
-                               CANDIDATES[j].entries[l].fname;
-
-                    fprintf(stdout, "'%s' ", stripdir ? basename(bc) : bc);
-
-                    if (stripdir) {
-                        free(bc);
                     }
                 }
 
-                diskfit_hrsize(CANDIDATES[j].total, hrs, 1023);
-                fprintf(stdout, "] = %s (%.3f%%)\n", hrs,
+                fprintf(stderr, "\033[sCalculating: 0%% ...\033[u");
+                diskfit_get_candidates(fitems, nitems, tsize, tg, addCandidate);
+                qsort(CANDIDATES, CANDIDATES_NUM, sizeof(FITEMLIST), cand_cmp);
+
+                fprintf(stderr, "\033[k");
+
+                const int stripdir = getenv("DISKFIT_STRIPDIR") != NULL;
+
+                for (j = 0; j < CANDIDATES_NUM; ++j) {
+
+                    char hrs[1024];
+                    size_t l;
+
+                    fprintf(stdout, "[ ");
+
+                    for (l = 0; l < CANDIDATES[j].size; ++l) {
+
+                        char *bc = stripdir ? strdup(CANDIDATES[j].entries[l].fname) :
+                                CANDIDATES[j].entries[l].fname;
+
+                        fprintf(stdout, "'%s' ", stripdir ? basename(bc) : bc);
+
+                        if (stripdir) {
+                        free(bc);
+                        }
+                    }
+
+                    diskfit_hrsize(CANDIDATES[j].total, hrs, 1023);
+                    fprintf(stdout, "] = %s (%.3f%%)\n", hrs,
                         (float)(CANDIDATES[j].total * 100u) / (float)tg);
-                free(CANDIDATES[j].entries);
+                    free(CANDIDATES[j].entries);
+                }
             }
 
             free(fitems);
