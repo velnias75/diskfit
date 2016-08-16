@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ([2.69])
-AC_INIT([DiskFit], [0.5], [heiko@rangun.de])
+AC_INIT([DiskFit], [0.6], [heiko@rangun.de])
 AC_CONFIG_SRCDIR([src/diskfit.c])
 AC_CONFIG_HEADERS([config.h])
 
@@ -21,6 +21,7 @@ LT_LIB_M
 
 # Checks for header files.
 AC_CHECK_HEADERS([stdlib.h string.h unistd.h stddef.h])
+AC_CHECK_HEADER_STDBOOL
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_TYPE_OFF_T

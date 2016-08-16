@@ -35,6 +35,10 @@
 #include "config.h"
 #endif
 
+#ifdef HAVE__BOOL
+#include <stdbool.h>
+#endif
+
 typedef struct {
     FITEM *entries;
     size_t size;
@@ -84,11 +88,13 @@ static void addCandidate(FITEM *array, int len, uint64_t total,
                 if (CANDIDATES[j].size == l.size && CANDIDATES[j].total == l.total) {
 
                     size_t k;
+#ifdef HAVE__BOOL
+                    bool dup = false;
+#else
                     int dup = 0;
+#endif
 
-                    for (k = 0; k < l.size; ++k) {
-                        dup |= CANDIDATES[j].entries[k].fname == l.entries[k].fname;
-                    }
+                    for (k = 0; !(dup |= CANDIDATES[j].entries[k].fname == l.entries[k].fname) || k < l.size; ++k);
 
                     if (dup) {
                         free(l.entries);
