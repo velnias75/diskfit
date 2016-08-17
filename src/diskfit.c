@@ -53,7 +53,6 @@ typedef struct {
 } DISP_PARAMS;
 
 static GTree *CANDIDATES = NULL;
-//static size_t CANDIDATES_NUM = 0;
 static unsigned long FAK_LST = 0u;
 
 inline static int fitem_cmp(const void *a, const void *b) {
@@ -80,7 +79,7 @@ inline static gint eq(gconstpointer a, gconstpointer b) {
     if (x->size == y->size && x->total == y->total) {
 
         size_t i;
-        const size_t min = x->size < y->size ? x->size : y->size;
+        const size_t min = (x->size < y->size ? x->size : y->size) - 1u;
         gboolean dup = FALSE;
 
         for (i = 0; !(dup |= x->entries[i].fname == y->entries[i].fname) && i < min; ++i);
@@ -94,11 +93,11 @@ inline static gint eq(gconstpointer a, gconstpointer b) {
 static void addCandidate(FITEM *array, int len, uint64_t total,
                          const unsigned long it_cur, const unsigned long it_tot) {
 
-    FITEMLIST *l = malloc(sizeof(FITEMLIST));
+    FITEMLIST *l = g_malloc(sizeof(FITEMLIST));
 
     if (l) {
 
-        l->entries = malloc(len * sizeof(FITEM));
+        l->entries = g_malloc(len * sizeof(FITEM));
         l->size = len;
         l->total = total;
 
@@ -111,21 +110,22 @@ static void addCandidate(FITEM *array, int len, uint64_t total,
                 fprintf(stderr, "\033[sCalculating: %lu%% ...\033[u", (FAK_LST = fc));
             }
 
-            for (i = 0; i < len; ++i) {
+            /*for (i = 0; i < len; ++i) {
                 memcpy(& (l->entries[i]), & (array[i]), sizeof(FITEM));
-            }
+            } */
+            memcpy(l->entries, array, sizeof(FITEM) * len);
 
             qsort(l->entries, l->size, sizeof(FITEM), fitem_cmp);
 
-            if (g_tree_search(CANDIDATES, eq, l) == NULL) {
+            if (g_tree_lookup(CANDIDATES, l) == NULL) {
                 g_tree_insert(CANDIDATES, l, l->entries);
             } else {
-                free(l->entries);
-                free(l);
+                g_free(l->entries);
+                g_free(l);
             }
 
         } else {
-            free(l);
+            g_free(l);
         }
     }
 }
@@ -144,8 +144,8 @@ static gboolean display_candidates(gpointer key, gpointer value, gpointer data) 
 
     for (i = 0; i < ((FITEMLIST *)key)->size; ++i) {
 
-        char *bc = p->stripdir ? g_strdup(((FITEMLIST *)key)->entries[i].fname) : 
-        ((FITEMLIST *)key)->entries[i].fname;
+        char *bc = p->stripdir ? g_strdup(((FITEMLIST *)key)->entries[i].fname) :
+                   ((FITEMLIST *)key)->entries[i].fname;
 
         fprintf(stdout, "'%s' ", p->stripdir ? basename(bc) : bc);
 
@@ -157,8 +157,9 @@ static gboolean display_candidates(gpointer key, gpointer value, gpointer data) 
     diskfit_hrsize(((FITEMLIST *)key)->total, hrs, 1023);
     fprintf(stdout, "] = %s (%.3f%%)\n", hrs,
             (float)(((FITEMLIST *)key)->total * 100u) / (float)p->tg);
-    
-    free(value);
+
+    g_free(value);
+    g_free(key);
 
     return FALSE;
 }
@@ -201,7 +202,7 @@ int main(int argc, char *argv[]) {
             }
         }
 
-        if ((fitems = malloc(p.we_wordc * sizeof(FITEM)))) {
+        if ((fitems = g_malloc(p.we_wordc * sizeof(FITEM)))) {
 
             for (j = 0; j < p.we_wordc; ++j) {
 
@@ -240,47 +241,13 @@ int main(int argc, char *argv[]) {
                 CANDIDATES = g_tree_new(eq);
 
                 diskfit_get_candidates(fitems, nitems, tsize, tg, addCandidate);
-
                 DISP_PARAMS p = { getenv("DISKFIT_STRIPDIR") != NULL, tg };
 
                 g_tree_foreach(CANDIDATES, display_candidates, &p);
                 g_tree_destroy(CANDIDATES);
-
-                /* qsort(CANDIDATES, CANDIDATES_NUM, sizeof(FITEMLIST), cand_cmp);
-
-                fprintf(stderr, "\033[k");
-
-                const int stripdir = getenv("DISKFIT_STRIPDIR") != NULL;
-
-                for (j = 0; j < CANDIDATES_NUM; ++j) {
-
-                    char hrs[1024];
-                    size_t l;
-
-                    fprintf(stdout, "[ ");
-
-                    for (l = 0; l < CANDIDATES[j].size; ++l) {
-
-                        char *bc = stripdir ? strdup(CANDIDATES[j].entries[l].fname) :
-                                CANDIDATES[j].entries[l].fname;
-
-                        fprintf(stdout, "'%s' ", stripdir ? basename(bc) : bc);
-
-                        if (stripdir) {
-                        free(bc);
-                        }
-                    }
-
-                    diskfit_hrsize(CANDIDATES[j].total, hrs, 1023);
-                    fprintf(stdout, "] = %s (%.3f%%)\n", hrs,
-                        (float)(CANDIDATES[j].total * 100u) / (float)tg);
-                    free(CANDIDATES[j].entries);
-
-                } */
             }
 
-            free(fitems);
-            //free(CANDIDATES);
+            g_free(fitems);
 
         } else {
             error(0, ENOMEM, "%s@%s:%d", __FUNCTION__, __FILE__, __LINE__);
