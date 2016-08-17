@@ -38,6 +38,8 @@ AC_FUNC_MALLOC
 AC_FUNC_REALLOC
 AC_FUNC_ERROR_AT_LINE
 
+PKG_CHECK_MODULES([GLIB2], [glib-2.0 >= 2.32])
+
 AC_LANG_POP([C])
 
 AC_OUTPUT([Makefile src/Makefile src/lib/Makefile])

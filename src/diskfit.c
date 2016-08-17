@@ -39,86 +39,28 @@
 #include <stdbool.h>
 #endif
 
+#include <glib.h>
+
 typedef struct {
     FITEM *entries;
     size_t size;
     uint64_t total;
 } FITEMLIST;
 
-FITEMLIST *CANDIDATES = NULL;
-size_t CANDIDATES_NUM = 0;
-unsigned long FAK_LST = 0u;
+typedef struct {
+    gboolean stripdir;
+    uint64_t tg;
+} DISP_PARAMS;
+
+static GTree *CANDIDATES = NULL;
+//static size_t CANDIDATES_NUM = 0;
+static unsigned long FAK_LST = 0u;
 
 inline static int fitem_cmp(const void *a, const void *b) {
     return a == b ? 0 : (a < b ? -1 : 1);
 }
 
-static void addCandidate(FITEM *array, int len, uint64_t total,
-                         const unsigned long it_cur, const unsigned long it_tot) {
-
-    FITEMLIST l = { malloc(len * sizeof(FITEM)), len, total };
-
-    if (l.entries) {
-
-        int i;
-        const unsigned long fc = (it_cur * 100u) / it_tot;
-
-        if (fc != FAK_LST) {
-            fprintf(stderr, "\033[sCalculating: %lu%% ...\033[u", (FAK_LST = fc));
-        }
-
-        for (i = 0; i < len; ++i) {
-            memcpy(& (l.entries[i]), & (array[i]), sizeof(FITEM));
-        }
-
-        qsort(l.entries, l.size, sizeof(FITEM), fitem_cmp);
-
-        if (!CANDIDATES) {
-            CANDIDATES = malloc(sizeof(FITEMLIST));
-        } else {
-
-            size_t j;
-
-            for (j = 0; j < CANDIDATES_NUM; ++j) {
-
-                if (CANDIDATES[j].size == l.size && CANDIDATES[j].total == l.total) {
-
-                    size_t k;
-#ifdef HAVE__BOOL
-                    bool dup = false;
-#else
-                    int dup = 0;
-#endif
-
-                    for (k = 0; !(dup |= CANDIDATES[j].entries[k].fname == l.entries[k].fname) || k < l.size; ++k);
-
-                    if (dup) {
-                        free(l.entries);
-                        return;
-                    }
-                }
-            }
-
-            FITEMLIST *fl = realloc(CANDIDATES, (CANDIDATES_NUM + 1) * sizeof(FITEMLIST));
-
-            if (fl) {
-                CANDIDATES = fl;
-            } else {
-                free(CANDIDATES);
-                CANDIDATES = NULL;
-            }
-        }
-
-        if (CANDIDATES) {
-            memcpy(& (CANDIDATES[CANDIDATES_NUM]), &l, sizeof(FITEMLIST));
-            ++CANDIDATES_NUM;
-        } else {
-            error(0, ENOMEM, "%s@%s:%d", __FUNCTION__, __FILE__, __LINE__);
-        }
-    }
-}
-
-inline static int cand_cmp(const void *a, const void *b) {
+inline static gint cand_cmp(gconstpointer a, gconstpointer b) {
 
     if (((FITEMLIST *) a)->total < ((FITEMLIST *) b)->total) {
         return -1;
@@ -131,8 +73,91 @@ inline static int cand_cmp(const void *a, const void *b) {
     return 0;
 }
 
+inline static gint eq(gconstpointer a, gconstpointer b) {
+
+    const FITEMLIST *x = (FITEMLIST *)a, *y = (FITEMLIST *)b;
+
+    if (!(x->size == y->size || x->total == y->total)) {
+
+        size_t i;
+        const size_t min = x->size < y->size ? x->size : y->size;
+        gboolean dup = FALSE;
+
+        for (i = 0; !(dup |= x->entries[i].fname == y->entries[i].fname) && i < min; ++i);
+
+        return dup ? 0 : cand_cmp(a, b);
+    }
+
+    return 0;
+}
+
+static void addCandidate(FITEM *array, int len, uint64_t total,
+                         const unsigned long it_cur, const unsigned long it_tot) {
+
+    FITEMLIST *l = malloc(sizeof(FITEMLIST));
+
+    if (l) {
+
+        l->entries = malloc(len * sizeof(FITEM));
+        l->size = len;
+        l->total = total;
+
+        if (l->entries) {
+
+            int i;
+            const unsigned long fc = (it_cur * 100u) / it_tot;
+
+            if (fc != FAK_LST) {
+                fprintf(stderr, "\033[sCalculating: %lu%% ...\033[u", (FAK_LST = fc));
+            }
+
+            for (i = 0; i < len; ++i) {
+                memcpy(& (l->entries[i]), & (array[i]), sizeof(FITEM));
+            }
+
+            qsort(l->entries, l->size, sizeof(FITEM), fitem_cmp);
+
+            if (g_tree_search(CANDIDATES, eq, l) == NULL) {
+                g_tree_insert(CANDIDATES, l, l->entries);
+            }
+
+        } else {
+            free(l);
+        }
+    }
+}
+
 static void print_copy() {
     fprintf(stderr, PACKAGE_STRING " - (c) 2016 by Heiko Sch\u00e4fer <heiko@rangun.de>\n");
+}
+
+static gboolean display_candidates(gpointer key, gpointer value, gpointer data) {
+
+    DISP_PARAMS *p = (DISP_PARAMS *)data;
+    char hrs[1024];
+    size_t i;
+
+    fprintf(stdout, "[ ");
+
+    for (i = 0; i < ((FITEMLIST *)key)->size; ++i) {
+
+        char *bc = p->stripdir ? g_strdup(((FITEMLIST *)key)->entries[i].fname) : 
+        ((FITEMLIST *)key)->entries[i].fname;
+
+        fprintf(stdout, "'%s' ", p->stripdir ? basename(bc) : bc);
+
+        if (p->stripdir) {
+            g_free(bc);
+        }
+    }
+
+    diskfit_hrsize(((FITEMLIST *)key)->total, hrs, 1023);
+    fprintf(stdout, "] = %s (%.3f%%)\n", hrs,
+            (float)(((FITEMLIST *)key)->total * 100u) / (float)p->tg);
+    
+    free(value);
+
+    return FALSE;
 }
 
 int main(int argc, char *argv[]) {
@@ -203,13 +228,22 @@ int main(int argc, char *argv[]) {
                     FITEM *f = realloc(fitems, nitems * sizeof(FITEM));
 
                     if (f && f != fitems) {
-                    fitems = f;
+                        fitems = f;
                     }
                 }
 
                 fprintf(stderr, "\033[sCalculating: 0%% ...\033[u");
+
+                CANDIDATES = g_tree_new(eq);
+
                 diskfit_get_candidates(fitems, nitems, tsize, tg, addCandidate);
-                qsort(CANDIDATES, CANDIDATES_NUM, sizeof(FITEMLIST), cand_cmp);
+
+                DISP_PARAMS p = { getenv("DISKFIT_STRIPDIR") != NULL, tg };
+
+                g_tree_foreach(CANDIDATES, display_candidates, &p);
+                g_tree_destroy(CANDIDATES);
+
+                /* qsort(CANDIDATES, CANDIDATES_NUM, sizeof(FITEMLIST), cand_cmp);
 
                 fprintf(stderr, "\033[k");
 
@@ -238,11 +272,12 @@ int main(int argc, char *argv[]) {
                     fprintf(stdout, "] = %s (%.3f%%)\n", hrs,
                         (float)(CANDIDATES[j].total * 100u) / (float)tg);
                     free(CANDIDATES[j].entries);
-                }
+
+                } */
             }
 
             free(fitems);
-            free(CANDIDATES);
+            //free(CANDIDATES);
 
         } else {
             error(0, ENOMEM, "%s@%s:%d", __FUNCTION__, __FILE__, __LINE__);
