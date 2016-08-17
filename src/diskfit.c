@@ -119,6 +119,9 @@ static void addCandidate(FITEM *array, int len, uint64_t total,
 
             if (g_tree_search(CANDIDATES, eq, l) == NULL) {
                 g_tree_insert(CANDIDATES, l, l->entries);
+            } else {
+                free(l->entries);
+                free(l);
             }
 
         } else {
