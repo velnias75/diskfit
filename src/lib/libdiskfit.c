@@ -46,39 +46,63 @@ inline static void swap(FITEM *restrict a, FITEM *restrict b) {
 
         FITEM h;
 
-        memcpy(&h, b, sizeof(FITEM));
-        memcpy(b,  a, sizeof(FITEM));
-        memcpy(a, &h, sizeof(FITEM));
+        memmove(&h, b, sizeof(FITEM));
+        memmove(b,  a, sizeof(FITEM));
+        memmove(a, &h, sizeof(FITEM));
     }
 }
 
-static void permute(const PERMUTE_ARGS *const pa, size_t i) {
+static void add(const PERMUTE_ARGS *const pa) {
 
-    if (pa->length == i) {
+    int k = pa->length;
+    uint64_t s = pa->total;
 
-        int k = pa->length;
-        uint64_t s = pa->total;
+    while (k >= 0 && (s -= pa->array[--k].fsize) > pa->target);
 
-        while (k >= 0 && (s -= pa->array[--k].fsize) > pa->target);
+    ++(*pa->it_cur);
 
-        ++(*pa->it_cur);
+    if (pa->adder && s != 0 && s <= pa->target) {
+        pa->adder(pa->array, k, s, *pa->it_cur, pa->it_tot);
+    }
+}
 
-        if (pa->adder && s != 0 && s <= pa->target) {
-            pa->adder(pa->array, k, s, *pa->it_cur, pa->it_tot);
+static void permute(const PERMUTE_ARGS *const pa) {
+
+    unsigned int *p = malloc((pa->length + 1) * sizeof(int));
+
+    if (p) {
+
+        unsigned int i, j;
+
+        for (i = 0; i < pa->length; ++i) {
+            p[i] = i;
         }
 
-        return;
+        p[pa->length] = pa->length;
+
+        add(pa);
+
+        i = 1;
+
+        while (i < pa->length) {
+
+            --p[i];
+
+            j = i % 2 * p[i];
+
+            swap(&(pa->array[j]), &(pa->array[i]));
+            add(pa);
+
+            i = 1;
+
+            while (!p[i]) {
+                p[i] = i;
+                ++i;
+            }
+        }
+
+        free(p);
     }
-
-    size_t j = i;
-
-    for (j = i; j < pa->length; ++j) {
-        swap(pa->array + i, pa->array + j);
-        permute(pa, i + 1);
-        swap(pa->array + i, pa->array + j);
-    }
-
-    return;
 }
 
 inline static unsigned long fak(int n) {
@@ -104,7 +128,7 @@ void diskfit_get_candidates(FITEM *array, size_t length, uint64_t total, uint64_
 
             const PERMUTE_ARGS pa = { array, length, total, target, adder, &cur, fak(length) };
 
-            permute(&pa, 0);
+            permute(&pa);
 
         } else {
             adder(array, length, total, 1, 1);
