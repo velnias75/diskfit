@@ -24,7 +24,6 @@
 #include <errno.h>
 #include <sys/stat.h>
 #include <unistd.h>
-#include <inttypes.h>
 
 #include <wordexp.h>
 #include <libgen.h>
@@ -35,21 +34,17 @@
 #include "config.h"
 #endif
 
-#ifdef HAVE__BOOL
-#include <stdbool.h>
-#endif
-
 #include <glib.h>
 
 typedef struct {
     FITEM *entries;
     size_t size;
-    uint64_t total;
+    guint64 total;
 } FITEMLIST;
 
 typedef struct {
     gboolean stripdir;
-    uint64_t tg;
+    guint64 tg;
 } DISP_PARAMS;
 
 static GTree *CANDIDATES = NULL;
@@ -90,7 +85,7 @@ inline static gint eq(gconstpointer a, gconstpointer b) {
     return cand_cmp(a, b);
 }
 
-static void addCandidate(FITEM *array, int len, uint64_t total,
+static void addCandidate(FITEM *array, int len, guint64 total,
                          const unsigned long it_cur, const unsigned long it_tot) {
 
     FITEMLIST *l = g_malloc(sizeof(FITEMLIST));
@@ -103,17 +98,13 @@ static void addCandidate(FITEM *array, int len, uint64_t total,
 
         if (l->entries) {
 
-            int i;
             const unsigned long fc = (it_cur * 100u) / it_tot;
 
             if (fc != FAK_LST) {
                 fprintf(stderr, "\033[sCalculating: %lu%% ...\033[u", (FAK_LST = fc));
             }
 
-            /*for (i = 0; i < len; ++i) {
-                memcpy(& (l->entries[i]), & (array[i]), sizeof(FITEM));
-            } */
-            memcpy(l->entries, array, sizeof(FITEM) * len);
+            memmove(l->entries, array, sizeof(FITEM) * len);
 
             qsort(l->entries, l->size, sizeof(FITEM), fitem_cmp);
 
@@ -177,15 +168,15 @@ int main(int argc, char *argv[]) {
 
         return EXIT_FAILURE;
     } else if (argc == 2) {
-        fprintf(stdout, "%" PRIu64 "\n", diskfit_target_size(argv[1]));
+        fprintf(stdout, "%" G_GUINT64_FORMAT "\n", diskfit_target_size(argv[1]));
         return EXIT_SUCCESS;
     } else {
 
         int i;
         size_t j, nitems = 0;
         FITEM *fitems = NULL;
-        uint64_t tsize = 0u;
-        const uint64_t tg = diskfit_target_size(argc > 1 ? argv[1] : "dvd");
+        guint64 tsize = 0u;
+        const guint64 tg = diskfit_target_size(argc > 1 ? argv[1] : "dvd");
         char hr_tot[1024], hr_tg[1024];
         wordexp_t p;
 
@@ -229,7 +220,7 @@ int main(int argc, char *argv[]) {
             if (nitems > 0) {
                 if (nitems < p.we_wordc) {
 
-                    FITEM *f = realloc(fitems, nitems * sizeof(FITEM));
+                    FITEM *f = g_realloc(fitems, nitems * sizeof(FITEM));
 
                     if (f && f != fitems) {
                         fitems = f;
