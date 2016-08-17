@@ -88,7 +88,7 @@ static void permute(const PERMUTE_ARGS *const pa) {
 
             --p[i];
 
-            j = i % 2 * p[i];
+            j = (i & 1) * p[i];
 
             swap(&(pa->array[j]), &(pa->array[i]));
             add(pa);

@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ([2.69])
-AC_INIT([DiskFit], [0.7], [heiko@rangun.de])
+AC_INIT([DiskFit], [0.8], [heiko@rangun.de])
 AC_CONFIG_SRCDIR([src/diskfit.c])
 AC_CONFIG_HEADERS([config.h])
 
@@ -33,7 +33,9 @@ AC_C_INLINE
 # Checks for library functions.
 AC_CHECK_FUNCS([memset])
 AC_CHECK_FUNCS([memmove])
+AC_CHECK_FUNCS([strcasecmp])
 AC_FUNC_ERROR_AT_LINE
+AC_FUNC_MALLOC
 
 PKG_CHECK_MODULES([GLIB2], [glib-2.0])
 

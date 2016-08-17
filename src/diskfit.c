@@ -50,10 +50,6 @@ typedef struct {
 static GTree *CANDIDATES = NULL;
 static unsigned long FAK_LST = 0u;
 
-inline static int fitem_cmp(const void *a, const void *b) {
-    return a == b ? 0 : (a < b ? -1 : 1);
-}
-
 inline static gint cand_cmp(gconstpointer a, gconstpointer b) {
 
     if (((FITEMLIST *) a)->total < ((FITEMLIST *) b)->total) {
@@ -105,15 +101,7 @@ static void addCandidate(FITEM *array, int len, guint64 total,
             }
 
             memmove(l->entries, array, sizeof(FITEM) * len);
-
-            qsort(l->entries, l->size, sizeof(FITEM), fitem_cmp);
-
-            if (g_tree_lookup(CANDIDATES, l) == NULL) {
-                g_tree_insert(CANDIDATES, l, l->entries);
-            } else {
-                g_free(l->entries);
-                g_free(l);
-            }
+            g_tree_insert(CANDIDATES, l, l->entries);
 
         } else {
             g_free(l);
@@ -125,6 +113,10 @@ static void print_copy() {
     fprintf(stderr, PACKAGE_STRING " - (c) 2016 by Heiko Sch\u00e4fer <heiko@rangun.de>\n");
 }
 
+inline static int fitem_cmp(const void *a, const void *b) {
+    return strcasecmp(((FITEM *)a)->fname, ((FITEM *)b)->fname);
+}
+
 static gboolean display_candidates(gpointer key, gpointer value, gpointer data) {
 
     DISP_PARAMS *p = (DISP_PARAMS *)data;
@@ -132,6 +124,8 @@ static gboolean display_candidates(gpointer key, gpointer value, gpointer data) 
     size_t i;
 
     fprintf(stdout, "[ ");
+
+    qsort(((FITEMLIST *)key)->entries, ((FITEMLIST *)key)->size, sizeof(FITEM), fitem_cmp);
 
     for (i = 0; i < ((FITEMLIST *)key)->size; ++i) {
 
