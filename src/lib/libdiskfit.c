@@ -40,7 +40,7 @@ typedef struct {
     unsigned long it_tot;
 } PERMUTE_ARGS;
 
-inline static void swap(FITEM *restrict a, FITEM *restrict b) {
+static inline void swap(FITEM *restrict a, FITEM *restrict b) {
 
     if (a != b) {
 
@@ -52,7 +52,7 @@ inline static void swap(FITEM *restrict a, FITEM *restrict b) {
     }
 }
 
-static void add(const PERMUTE_ARGS *const pa) {
+static inline void add(const PERMUTE_ARGS *const pa) {
 
     int k = pa->length;
     uint64_t s = pa->total;
@@ -105,7 +105,7 @@ static void permute(const PERMUTE_ARGS *const pa) {
     }
 }
 
-inline static unsigned long fak(int n) {
+static inline unsigned long fak(int n) {
 
     int i;
     unsigned long fak;

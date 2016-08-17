@@ -50,32 +50,36 @@ typedef struct {
 static GTree *CANDIDATES = NULL;
 static unsigned long FAK_LST = 0u;
 
-inline static int fitem_cmp(const void *a, const void *b) {
-    return a == b ? 0 : (a < b ? -1 : 1);
+static inline int fitem_cmp(const void *a, const void *b) {
+    register const FITEM *x = a, *y = b;
+    return x->fsize == y->fsize ? (x->fname == y->fname ? 0 : (x->fname < y->fname ? -1 : 1)) :
+               (x->fsize < y->fsize ? -1 : 0);
 }
 
-inline static gint cand_cmp(gconstpointer a, gconstpointer b) {
+static inline gint cand_cmp(gconstpointer a, gconstpointer b) {
 
-    if (((FITEMLIST *) a)->total < ((FITEMLIST *) b)->total) {
+    register const FITEMLIST *x = (FITEMLIST *)a, *y = (FITEMLIST *)b;
+
+    if (x->total < y->total) {
         return -1;
     }
 
-    if (((FITEMLIST *) a)->total > ((FITEMLIST *) b)->total) {
+    if (x->total > y->total) {
         return 1;
     }
 
     return 0;
 }
 
-inline static gint eq(gconstpointer a, gconstpointer b) {
+static inline gint eq(gconstpointer a, gconstpointer b) {
 
-    const FITEMLIST *x = (FITEMLIST *)a, *y = (FITEMLIST *)b;
+    register const FITEMLIST *x = (FITEMLIST *)a, *y = (FITEMLIST *)b;
 
     if (x->size == y->size && x->total == y->total) {
 
-        size_t i;
-        const size_t min = (x->size < y->size ? x->size : y->size) - 1u;
-        gboolean dup = FALSE;
+        register size_t i;
+        register const size_t min = (x->size < y->size ? x->size : y->size) - 1u;
+        register gboolean dup = FALSE;
 
         for (i = 0; !(dup |= x->entries[i].fname == y->entries[i].fname) && i < min; ++i);
 
@@ -124,7 +128,7 @@ static void print_copy() {
     fprintf(stderr, PACKAGE_STRING " - (c) 2016 by Heiko Sch\u00e4fer <heiko@rangun.de>\n");
 }
 
-inline static int fitem_ccmp(const void *a, const void *b) {
+static inline int fitem_ccmp(const void *a, const void *b) {
     return strcasecmp(((FITEM *)a)->fname, ((FITEM *)b)->fname);
 }
 
