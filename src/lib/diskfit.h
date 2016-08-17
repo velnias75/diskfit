@@ -17,6 +17,9 @@
  * along with DiskFit.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifndef DISKFIT_H
+#define DISKFIT_H
+
 #define DISKFIT_EXPORT __attribute__((visibility ("default")))
 
 #ifdef _cplusplus
@@ -42,5 +45,7 @@ extern "C" {
 #ifdef _cplusplus
 }
 #endif
+
+#endif /* DISKFIT_H */
 
 // kate: indent-mode cstyle; indent-width 4; replace-tabs on; 
