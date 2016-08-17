@@ -77,7 +77,7 @@ inline static gint eq(gconstpointer a, gconstpointer b) {
 
     const FITEMLIST *x = (FITEMLIST *)a, *y = (FITEMLIST *)b;
 
-    if (!(x->size == y->size || x->total == y->total)) {
+    if (x->size == y->size && x->total == y->total) {
 
         size_t i;
         const size_t min = x->size < y->size ? x->size : y->size;
@@ -88,7 +88,7 @@ inline static gint eq(gconstpointer a, gconstpointer b) {
         return dup ? 0 : cand_cmp(a, b);
     }
 
-    return 0;
+    return cand_cmp(a, b);
 }
 
 static void addCandidate(FITEM *array, int len, uint64_t total,
