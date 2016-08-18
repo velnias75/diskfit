@@ -49,6 +49,8 @@ typedef struct {
 
 static GTree *CANDIDATES = NULL;
 static unsigned long FAK_LST = 0u;
+static FITEM *CHUNK = NULL;
+static size_t CHUNKSIZE = 0u;
 
 static inline int fitem_cmp(const void *a, const void *b) {
     register const FITEM *x = a, *y = b;
@@ -96,7 +98,8 @@ static void addCandidate(FITEM *array, int len, guint64 total,
 
     if (l) {
 
-        l->entries = g_malloc(len * sizeof(FITEM));
+        CHUNK = l->entries = CHUNK != NULL ? CHUNK : g_malloc(CHUNKSIZE * sizeof(FITEM));
+
         l->size = len;
         l->total = total;
 
@@ -113,8 +116,8 @@ static void addCandidate(FITEM *array, int len, guint64 total,
 
             if (g_tree_lookup(CANDIDATES, l) == NULL) {
                 g_tree_insert(CANDIDATES, l, l->entries);
+                CHUNK = NULL;
             } else {
-                g_free(l->entries);
                 g_free(l);
             }
 
@@ -176,9 +179,12 @@ int main(int argc, char *argv[]) {
                 "to strip directories.\n");
 
         return EXIT_FAILURE;
+
     } else if (argc == 2) {
+
         fprintf(stdout, "%" G_GUINT64_FORMAT "\n", diskfit_target_size(argv[1]));
         return EXIT_SUCCESS;
+
     } else {
 
         int i;
@@ -227,6 +233,7 @@ int main(int argc, char *argv[]) {
             }
 
             if (nitems > 0) {
+
                 if (nitems < p.we_wordc) {
 
                     FITEM *f = g_realloc(fitems, nitems * sizeof(FITEM));
@@ -239,12 +246,16 @@ int main(int argc, char *argv[]) {
                 fprintf(stderr, "\033[sCalculating: 0%% ...\033[u");
 
                 CANDIDATES = g_tree_new(eq);
+                CHUNKSIZE  = nitems;
 
                 diskfit_get_candidates(fitems, nitems, tsize, tg, addCandidate);
+
                 DISP_PARAMS p = { getenv("DISKFIT_STRIPDIR") != NULL, tg };
 
                 g_tree_foreach(CANDIDATES, display_candidates, &p);
                 g_tree_destroy(CANDIDATES);
+
+                g_free(CHUNK);
             }
 
             g_free(fitems);
