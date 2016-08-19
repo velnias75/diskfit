@@ -50,10 +50,12 @@ typedef struct {
     guint64 tg;
 } DISP_PARAMS;
 
-static GTree *CANDIDATES = NULL;
-static unsigned long FAK_LST = 0u;
-static FITEM *CHUNK = NULL;
-static size_t CHUNKSIZE = 0u;
+typedef struct {
+    GTree *candidates;
+    unsigned long fak_last;
+    FITEM *chunk;
+    size_t chunksize;
+} CAND_PARAMS;
 
 static inline gint cand_cmp(gconstpointer a, gconstpointer b) {
 
@@ -107,14 +109,15 @@ static inline void insertion_sort(FITEM *a, size_t n) {
 }
 
 static void addCandidate(FITEM *array, int len, guint64 total,
-                         const unsigned long it_cur, const unsigned long it_tot) {
+                         const unsigned long it_cur, const unsigned long it_tot, void *user_data) {
 
-    FITEMLIST *l = g_malloc(sizeof(FITEMLIST));
+    FITEMLIST    *l = g_malloc(sizeof(FITEMLIST));
+    CAND_PARAMS *cp = user_data;
 
     if (l) {
 
-        CHUNK = l->entries = CHUNK != NULL ? CHUNK : g_malloc(CHUNKSIZE * sizeof(FITEM));
-
+        cp->chunk = l->entries = cp->chunk != NULL ? cp->chunk :
+                                 g_malloc(cp->chunksize * sizeof(FITEM));
         l->size = len;
         l->total = total;
 
@@ -122,16 +125,16 @@ static void addCandidate(FITEM *array, int len, guint64 total,
 
             const unsigned long fc = (it_cur * 100u) / it_tot;
 
-            if (fc != FAK_LST) {
-                fprintf(stderr, "\033[sCalculating: %lu%% ...\033[u", (FAK_LST = fc));
+            if (fc != cp->fak_last) {
+                fprintf(stderr, "\033[sCalculating: %lu%% ...\033[u", (cp->fak_last = fc));
             }
 
             memmove(l->entries, array, sizeof(FITEM) * len);
             insertion_sort(l->entries, l->size);
 
-            if (g_tree_lookup(CANDIDATES, l) == NULL) {
-                g_tree_insert(CANDIDATES, l, l->entries);
-                CHUNK = NULL;
+            if (g_tree_lookup(cp->candidates, l) == NULL) {
+                g_tree_insert(cp->candidates, l, l->entries);
+                cp->chunk = NULL;
             } else {
                 g_free(l);
             }
@@ -143,7 +146,7 @@ static void addCandidate(FITEM *array, int len, guint64 total,
 }
 
 static void print_copy() {
-    fprintf(stderr, PACKAGE_STRING " - (c) 2016 by Heiko Sch\u00e4fer <heiko@rangun.de>\n");
+    fprintf(stderr, PACKAGE_STRING " - \u00a9 2016 by Heiko Sch\u00e4fer <heiko@rangun.de>\n");
 }
 
 static inline int fitem_ccmp(const void *a, const void *b) {
@@ -191,7 +194,7 @@ int main(int argc, char *argv[]) {
         fprintf(stdout, "\nUsage: %s (cd|dvd|target_size[G|M|K]) [file_pattern...]\n\n", argv[0]);
         fprintf(stdout, "Omitting the file_pattern will just print the target size in Bytes.\n\n");
         fprintf(stdout, "Set environment variable DISKFIT_STRIPDIR to any value "
-                "to strip directories.\n");
+                "to strip directories from the output.\n");
 
         return EXIT_FAILURE;
 
@@ -260,17 +263,16 @@ int main(int argc, char *argv[]) {
 
                 fprintf(stderr, "\033[sCalculating: 0%% ...\033[u");
 
-                CANDIDATES = g_tree_new(eq);
-                CHUNKSIZE  = nitems;
+                CAND_PARAMS cp = { g_tree_new(eq), 0u, NULL, nitems };
 
-                diskfit_get_candidates(fitems, nitems, tsize, tg, addCandidate);
+                diskfit_get_candidates(fitems, nitems, tsize, tg, addCandidate, &cp);
 
-                DISP_PARAMS p = { getenv("DISKFIT_STRIPDIR") != NULL, tg };
+                DISP_PARAMS dp = { getenv("DISKFIT_STRIPDIR") != NULL, tg };
 
-                g_tree_foreach(CANDIDATES, display_candidates, &p);
-                g_tree_destroy(CANDIDATES);
+                g_tree_foreach(cp.candidates, display_candidates, &dp);
+                g_tree_destroy(cp.candidates);
 
-                g_free(CHUNK);
+                g_free(cp.chunk);
             }
 
             g_free(fitems);

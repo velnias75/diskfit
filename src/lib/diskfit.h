@@ -35,12 +35,13 @@ extern "C" {
     } FITEM;
 
     typedef void (*INSERTER)(FITEM *fitems, int length, uint64_t total,
-                             const unsigned long it_cur, const unsigned long it_tot);
+                             const unsigned long it_cur, const unsigned long it_tot,
+                             void *user_data);
 
     DISKFIT_EXPORT int diskfit_hrsize(uint64_t size, char *out, size_t len);
     DISKFIT_EXPORT uint64_t diskfit_target_size(const char *tgs);
     DISKFIT_EXPORT void diskfit_get_candidates(FITEM *fitems, size_t length, uint64_t total,
-            uint64_t target, INSERTER inserter);
+            uint64_t target, INSERTER inserter, void *user_data);
 
 #ifdef _cplusplus
 }

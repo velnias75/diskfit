@@ -38,6 +38,7 @@ typedef struct {
     INSERTER adder;
     unsigned long *it_cur;
     unsigned long it_tot;
+    void *user_data;
 } PERMUTE_ARGS;
 
 static inline void swap(FITEM *restrict a, FITEM *restrict b) {
@@ -62,7 +63,7 @@ static inline void add(const PERMUTE_ARGS *const pa) {
     ++(*pa->it_cur);
 
     if (pa->adder && s != 0 && s <= pa->target) {
-        pa->adder(pa->array, k, s, *pa->it_cur, pa->it_tot);
+        pa->adder(pa->array, k, s, *pa->it_cur, pa->it_tot, pa->user_data);
     }
 }
 
@@ -118,7 +119,7 @@ static inline unsigned long fak(int n) {
 }
 
 void diskfit_get_candidates(FITEM *array, size_t length, uint64_t total, uint64_t target,
-                            INSERTER adder) {
+                            INSERTER adder, void *user_data) {
 
     if (array) {
 
@@ -126,12 +127,14 @@ void diskfit_get_candidates(FITEM *array, size_t length, uint64_t total, uint64_
 
             unsigned long cur = 0ul;
 
-            const PERMUTE_ARGS pa = { array, length, total, target, adder, &cur, fak(length) };
+            const PERMUTE_ARGS pa = { array, length, total, target, adder, &cur, fak(length),
+                                      user_data
+                                    };
 
             permute(&pa);
 
         } else {
-            adder(array, length, total, 1, 1);
+            adder(array, length, total, 1, 1, user_data);
         }
     }
 }
