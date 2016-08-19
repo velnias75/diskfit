@@ -74,6 +74,24 @@ static inline gboolean includes(const FITEM *first1, const FITEM *last1,
     return TRUE;
 }
 
+static inline void insertion_sort(FITEM *a, size_t n) {
+
+    register size_t i = 1u;
+
+    for (; i < n; ++i) {
+
+        FITEM h = { a[i].fname, a[i].fsize };
+        register size_t j = i;
+
+        while (j > 0u && a[j - 1u].fname > h.fname) {
+            memmove(&(a[j]), &(a[j - 1u]), sizeof(FITEM));
+            --j;
+        }
+
+        memmove(&(a[j]), &h, sizeof(FITEM));
+    }
+}
+
 static gboolean create_rev_list(gpointer key, gpointer value, gpointer data) {
 
     GList **l = (GList **)data;
@@ -86,6 +104,9 @@ static gboolean create_rev_list(gpointer key, gpointer value, gpointer data) {
 
         register const FITEMLIST *min = p->size < k->size ? p : k;
         register const FITEMLIST *max = p->size < k->size ? k : p;
+
+        insertion_sort(p->entries, p->size);
+        insertion_sort(k->entries, k->size);
 
         if (!includes(max->entries, max->entries + max->size,
                       min->entries, min->entries + min->size)) {
@@ -117,24 +138,6 @@ static inline gint cand_cmp(gconstpointer a, gconstpointer b) {
     return 0;
 }
 
-static inline void insertion_sort(FITEM *a, size_t n) {
-
-    register size_t i = 1u;
-
-    for (; i < n; ++i) {
-
-        FITEM h = { a[i].fname, a[i].fsize };
-        register size_t j = i;
-
-        while (j > 0u && a[j - 1u].fname > h.fname) {
-            memmove(&(a[j]), &(a[j - 1u]), sizeof(FITEM));
-            --j;
-        }
-
-        memmove(&(a[j]), &h, sizeof(FITEM));
-    }
-}
-
 static void addCandidate(FITEM *array, int len, guint64 total,
                          const unsigned long it_cur, const unsigned long it_tot, void *user_data) {
 
@@ -157,7 +160,6 @@ static void addCandidate(FITEM *array, int len, guint64 total,
             }
 
             memmove(l->entries, array, sizeof(FITEM) * len);
-            insertion_sort(l->entries, l->size);
 
             if (g_tree_lookup(cp->candidates, l) == NULL) {
                 g_tree_insert(cp->candidates, l, l->entries);
