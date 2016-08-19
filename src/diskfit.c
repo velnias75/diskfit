@@ -58,6 +58,26 @@ static inline int fitem_cmp(const void *a, const void *b) {
                (x->fsize < y->fsize ? -1 : 0);
 }
 
+static inline void insertion_sort(FITEM *a, size_t n) {
+
+    register size_t i = 2u;
+
+    for (; i < n; ++i) {
+
+        FITEM h;
+        register size_t j = i;
+
+        memmove(&h, &(a[i]), sizeof(FITEM));
+
+        while (j > 1u && fitem_cmp(&(a[j - 1]), &h) == 1) {
+            memmove(&(a[j]), &(a[j - 1]), sizeof(FITEM));
+            --j;
+        }
+
+        memmove(&(a[j]), &h, sizeof(FITEM));
+    }
+}
+
 static inline gint cand_cmp(gconstpointer a, gconstpointer b) {
 
     register const FITEMLIST *x = (FITEMLIST *)a, *y = (FITEMLIST *)b;
@@ -112,7 +132,7 @@ static void addCandidate(FITEM *array, int len, guint64 total,
             }
 
             memmove(l->entries, array, sizeof(FITEM) * len);
-            qsort(l->entries, l->size, sizeof(FITEM), fitem_cmp);
+            insertion_sort(l->entries, l->size);
 
             if (g_tree_lookup(CANDIDATES, l) == NULL) {
                 g_tree_insert(CANDIDATES, l, l->entries);
