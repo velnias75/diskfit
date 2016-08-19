@@ -36,6 +36,9 @@
 
 #include <glib.h>
 
+#define FITEM_CMP(a, b) ((a)->fsize == (b)->fsize ? ((a)->fname == (b)->fname ? 0 : \
+                         ((a)->fname < (b)->fname ? -1 : 1)) : ((a)->fsize < (b)->fsize ? -1 : 0))
+
 typedef struct {
     FITEM *entries;
     size_t size;
@@ -51,32 +54,6 @@ static GTree *CANDIDATES = NULL;
 static unsigned long FAK_LST = 0u;
 static FITEM *CHUNK = NULL;
 static size_t CHUNKSIZE = 0u;
-
-static inline int fitem_cmp(const void *a, const void *b) {
-    register const FITEM *x = a, *y = b;
-    return x->fsize == y->fsize ? (x->fname == y->fname ? 0 : (x->fname < y->fname ? -1 : 1)) :
-               (x->fsize < y->fsize ? -1 : 0);
-}
-
-static inline void insertion_sort(FITEM *a, size_t n) {
-
-    register size_t i = 2u;
-
-    for (; i < n; ++i) {
-
-        FITEM h;
-        register size_t j = i;
-
-        memmove(&h, &(a[i]), sizeof(FITEM));
-
-        while (j > 1u && fitem_cmp(&(a[j - 1]), &h) == 1) {
-            memmove(&(a[j]), &(a[j - 1]), sizeof(FITEM));
-            --j;
-        }
-
-        memmove(&(a[j]), &h, sizeof(FITEM));
-    }
-}
 
 static inline gint cand_cmp(gconstpointer a, gconstpointer b) {
 
@@ -109,6 +86,24 @@ static inline gint eq(gconstpointer a, gconstpointer b) {
     }
 
     return cand_cmp(a, b);
+}
+
+static inline void insertion_sort(FITEM *a, size_t n) {
+
+    register size_t i = 1u;
+
+    for (; i < n; ++i) {
+
+        FITEM h = { a[i].fname, a[i].fsize };
+        register size_t j = i;
+
+        while (j > 0u && (FITEM_CMP(&(a[j - 1u]), &h) == 1)) {
+            memmove(&(a[j]), &(a[j - 1u]), sizeof(FITEM));
+            --j;
+        }
+
+        memmove(&(a[j]), &h, sizeof(FITEM));
+    }
 }
 
 static void addCandidate(FITEM *array, int len, guint64 total,
