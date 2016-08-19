@@ -57,37 +57,64 @@ typedef struct {
     size_t chunksize;
 } CAND_PARAMS;
 
+static inline gboolean includes(const FITEM *first1, const FITEM *last1,
+                                const FITEM *first2, const FITEM *last2) {
+
+    for (; first2 != last2; ++first1) {
+
+        if (first1 == last1 || first2->fname < first1->fname) {
+            return FALSE;
+        }
+
+        if (!(first1->fname < first2->fname)) {
+            ++first2;
+        }
+    }
+
+    return TRUE;
+}
+
+static gboolean create_rev_list(gpointer key, gpointer value, gpointer data) {
+
+    GList **l = (GList **)data;
+    FITEMLIST *k = key;
+    FITEMLIST *p = g_list_nth_data(*l, 0);
+
+    (void)value;
+
+    if (p && k) {
+
+        register const FITEMLIST *min = p->size < k->size ? p : k;
+        register const FITEMLIST *max = p->size < k->size ? k : p;
+
+        if (!includes(max->entries, max->entries + max->size,
+                      min->entries, min->entries + min->size)) {
+            *l = g_list_prepend(*l, k);
+        } else {
+            g_free(k->entries);
+            g_free(k);
+        }
+
+    } else if (!*l) {
+        *l = g_list_prepend(*l, k);
+    }
+
+    return FALSE;
+}
+
 static inline gint cand_cmp(gconstpointer a, gconstpointer b) {
 
     register const FITEMLIST *x = (FITEMLIST *)a, *y = (FITEMLIST *)b;
 
     if (x->total < y->total) {
-        return -1;
-    }
-
-    if (x->total > y->total) {
         return 1;
     }
 
-    return 0;
-}
-
-static inline gint eq(gconstpointer a, gconstpointer b) {
-
-    register const FITEMLIST *x = (FITEMLIST *)a, *y = (FITEMLIST *)b;
-
-    if (x->size == y->size && x->total == y->total) {
-
-        register size_t i;
-        register const size_t min = (x->size < y->size ? x->size : y->size) - 1u;
-        register gboolean dup = FALSE;
-
-        for (i = 0; !(dup |= x->entries[i].fname == y->entries[i].fname) && i < min; ++i);
-
-        return dup ? 0 : cand_cmp(a, b);
+    if (x->total > y->total) {
+        return -1;
     }
 
-    return cand_cmp(a, b);
+    return 0;
 }
 
 static inline void insertion_sort(FITEM *a, size_t n) {
@@ -99,7 +126,7 @@ static inline void insertion_sort(FITEM *a, size_t n) {
         FITEM h = { a[i].fname, a[i].fsize };
         register size_t j = i;
 
-        while (j > 0u && (FITEM_CMP(&(a[j - 1u]), &h) == 1)) {
+        while (j > 0u && a[j - 1u].fname > h.fname) {
             memmove(&(a[j]), &(a[j - 1u]), sizeof(FITEM));
             --j;
         }
@@ -153,7 +180,7 @@ static inline int fitem_ccmp(const void *a, const void *b) {
     return strcasecmp(((FITEM *)a)->fname, ((FITEM *)b)->fname);
 }
 
-static gboolean display_candidates(gpointer key, gpointer value, gpointer data) {
+static void display_candidates(gpointer key, gpointer data) {
 
     DISP_PARAMS *p = (DISP_PARAMS *)data;
     char hrs[1024];
@@ -179,10 +206,8 @@ static gboolean display_candidates(gpointer key, gpointer value, gpointer data) 
     fprintf(stdout, "] = %s (%.3f%%)\n", hrs,
             (float)(((FITEMLIST *)key)->total * 100u) / (float)p->tg);
 
-    g_free(value);
+    g_free(((FITEMLIST *)key)->entries);
     g_free(key);
-
-    return FALSE;
 }
 
 int main(int argc, char *argv[]) {
@@ -263,15 +288,19 @@ int main(int argc, char *argv[]) {
 
                 fprintf(stderr, "\033[sCalculating: 0%% ...\033[u");
 
-                CAND_PARAMS cp = { g_tree_new(eq), 0u, NULL, nitems };
+                CAND_PARAMS cp = { g_tree_new(cand_cmp), 0u, NULL, nitems };
 
                 diskfit_get_candidates(fitems, nitems, tsize, tg, addCandidate, &cp);
 
                 DISP_PARAMS dp = { getenv("DISKFIT_STRIPDIR") != NULL, tg };
 
-                g_tree_foreach(cp.candidates, display_candidates, &dp);
-                g_tree_destroy(cp.candidates);
+                GList *rl = NULL;
 
+                g_tree_foreach(cp.candidates, create_rev_list, &rl);
+                g_list_foreach(rl, display_candidates, &dp);
+
+                g_list_free(rl);
+                g_tree_destroy(cp.candidates);
                 g_free(cp.chunk);
             }
 
