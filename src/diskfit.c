@@ -134,6 +134,14 @@ static inline gint cand_cmp(gconstpointer a, gconstpointer b) {
         return -1;
     }
 
+    if(x->size < y->size) {
+        return 1;
+    }
+
+    if(x->size > y->size) {
+        return -1;
+    }
+
     return 0;
 }
 
