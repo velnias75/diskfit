@@ -100,13 +100,12 @@ static gboolean create_rev_list(gpointer key, gpointer value, gpointer data) {
 
     (void)value;
 
-    if (p && k) {
+    insertion_sort(k->entries, k->size);
+
+    if (p) {
 
         register const FITEMLIST *min = p->size < k->size ? p : k;
         register const FITEMLIST *max = p->size < k->size ? k : p;
-
-        insertion_sort(p->entries, p->size);
-        insertion_sort(k->entries, k->size);
 
         if (!includes(max->entries, max->entries + max->size,
                       min->entries, min->entries + min->size)) {
