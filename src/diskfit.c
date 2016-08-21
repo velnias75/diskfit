@@ -92,36 +92,6 @@ static inline void insertion_sort(FITEM *a, size_t n) {
     }
 }
 
-static gboolean create_rev_list(gpointer key, gpointer value, gpointer data) {
-
-    GList **l = (GList **)data;
-    FITEMLIST *k = key;
-    FITEMLIST *p = g_list_nth_data(*l, 0);
-
-    (void)value;
-
-    insertion_sort(k->entries, k->size);
-
-    if (p) {
-
-        register const FITEMLIST *min = p->size < k->size ? p : k;
-        register const FITEMLIST *max = p->size < k->size ? k : p;
-
-        if (!includes(max->entries, max->entries + max->size,
-                      min->entries, min->entries + min->size)) {
-            *l = g_list_prepend(*l, k);
-        } else {
-            g_free(k->entries);
-            g_free(k);
-        }
-
-    } else if (!*l) {
-        *l = g_list_prepend(*l, k);
-    }
-
-    return FALSE;
-}
-
 static inline gint cand_cmp(gconstpointer a, gconstpointer b) {
 
     register const FITEMLIST *x = (FITEMLIST *)a, *y = (FITEMLIST *)b;
@@ -143,6 +113,49 @@ static inline gint cand_cmp(gconstpointer a, gconstpointer b) {
     }
 
     return 0;
+}
+
+static gint include_cmp(gconstpointer a, gconstpointer b) {
+
+    register const FITEMLIST *x = a, *y = b;
+
+    const gint c = cand_cmp(x, y);
+
+    if (c < 0) {
+
+        register const FITEMLIST *min = x->size < y->size ? x : y;
+        register const FITEMLIST *max = x->size < y->size ? y : x;
+
+        return includes(max->entries, max->entries + max->size,
+                        min->entries, min->entries + min->size) ? 0 : c;
+    }
+
+    return c;
+}
+
+static gboolean create_rev_list(gpointer key, gpointer value, gpointer data) {
+
+    GSList **l = (GSList **)data;
+    FITEMLIST *k = key;
+
+    (void)value;
+
+    insertion_sort(k->entries, k->size);
+
+    if (*l) {
+
+        if (g_slist_find_custom(*l, k, include_cmp) == NULL) {
+            *l = g_slist_prepend(*l, k);
+        } else {
+            g_free(k->entries);
+            g_free(k);
+        }
+
+    } else {
+        *l = g_slist_prepend(*l, k);
+    }
+
+    return FALSE;
 }
 
 static void addCandidate(FITEM *array, int len, guint64 total,
@@ -303,12 +316,12 @@ int main(int argc, char *argv[]) {
 
                 DISP_PARAMS dp = { getenv("DISKFIT_STRIPDIR") != NULL, tg };
 
-                GList *rl = NULL;
+                GSList *rl = NULL;
 
                 g_tree_foreach(cp.candidates, create_rev_list, &rl);
-                g_list_foreach(rl, display_candidates, &dp);
+                g_slist_foreach(rl, display_candidates, &dp);
 
-                g_list_free(rl);
+                g_slist_free(rl);
                 g_tree_destroy(cp.candidates);
                 g_free(cp.chunk);
             }
