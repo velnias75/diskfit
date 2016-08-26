@@ -277,7 +277,7 @@ int main(int argc, char *argv[]) {
 
         print_copy();
 
-        fprintf(stdout, "\nUsage: %s (target_profile|target_size[G|M|K]) [file_pattern...]\n\n", argv[0]);
+        fprintf(stdout, "\nUsage: %s [target_profile|target_size[G|M|K]] [file_pattern...]\n\n", argv[0]);
         fprintf(stdout, "Omitting the file_pattern will just print the target size in Bytes.\n\n");
         fprintf(stdout, "Set environment variable DISKFIT_STRIPDIR to any value "
                 "to strip directories from the output.\n\nTarget profiles:\n");
