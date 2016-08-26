@@ -38,8 +38,10 @@ extern "C" {
                              const unsigned long it_cur, const unsigned long it_tot,
                              void *user_data);
 
+    typedef int (*TARGETMAPPER)(const char *tgs, uint64_t *size, void *user_data);
+
     DISKFIT_EXPORT int diskfit_hrsize(uint64_t size, char *out, size_t len);
-    DISKFIT_EXPORT uint64_t diskfit_target_size(const char *tgs);
+    DISKFIT_EXPORT uint64_t diskfit_target_size(const char *tgs, TARGETMAPPER tmp, void *user_data);
     DISKFIT_EXPORT void diskfit_get_candidates(FITEM *fitems, size_t length, uint64_t total,
             uint64_t target, INSERTER inserter, void *user_data);
 

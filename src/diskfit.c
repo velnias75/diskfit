@@ -194,11 +194,24 @@ static void addCandidate(FITEM *array, int len, guint64 total,
     }
 }
 
+static int tmap(const char *tgs, uint64_t *size, void *user_data) {
+
+    GKeyFile *rc = user_data;
+
+    if (rc && g_key_file_has_group(rc, tgs) && g_key_file_has_key(rc, tgs, "size", NULL)) {
+        *size = g_key_file_get_uint64(rc, tgs, "size", NULL);
+        return 1;
+    }
+
+    return 0;
+}
+
 static void print_copy() {
     fprintf(stderr, PACKAGE_STRING " - \u00a9 2016 by Heiko Sch\u00e4fer <heiko@rangun.de>\n");
 }
 
-static inline int fitem_ccmp(const void *a, const void *b) {
+static inline gint fitem_ccmp(gconstpointer a, gconstpointer b, gpointer d) {
+    (void)d;
     return strcasecmp(((FITEM *)a)->fname, ((FITEM *)b)->fname);
 }
 
@@ -210,14 +223,15 @@ static void display_candidates(gpointer key, gpointer data) {
 
     fprintf(stdout, "[ ");
 
-    qsort(((FITEMLIST *)key)->entries, ((FITEMLIST *)key)->size, sizeof(FITEM), fitem_ccmp);
+    g_qsort_with_data(((FITEMLIST *)key)->entries, ((FITEMLIST *)key)->size, sizeof(FITEM),
+                      fitem_ccmp, NULL);
 
     for (i = 0; i < ((FITEMLIST *)key)->size; ++i) {
 
-        char *bc = p->stripdir ? g_strdup(((FITEMLIST *)key)->entries[i].fname) :
+        char *bc = p->stripdir ? g_path_get_basename(((FITEMLIST *)key)->entries[i].fname) :
                    ((FITEMLIST *)key)->entries[i].fname;
 
-        fprintf(stdout, "'%s' ", p->stripdir ? basename(bc) : bc);
+        fprintf(stdout, "'%s' ", bc);
 
         if (p->stripdir) {
             g_free(bc);
@@ -234,20 +248,80 @@ static void display_candidates(gpointer key, gpointer data) {
 
 int main(int argc, char *argv[]) {
 
+    GKeyFile *rc = g_key_file_new();
+    gchar **env = g_get_environ();
+    gchar *rcfile = NULL;
+
+    const gchar *sd[] = {
+        "./",
+        g_strconcat(g_environ_getenv(env, "HOME"), "/", NULL),
+        SYSCONFDIR,
+        NULL
+    };
+
+    const gboolean has_rc = g_key_file_load_from_dirs(rc, ".diskfitrc", sd, &rcfile,
+                            G_KEY_FILE_NONE, NULL) || g_key_file_load_from_dirs(rc, "diskfitrc",
+                                    sd, &rcfile, G_KEY_FILE_NONE, NULL);
+
+#ifndef NDEBUG
+
+    if (has_rc) {
+        fprintf(stderr, "[DEBUG] targets read from %s\n", rcfile);
+    } else {
+        fprintf(stderr, "[DEBUG] no targets read\n");
+    }
+
+#endif
+
     if (argc < 2) {
 
         print_copy();
 
-        fprintf(stdout, "\nUsage: %s (cd|dvd|target_size[G|M|K]) [file_pattern...]\n\n", argv[0]);
+        fprintf(stdout, "\nUsage: %s (target_profile|target_size[G|M|K]) [file_pattern...]\n\n", argv[0]);
         fprintf(stdout, "Omitting the file_pattern will just print the target size in Bytes.\n\n");
         fprintf(stdout, "Set environment variable DISKFIT_STRIPDIR to any value "
-                "to strip directories from the output.\n");
+                "to strip directories from the output.\n\nTarget profiles:\n");
+
+        if (has_rc) {
+
+            char hr_ptg[1024];
+            gsize pi, plength;
+            gchar **profiles = g_key_file_get_groups(rc, &plength);
+
+            for (pi = 0; pi < plength; ++pi) {
+                diskfit_hrsize(diskfit_target_size(profiles[pi], tmap, rc), hr_ptg, 1023);
+                fprintf(stdout, "\t%s = %s\n", profiles[pi], hr_ptg);
+            }
+
+            g_strfreev(profiles);
+
+        } else {
+
+            char hr_dvd[1024], hr_cd[1024];
+
+            diskfit_hrsize(diskfit_target_size("dvd", NULL, NULL), hr_dvd, 1023);
+            diskfit_hrsize(diskfit_target_size("cd", NULL, NULL), hr_cd, 1023);
+
+            fprintf(stdout, "\tdvd = %s\n\tcd = %s\n", hr_dvd, hr_cd);
+        }
+
+        g_strfreev(env);
+        g_free((void *)sd[1]);
+        g_key_file_free(rc);
+        g_free(rcfile);
 
         return EXIT_FAILURE;
 
     } else if (argc == 2) {
 
-        fprintf(stdout, "%" G_GUINT64_FORMAT "\n", diskfit_target_size(argv[1]));
+        fprintf(stdout, "%" G_GUINT64_FORMAT "\n", diskfit_target_size(argv[1], tmap,
+                has_rc ? rc : NULL));
+
+        g_strfreev(env);
+        g_free((void *)sd[1]);
+        g_key_file_free(rc);
+        g_free(rcfile);
+
         return EXIT_SUCCESS;
 
     } else {
@@ -256,7 +330,8 @@ int main(int argc, char *argv[]) {
         size_t j, nitems = 0;
         FITEM *fitems = NULL;
         guint64 tsize = 0u;
-        const guint64 tg = diskfit_target_size(argc > 1 ? argv[1] : "dvd");
+        const guint64 tg = diskfit_target_size(argc > 1 ? argv[1] : "dvd", tmap,
+                                               has_rc ? rc : NULL);
         char hr_tot[1024], hr_tg[1024];
         wordexp_t p;
 
@@ -314,7 +389,7 @@ int main(int argc, char *argv[]) {
 
                 diskfit_get_candidates(fitems, nitems, tsize, tg, addCandidate, &cp);
 
-                DISP_PARAMS dp = { getenv("DISKFIT_STRIPDIR") != NULL, tg };
+                DISP_PARAMS dp = { g_environ_getenv(env, "DISKFIT_STRIPDIR") != NULL, tg };
 
                 GSList *rl = NULL;
 
@@ -338,6 +413,11 @@ int main(int argc, char *argv[]) {
         diskfit_hrsize(tg, hr_tg, 1023);
         fprintf(stderr, "Total size: %s - Target size: %s\n", hr_tot, hr_tg);
     }
+
+    g_strfreev(env);
+    g_free((void *)sd[1]);
+    g_key_file_free(rc);
+    g_free(rcfile);
 
     return EXIT_SUCCESS;
 }

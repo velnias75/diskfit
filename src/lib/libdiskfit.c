@@ -159,45 +159,52 @@ int diskfit_hrsize(uint64_t s, char *out, size_t len) {
     return -1;
 }
 
-uint64_t diskfit_target_size(const char *tgs) {
+uint64_t diskfit_target_size(const char *tgs, TARGETMAPPER tmp, void *user_data) {
 
     if (tgs) {
 
-        char suff = '\0';
-        double fac = 1.0;
+        uint64_t t = 0u;
 
-        if ((tgs[0] == 'D' || tgs[0] == 'd') && (tgs[1] == 'V' || tgs[1] == 'v') &&
-                (tgs[2] == 'D' || tgs[2] == 'd')) {
-            return 4705954816u;
-        }
+        if (tmp && tmp(tgs, &t, user_data)) {
+            return t;
+        } else {
 
-        if ((tgs[0] == 'C' || tgs[0] == 'c') && (tgs[1] == 'D' || tgs[1] == 'd')) {
-            return 734003200u;
-        }
+            char suff = '\0';
+            double fac = 1.0;
 
-        double b = 0.0;
-
-        if (sscanf(tgs, "%lf%c", &b, &suff) != EOF) {
-
-            switch (suff) {
-                case 'G':
-                case 'g':
-                    fac = 1073741824.0;
-                    break;
-
-                case 'M':
-                case 'm':
-                    fac = 1048576.0;
-                    break;
-
-                case 'K':
-                case 'k':
-                    fac = 1024.0;
-                    break;
+            if ((tgs[0] == 'D' || tgs[0] == 'd') && (tgs[1] == 'V' || tgs[1] == 'v') &&
+                    (tgs[2] == 'D' || tgs[2] == 'd')) {
+                return 4705954816u;
             }
-        }
 
-        return b * fac;
+            if ((tgs[0] == 'C' || tgs[0] == 'c') && (tgs[1] == 'D' || tgs[1] == 'd')) {
+                return 734003200u;
+            }
+
+            double b = 0.0;
+
+            if (sscanf(tgs, "%lf%c", &b, &suff) != EOF) {
+
+                switch (suff) {
+                    case 'G':
+                    case 'g':
+                        fac = 1073741824.0;
+                        break;
+
+                    case 'M':
+                    case 'm':
+                        fac = 1048576.0;
+                        break;
+
+                    case 'K':
+                    case 'k':
+                        fac = 1024.0;
+                        break;
+                }
+            }
+
+            return b * fac;
+        }
     }
 
     return 0u;

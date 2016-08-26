@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ([2.69])
-AC_INIT([DiskFit], [1.0.3], [heiko@rangun.de])
+AC_INIT([DiskFit], [1.0.4], [heiko@rangun.de])
 AC_CONFIG_SRCDIR([src/diskfit.c])
 AC_CONFIG_HEADERS([config.h])
 
@@ -37,7 +37,7 @@ AC_CHECK_FUNCS([strcasecmp])
 AC_FUNC_ERROR_AT_LINE
 AC_FUNC_MALLOC
 
-PKG_CHECK_MODULES([GLIB2], [glib-2.0])
+PKG_CHECK_MODULES([GLIB2], [glib-2.0 >= 2.6])
 
 AC_LANG_POP([C])
 
