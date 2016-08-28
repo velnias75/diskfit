@@ -239,7 +239,7 @@ static void display_candidates(gpointer key, gpointer data) {
     }
 
     diskfit_hrsize(((FITEMLIST *)key)->total, hrs, 1023);
-    fprintf(stdout, "] = %s (%.3f%%)\n", hrs,
+    fprintf(stdout, "]:%zu = %s (%.3f%%)\n", ((FITEMLIST *)key)->size, hrs,
             (float)(((FITEMLIST *)key)->total * 100u) / (float)p->tg);
 
     g_free(((FITEMLIST *)key)->entries);
@@ -327,7 +327,7 @@ int main(int argc, char *argv[]) {
     } else {
 
         int i;
-        size_t j, nitems = 0;
+        size_t nitems = 0u;
         FITEM *fitems = NULL;
         guint64 tsize = 0u;
         const guint64 tg = diskfit_target_size(argc > 1 ? argv[1] : "dvd", tmap,
@@ -350,7 +350,10 @@ int main(int argc, char *argv[]) {
 
         if ((fitems = g_malloc(p.we_wordc * sizeof(FITEM)))) {
 
-            for (j = 0; j < p.we_wordc; ++j) {
+            size_t j = 0u;
+            gboolean trunc = FALSE;
+
+            for (; j < p.we_wordc; ++j) {
 
                 struct stat st;
 
@@ -358,18 +361,26 @@ int main(int argc, char *argv[]) {
 
                     if (S_ISREG(st.st_mode)) {
 
-                        tsize += st.st_size;
+                        if ((tsize += st.st_size) <= tg || nitems < 20) {
 
-                        fitems[nitems].fname = p.we_wordv[j];
-                        fitems[nitems].fsize = st.st_size;
+                            fitems[nitems].fname = p.we_wordv[j];
+                            fitems[nitems].fsize = st.st_size;
 
-                        ++nitems;
+                            ++nitems;
+
+                        } else {
+                            trunc = TRUE;
+                        }
                     }
 
                 } else {
                     error(0, errno, "%s@%s:%d: %s", __FUNCTION__, __FILE__, __LINE__,
                           p.we_wordv[j]);
                 }
+            }
+
+            if (trunc) {
+                fprintf(stderr, "WARNING: truncated number of files to first 20 matches.\n");
             }
 
             if (nitems > 0) {
@@ -411,7 +422,7 @@ int main(int argc, char *argv[]) {
 
         diskfit_hrsize(tsize, hr_tot, 1023);
         diskfit_hrsize(tg, hr_tg, 1023);
-        fprintf(stderr, "Total size: %s - Target size: %s\n", hr_tot, hr_tg);
+        fprintf(stderr, "Total size: %s - Target size: %s - Total number of files: %zu\n", hr_tot, hr_tg, nitems);
     }
 
     g_strfreev(env);

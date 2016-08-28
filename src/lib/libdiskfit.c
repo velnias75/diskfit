@@ -111,6 +111,8 @@ static inline uint64_t fak(int n) {
     int i;
     uint64_t fak;
 
+    if (n > 20) return -1;
+
     for (i = 1, fak = 1; i <= n; ++i) {
         fak *= i;
     }
