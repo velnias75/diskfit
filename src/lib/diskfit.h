@@ -35,7 +35,7 @@ extern "C" {
     } FITEM;
 
     typedef void (*INSERTER)(FITEM *fitems, int length, uint64_t total,
-                             const unsigned long it_cur, const unsigned long it_tot,
+                             const uint64_t it_cur, const uint64_t it_tot,
                              void *user_data);
 
     typedef int (*TARGETMAPPER)(const char *tgs, uint64_t *size, void *user_data);

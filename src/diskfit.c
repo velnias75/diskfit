@@ -52,7 +52,7 @@ typedef struct {
 
 typedef struct {
     GTree *candidates;
-    unsigned long fak_last;
+    guint64 fak_last;
     FITEM *chunk;
     size_t chunksize;
 } CAND_PARAMS;
@@ -159,7 +159,7 @@ static gboolean create_rev_list(gpointer key, gpointer value, gpointer data) {
 }
 
 static void addCandidate(FITEM *array, int len, guint64 total,
-                         const unsigned long it_cur, const unsigned long it_tot, void *user_data) {
+                         const uint64_t it_cur, const uint64_t it_tot, void *user_data) {
 
     FITEMLIST    *l = g_malloc(sizeof(FITEMLIST));
     CAND_PARAMS *cp = user_data;
@@ -173,10 +173,10 @@ static void addCandidate(FITEM *array, int len, guint64 total,
 
         if (l->entries) {
 
-            const unsigned long fc = (it_cur * 100u) / it_tot;
+            const guint64 fc = (it_cur * 100u) / it_tot;
 
             if (fc != cp->fak_last) {
-                fprintf(stderr, "\033[sCalculating: %lu%% ...\033[u", (cp->fak_last = fc));
+                fprintf(stderr, "\033[sCalculating: %" G_GUINT64_FORMAT "%% ...\033[u", (cp->fak_last = fc));
             }
 
             memmove(l->entries, array, sizeof(FITEM) * len);

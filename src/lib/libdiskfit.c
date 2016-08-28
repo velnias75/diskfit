@@ -106,10 +106,10 @@ static void permute(const PERMUTE_ARGS *const pa) {
     }
 }
 
-static inline unsigned long fak(int n) {
+static inline uint64_t fak(int n) {
 
     int i;
-    unsigned long fak;
+    uint64_t fak;
 
     for (i = 1, fak = 1; i <= n; ++i) {
         fak *= i;
@@ -125,7 +125,7 @@ void diskfit_get_candidates(FITEM *array, size_t length, uint64_t total, uint64_
 
         if (total > target) {
 
-            unsigned long cur = 0ul;
+            uint64_t cur = 0ul;
 
             const PERMUTE_ARGS pa = { array, length, total, target, adder, &cur, fak(length),
                                       user_data
