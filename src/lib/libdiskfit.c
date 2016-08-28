@@ -36,8 +36,8 @@ typedef struct {
     uint64_t total;
     uint64_t target;
     INSERTER adder;
-    unsigned long *it_cur;
-    unsigned long it_tot;
+    uint64_t *it_cur;
+    uint64_t it_tot;
     void *user_data;
 } PERMUTE_ARGS;
 
