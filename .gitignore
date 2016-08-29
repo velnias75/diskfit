@@ -23,3 +23,5 @@ stamp-h1
 *.la
 .kdev4/
 diskfit.kdev4
+diskfit
+diskfit.bc

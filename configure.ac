@@ -2,12 +2,13 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ([2.69])
-AC_INIT([DiskFit], [1.0.6], [heiko@rangun.de])
+AC_INIT([DiskFit], [1.0.10], [heiko@rangun.de])
 AC_CONFIG_SRCDIR([src/diskfit.c])
 AC_CONFIG_HEADERS([config.h])
 
 LT_INIT
 AM_INIT_AUTOMAKE([foreign no-dist-gzip dist-xz])
+AM_MAINTAINER_MODE
 AC_CONFIG_MACRO_DIR([m4])
 
 AC_SYS_LARGEFILE
@@ -38,6 +39,7 @@ AC_FUNC_ERROR_AT_LINE
 AC_FUNC_MALLOC
 
 PKG_CHECK_MODULES([GLIB2], [glib-2.0 >= 2.6])
+PKG_CHECK_VAR([COMPLETIONSDIR], [bash-completion], [completionsdir])
 
 AC_LANG_POP([C])
 
