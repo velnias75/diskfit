@@ -4,15 +4,19 @@ ACLOCAL_AMFLAGS = -Im4
 
 AM_DISTCHECK_CONFIGURE_FLAGS = --with-bash-completion-dir=no
 
-completionsdir = $(bashcompdir)
-
 doc_DATA = README.md
-completions_DATA = diskfit
 sysconf_DATA = diskfitrc
+
+if INSTALL_BASHCOMP
+completionsdir = $(bashcompdir)
+dist_completions_DATA = diskfit
+endif
 
 EXTRA_DIST = $(doc_DATA) $(sysconf_DATA) diskfit.bc.in
 
-DISTCLEANFILES = $(completions_DATA)
+DISTCLEANFILES = $(dist_completions_DATA)
 
+if INSTALL_BASHCOMP
 diskfit: $(top_srcdir)/diskfit.bc.in
 	$(AM_V_GEN)$(SED) -e 's|@bindir[@]|$(bindir)|g' < $< > $@
+endif

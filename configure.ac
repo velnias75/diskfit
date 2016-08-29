@@ -63,9 +63,9 @@ AM_CONDITIONAL([INSTALL_BASHCOMP], [ false ])
 
 AC_ARG_WITH([bash-completion-dir], [AS_HELP_STRING([--with-bash-completion-dir=DIR],
   [directory to install bash completion files into])],
-  [ if test "x$with_bashcompletiondir" != "xno"; then
+  [ if test "x$with_bash_completion_dir" != "xno"; then
       AM_CONDITIONAL([INSTALL_BASHCOMP], [ true ])
-      bashcompdir="$with_bashcompletiondir"
+      bashcompdir="$with_bash_completion_dir"
         fi ],
   [  AM_CONDITIONAL([INSTALL_BASHCOMP], [ true ])
      PKG_CHECK_VAR(bashcompdir, [bash-completion], [completionsdir], ,
