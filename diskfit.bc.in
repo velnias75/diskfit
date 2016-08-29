@@ -1,6 +1,6 @@
 _diskfit() {
 
-    local cur prev opts
+    local cur opts
 
     COMPREPLY=( )
 

@@ -2,7 +2,9 @@ SUBDIRS = src
 
 ACLOCAL_AMFLAGS = -Im4
 
-completionsdir = $(COMPLETIONSDIR)
+AM_DISTCHECK_CONFIGURE_FLAGS = --with-bashcompletiondir=no
+
+completionsdir = $(bashcompdir)
 
 doc_DATA = README.md
 completions_DATA = diskfit
