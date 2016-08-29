@@ -2,7 +2,7 @@ SUBDIRS = src
 
 ACLOCAL_AMFLAGS = -Im4
 
-AM_DISTCHECK_CONFIGURE_FLAGS = --with-bashcompletiondir=no
+AM_DISTCHECK_CONFIGURE_FLAGS = --with-bash-completion-dir=no
 
 completionsdir = $(bashcompdir)
 

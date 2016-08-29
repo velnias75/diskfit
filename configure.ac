@@ -61,7 +61,7 @@ AS_VAR_IF([$1], [""], [$5], [$4])dnl
 
 AM_CONDITIONAL([INSTALL_BASHCOMP], [ false ])
 
-AC_ARG_WITH([bashcompletiondir], [AS_HELP_STRING([--with-bashcompletiondir=DIR],
+AC_ARG_WITH([bash-completion-dir], [AS_HELP_STRING([--with-bash-completion-dir=DIR],
   [directory to install bash completion files into])],
   [ if test "x$with_bashcompletiondir" != "xno"; then
       AM_CONDITIONAL([INSTALL_BASHCOMP], [ true ])
