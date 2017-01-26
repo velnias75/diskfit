@@ -159,7 +159,7 @@ static gboolean create_rev_list(gpointer key, gpointer value, gpointer data) {
 }
 
 static void addCandidate(FITEM *array, int len, guint64 total,
-                         const mpz_t *it_cur, const mpz_t *it_tot, void *user_data) {
+                         mpz_t *const it_cur, mpz_t *const it_tot, void *user_data) {
 
     FITEMLIST    *l = g_malloc(sizeof(FITEMLIST));
     CAND_PARAMS *cp = user_data;
