@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 by Heiko Schäfer <heiko@rangun.de>
+ * Copyright 2016-2017 by Heiko Schäfer <heiko@rangun.de>
  *
  * This file is part of DiskFit.
  *
@@ -36,8 +36,8 @@ typedef struct {
     uint64_t total;
     uint64_t target;
     INSERTER adder;
-    uint64_t *it_cur;
-    uint64_t it_tot;
+    mpz_t **it_cur;
+    mpz_t *it_tot;
     void *user_data;
 } PERMUTE_ARGS;
 
@@ -60,10 +60,10 @@ static inline void add(const PERMUTE_ARGS *const pa) {
 
     while (k >= 0 && (s -= pa->array[--k].fsize) > pa->target);
 
-    ++(*pa->it_cur);
+    mpz_add_ui((mpz_ptr) * (pa->it_cur), (mpz_srcptr) * (pa->it_cur), 1UL);
 
     if (pa->adder && s != 0 && s <= pa->target) {
-        pa->adder(pa->array, k, s, *pa->it_cur, pa->it_tot, pa->user_data);
+        pa->adder(pa->array, k, s, *(pa->it_cur), pa->it_tot, pa->user_data);
     }
 }
 
@@ -106,20 +106,6 @@ static void permute(const PERMUTE_ARGS *const pa) {
     }
 }
 
-static inline uint64_t fak(int n) {
-
-    int i;
-    uint64_t fak;
-
-    if (n > 20) return -1;
-
-    for (i = 1, fak = 1; i <= n; ++i) {
-        fak *= i;
-    }
-
-    return fak;
-}
-
 void diskfit_get_candidates(FITEM *array, size_t length, uint64_t total, uint64_t target,
                             INSERTER adder, void *user_data) {
 
@@ -127,16 +113,33 @@ void diskfit_get_candidates(FITEM *array, size_t length, uint64_t total, uint64_
 
         if (total > target) {
 
-            uint64_t cur = 0ul;
+            mpz_t cur, *p_cur = &cur;
+            mpz_t it_tot;
 
-            const PERMUTE_ARGS pa = { array, length, total, target, adder, &cur, fak(length),
+            mpz_init(it_tot);
+            mpz_init_set_ui(cur, 0UL);
+            mpz_fac_ui(it_tot, length);
+
+            const PERMUTE_ARGS pa = { array, length, total, target, adder, &p_cur, &it_tot,
                                       user_data
                                     };
-
             permute(&pa);
 
+            mpz_clear(cur);
+            mpz_clear(it_tot);
+
         } else {
-            adder(array, length, total, 1, 1, user_data);
+
+            mpz_t it_cur;
+            mpz_t it_tot;
+
+            mpz_init_set_ui(it_cur, 1UL);
+            mpz_init_set_ui(it_tot, 1UL);
+
+            adder(array, length, total, &it_cur, &it_tot, user_data);
+
+            mpz_clear(it_cur);
+            mpz_clear(it_tot);
         }
     }
 }

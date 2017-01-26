@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 by Heiko Schäfer <heiko@rangun.de>
+ * Copyright 2016-2017 by Heiko Schäfer <heiko@rangun.de>
  *
  * This file is part of DiskFit.
  *
@@ -29,13 +29,15 @@ extern "C" {
 #include <stdint.h>
 #include <stddef.h>
 
+#include <gmp.h>
+
     typedef struct {
         char *fname;
         uint64_t fsize;
     } FITEM;
 
     typedef void (*INSERTER)(FITEM *fitems, int length, uint64_t total,
-                             const uint64_t it_cur, const uint64_t it_tot,
+                             const mpz_t *it_cur, const mpz_t *it_tot,
                              void *user_data);
 
     typedef int (*TARGETMAPPER)(const char *tgs, uint64_t *size, void *user_data);

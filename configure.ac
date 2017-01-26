@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ([2.69])
-AC_INIT([DiskFit], [1.0.10], [heiko@rangun.de])
+AC_INIT([DiskFit], [1.0.11], [heiko@rangun.de])
 AC_CONFIG_SRCDIR([src/diskfit.c])
 AC_CONFIG_HEADERS([config.h])
 
@@ -19,9 +19,11 @@ AC_LANG_PUSH([C])
 
 # Checks for libraries.
 LT_LIB_M
+AC_CHECK_LIB(gmp, main, , [AC_MSG_ERROR([Please install gmp - the GNU multiple precision arithmetic library])])
 
 # Checks for header files.
 AC_CHECK_HEADERS([stdlib.h string.h unistd.h stddef.h])
+AC_CHECK_HEADERS([gmp.h], , [AC_MSG_ERROR([Please install gmp - the GNU multiple precision arithmetic library])])
 AC_CHECK_HEADER_STDBOOL
 
 # Checks for typedefs, structures, and compiler characteristics.
@@ -39,7 +41,6 @@ AC_FUNC_ERROR_AT_LINE
 AC_FUNC_MALLOC
 
 PKG_CHECK_MODULES([GLIB2], [glib-2.0 >= 2.6])
-
 
 # backwards compat with older pkg-config
 # - pull in AC_DEFUN from pkg.m4

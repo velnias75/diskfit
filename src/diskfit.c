@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 by Heiko Schäfer <heiko@rangun.de>
+ * Copyright 2016-2017 by Heiko Schäfer <heiko@rangun.de>
  *
  * This file is part of DiskFit.
  *
@@ -52,7 +52,7 @@ typedef struct {
 
 typedef struct {
     GTree *candidates;
-    guint64 fak_last;
+    mpz_t *fak_last;
     FITEM *chunk;
     size_t chunksize;
 } CAND_PARAMS;
@@ -159,7 +159,7 @@ static gboolean create_rev_list(gpointer key, gpointer value, gpointer data) {
 }
 
 static void addCandidate(FITEM *array, int len, guint64 total,
-                         const uint64_t it_cur, const uint64_t it_tot, void *user_data) {
+                         const mpz_t *it_cur, const mpz_t *it_tot, void *user_data) {
 
     FITEMLIST    *l = g_malloc(sizeof(FITEMLIST));
     CAND_PARAMS *cp = user_data;
@@ -168,15 +168,22 @@ static void addCandidate(FITEM *array, int len, guint64 total,
 
         cp->chunk = l->entries = cp->chunk != NULL ? cp->chunk :
                                  g_malloc(cp->chunksize * sizeof(FITEM));
-        l->size = len;
+        l->size  = len;
         l->total = total;
 
         if (l->entries) {
 
-            const guint64 fc = (it_cur * 100u) / it_tot;
+            mpz_t fc, n;
 
-            if (fc != cp->fak_last) {
-                fprintf(stderr, "\033[sCalculating: %" G_GUINT64_FORMAT "%% ...\033[u", (cp->fak_last = fc));
+            mpz_init(fc);
+            mpz_init(n);
+
+            mpz_mul_ui(n, *it_cur, 100UL);
+            mpz_tdiv_q(fc, n, *it_tot);
+
+            if (mpz_cmp(fc, *(cp->fak_last))) {
+                mpz_set(*(cp->fak_last), fc);
+                gmp_fprintf(stderr, "\033[sCalculating: %Zd%% ...\033[u", *(cp->fak_last));
             }
 
             memmove(l->entries, array, sizeof(FITEM) * len);
@@ -187,6 +194,9 @@ static void addCandidate(FITEM *array, int len, guint64 total,
             } else {
                 g_free(l);
             }
+
+            mpz_clear(fc);
+            mpz_clear(n);
 
         } else {
             g_free(l);
@@ -207,7 +217,7 @@ static int tmap(const char *tgs, uint64_t *size, void *user_data) {
 }
 
 static void print_copy() {
-    fprintf(stderr, PACKAGE_STRING " - \u00a9 2016 by Heiko Sch\u00e4fer <heiko@rangun.de>\n");
+    fprintf(stderr, PACKAGE_STRING " - \u00a9 2016-2017 by Heiko Sch\u00e4fer <heiko@rangun.de>\n");
 }
 
 static inline gint fitem_ccmp(gconstpointer a, gconstpointer b, gpointer d) {
@@ -277,7 +287,8 @@ int main(int argc, char *argv[]) {
 
         print_copy();
 
-        fprintf(stdout, "\nUsage: %s [target_profile|target_size[G|M|K]] [file_pattern...]\n\n", argv[0]);
+        fprintf(stdout, "\nUsage: %s [target_profile|target_size[G|M|K]] [file_pattern...]\n\n",
+                argv[0]);
         fprintf(stdout, "Omitting the file_pattern will just print the target size in Bytes.\n\n");
         fprintf(stdout, "Set environment variable DISKFIT_STRIPDIR to any value "
                 "to strip directories from the output.\n\nTarget profiles:\n");
@@ -351,7 +362,6 @@ int main(int argc, char *argv[]) {
         if ((fitems = g_malloc(p.we_wordc * sizeof(FITEM)))) {
 
             size_t j = 0u;
-            gboolean trunc = FALSE;
 
             for (; j < p.we_wordc; ++j) {
 
@@ -361,26 +371,18 @@ int main(int argc, char *argv[]) {
 
                     if (S_ISREG(st.st_mode)) {
 
-                        if ((tsize += st.st_size) <= tg || nitems < 20) {
+                        tsize += st.st_size;
 
-                            fitems[nitems].fname = p.we_wordv[j];
-                            fitems[nitems].fsize = st.st_size;
+                        fitems[nitems].fname = p.we_wordv[j];
+                        fitems[nitems].fsize = st.st_size;
 
-                            ++nitems;
-
-                        } else {
-                            trunc = TRUE;
-                        }
+                        ++nitems;
                     }
 
                 } else {
                     error(0, errno, "%s@%s:%d: %s", __FUNCTION__, __FILE__, __LINE__,
                           p.we_wordv[j]);
                 }
-            }
-
-            if (trunc) {
-                fprintf(stderr, "WARNING: truncated number of files to first 20 matches.\n");
             }
 
             if (nitems > 0) {
@@ -396,9 +398,15 @@ int main(int argc, char *argv[]) {
 
                 fprintf(stderr, "\033[sCalculating: 0%% ...\033[u");
 
-                CAND_PARAMS cp = { g_tree_new(cand_cmp), 0u, NULL, nitems };
+                mpz_t last_fac;
+
+                mpz_init(last_fac);
+
+                CAND_PARAMS cp = { g_tree_new(cand_cmp), &last_fac, NULL, nitems };
 
                 diskfit_get_candidates(fitems, nitems, tsize, tg, addCandidate, &cp);
+
+                mpz_clear(last_fac);
 
                 DISP_PARAMS dp = { g_environ_getenv(env, "DISKFIT_STRIPDIR") != NULL, tg };
 
@@ -422,7 +430,8 @@ int main(int argc, char *argv[]) {
 
         diskfit_hrsize(tsize, hr_tot, 1023);
         diskfit_hrsize(tg, hr_tg, 1023);
-        fprintf(stderr, "Total size: %s - Target size: %s - Total number of files: %zu\n", hr_tot, hr_tg, nitems);
+        fprintf(stderr, "Total size: %s - Target size: %s - Total number of files: %zu\n", hr_tot,
+                hr_tg, nitems);
     }
 
     g_strfreev(env);
