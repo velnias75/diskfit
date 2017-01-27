@@ -346,7 +346,7 @@ int main(int argc, char *argv[]) {
             }
         }
 
-        if ((fitems = g_malloc(p.we_wordc * sizeof(DISKFIT_FITEM)))) {
+        if ((fitems = g_malloc_n(p.we_wordc, sizeof(DISKFIT_FITEM)))) {
 
             size_t j = 0u;
 
