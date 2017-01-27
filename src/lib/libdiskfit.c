@@ -56,14 +56,13 @@ static inline void swap(DISKFIT_FITEM *restrict a, DISKFIT_FITEM *restrict b) {
 
 static inline void add(const PERMUTE_ARGS *const pa) {
 
-    int k = pa->length;
+    int      k = pa->length;
     uint64_t s = pa->total;
 
     while (k >= 0 && (s -= pa->array[--k].fsize) > pa->target);
 
-    mpz_add_ui(pa->it_cur, pa->it_cur, 1UL);
-
     if (pa->adder && s != 0 && s <= pa->target) {
+        mpz_add_ui(pa->it_cur, pa->it_cur, 1UL);
         pa->adder(pa->array, k, s, pa->it_cur, pa->it_tot, pa->user_data);
     }
 }

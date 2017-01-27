@@ -52,10 +52,10 @@ typedef struct {
 } DISP_PARAMS;
 
 typedef struct {
-    GTree   *candidates;
-    mpz_ptr  fak_last;
-    mpz_ptr  fc;
-    mpz_ptr  n;
+    GTree         *candidates;
+    mpz_ptr        fak_last;
+    mpz_ptr        fc;
+    mpz_ptr        n;
     DISKFIT_FITEM *chunk;
     size_t chunksize;
 } CAND_PARAMS;
@@ -120,12 +120,11 @@ static inline gint cand_cmp(gconstpointer a, gconstpointer b) {
 
 static gint include_cmp(gconstpointer a, gconstpointer b) {
 
-    register const FITEMLIST *x = a, *y = b;
-
-    const gint c = cand_cmp(x, y);
+    const gint c = cand_cmp(a, b);
 
     if (c < 0) {
 
+        register const FITEMLIST *x = a, *y = b;
         register const FITEMLIST *min = x->size < y->size ? x : y;
         register const FITEMLIST *max = x->size < y->size ? y : x;
 
@@ -171,20 +170,24 @@ static void addCandidate(DISKFIT_FITEM *array, int len, guint64 total,
         CAND_PARAMS *cp = user_data;
 
         cp->chunk = l->entries = cp->chunk != NULL ? cp->chunk :
-                                 g_malloc_n(cp->chunksize, sizeof(DISKFIT_FITEM));
+                                 g_try_malloc_n(cp->chunksize, sizeof(DISKFIT_FITEM));
 
         if (l->entries) {
 
-            l->size  = len;
-            l->total = total;
-
-            mpz_mul_ui(cp->n, it_cur, 100UL);
-            mpz_tdiv_q(cp->fc, cp->n, it_tot);
+            if (len < 20) {
+                mpz_set_ui(cp->fc, (mpz_get_ui(it_cur) * 100u) / mpz_get_ui(it_tot));
+            } else {
+                mpz_mul_ui(cp->n, it_cur, 100UL);
+                mpz_tdiv_q(cp->fc, cp->n, it_tot);
+            }
 
             if (mpz_cmp(cp->fc, cp->fak_last)) {
                 mpz_set(cp->fak_last, cp->fc);
                 gmp_fprintf(stderr, "\033[sCalculating: %Zd%% ...\033[u", cp->fak_last);
             }
+
+            l->size  = len;
+            l->total = total;
 
             memmove(l->entries, array, sizeof(DISKFIT_FITEM) * len);
 
@@ -356,7 +359,7 @@ int main(int argc, char *argv[]) {
             }
         }
 
-        if ((fitems = g_malloc_n(p.we_wordc, sizeof(DISKFIT_FITEM)))) {
+        if ((fitems = g_try_malloc_n(p.we_wordc, sizeof(DISKFIT_FITEM)))) {
 
             size_t j = 0u;
 
@@ -386,7 +389,7 @@ int main(int argc, char *argv[]) {
 
                 if (nitems < p.we_wordc) {
 
-                    DISKFIT_FITEM *f = g_realloc(fitems, nitems * sizeof(DISKFIT_FITEM));
+                    DISKFIT_FITEM *f = g_try_realloc_n(fitems, nitems, sizeof(DISKFIT_FITEM));
 
                     if (f && f != fitems) {
                         fitems = f;
@@ -397,9 +400,9 @@ int main(int argc, char *argv[]) {
 
                 mpz_t last_fac, fc, n;
 
-                mpz_init(last_fac);
-                mpz_init(fc);
-                mpz_init(n);
+                mpz_init2(last_fac, 128);
+                mpz_init2(fc, 128);
+                mpz_init2(n, 128);
 
                 CAND_PARAMS cp = { g_tree_new(cand_cmp), last_fac, fc, n, NULL, nitems };
 
