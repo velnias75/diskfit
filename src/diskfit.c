@@ -56,7 +56,6 @@ typedef struct {
     mpz_ptr  fak_last;
     mpz_ptr  fc;
     mpz_ptr  n;
-    size_t   chunksize;
 } CAND_PARAMS;
 
 static inline gboolean includes(const DISKFIT_FITEM *first1, const DISKFIT_FITEM *last1,
@@ -161,16 +160,13 @@ static gboolean create_rev_list(gpointer key, gpointer value, gpointer data) {
 static void addCandidate(DISKFIT_FITEM *array, int len, guint64 total,
                          mpz_ptr it_cur, mpz_srcptr const it_tot, void *user_data) {
 
-    FITEMLIST    *l = g_malloc(sizeof(FITEMLIST));
-    CAND_PARAMS *cp = user_data;
+    FITEMLIST *l = g_slice_new(FITEMLIST);
 
     if (l) {
 
-        l->entries = g_malloc(cp->chunksize * sizeof(DISKFIT_FITEM));
-        l->size  = len;
-        l->total = total;
+        if ((l->entries = g_slice_copy(len * sizeof(DISKFIT_FITEM), array))) {
 
-        if (l->entries) {
+            CAND_PARAMS *cp = user_data;
 
             mpz_mul_ui(cp->n, it_cur, 100UL);
             mpz_tdiv_q(cp->fc, cp->n, it_tot);
@@ -180,11 +176,13 @@ static void addCandidate(DISKFIT_FITEM *array, int len, guint64 total,
                 gmp_fprintf(stderr, "\033[sCalculating: %Zd%% ...\033[u", cp->fak_last);
             }
 
-            memmove(l->entries, array, sizeof(DISKFIT_FITEM) * len);
+            l->size  = len;
+            l->total = total;
+
             g_tree_replace(cp->candidates, l, l->entries);
 
         } else {
-            g_free(l);
+            g_slice_free(FITEMLIST, l);
         }
     }
 }
@@ -239,8 +237,10 @@ static void display_candidates(gpointer key, gpointer data) {
 }
 
 static inline void destroy_key(gpointer data) {
-    g_free(((FITEMLIST *)data)->entries);
-    g_free(data);
+    FITEMLIST *l = (FITEMLIST *)data;
+
+    g_slice_free1(l->size * sizeof(DISKFIT_FITEM), l->entries);
+    g_slice_free(FITEMLIST, l);
 }
 
 int main(int argc, char *argv[]) {
@@ -392,7 +392,7 @@ int main(int argc, char *argv[]) {
                 mpz_init(n);
 
                 CAND_PARAMS cp = { g_tree_new_full(cand_cmp, NULL, destroy_key, NULL),
-                                   last_fac, fc, n, nitems
+                                   last_fac, fc, n
                                  };
 
                 diskfit_get_candidates(fitems, nitems, tsize, tg, addCandidate, &cp);
