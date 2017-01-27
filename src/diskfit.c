@@ -179,7 +179,7 @@ static void addCandidate(DISKFIT_FITEM *array, int len, guint64 total,
             l->size  = len;
             l->total = total;
 
-            g_tree_replace(cp->candidates, l, l->entries);
+            g_tree_insert(cp->candidates, l, l->entries);
 
         } else {
             g_slice_free(FITEMLIST, l);
