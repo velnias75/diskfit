@@ -29,6 +29,7 @@
 #include <libgen.h>
 
 #include "diskfit.h"
+#include "fitem.h"
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -40,25 +41,25 @@
                          ((a)->fname < (b)->fname ? -1 : 1)) : ((a)->fsize < (b)->fsize ? -1 : 0))
 
 typedef struct {
-    FITEM *entries;
-    size_t size;
-    guint64 total;
+    DISKFIT_FITEM *entries;
+    size_t         size;
+    guint64        total;
 } FITEMLIST;
 
 typedef struct {
     gboolean stripdir;
-    guint64 tg;
+    guint64  tg;
 } DISP_PARAMS;
 
 typedef struct {
-    GTree *candidates;
-    mpz_t *fak_last;
-    FITEM *chunk;
-    size_t chunksize;
+    GTree         *candidates;
+    mpz_ptr        fak_last;
+    DISKFIT_FITEM *chunk;
+    size_t         chunksize;
 } CAND_PARAMS;
 
-static inline gboolean includes(const FITEM *first1, const FITEM *last1,
-                                const FITEM *first2, const FITEM *last2) {
+static inline gboolean includes(const DISKFIT_FITEM *first1, const DISKFIT_FITEM *last1,
+                                const DISKFIT_FITEM *first2, const DISKFIT_FITEM *last2) {
 
     for (; first2 != last2; ++first1) {
 
@@ -74,21 +75,21 @@ static inline gboolean includes(const FITEM *first1, const FITEM *last1,
     return TRUE;
 }
 
-static inline void insertion_sort(FITEM *a, size_t n) {
+static inline void insertion_sort(DISKFIT_FITEM *a, size_t n) {
 
     register size_t i = 1u;
 
     for (; i < n; ++i) {
 
-        FITEM h = { a[i].fname, a[i].fsize };
+        DISKFIT_FITEM h = { a[i].fname, a[i].fsize };
         register size_t j = i;
 
         while (j > 0u && a[j - 1u].fname > h.fname) {
-            memmove(&(a[j]), &(a[j - 1u]), sizeof(FITEM));
+            memmove(&(a[j]), &(a[j - 1u]), sizeof(DISKFIT_FITEM));
             --j;
         }
 
-        memmove(&(a[j]), &h, sizeof(FITEM));
+        memmove(&(a[j]), &h, sizeof(DISKFIT_FITEM));
     }
 }
 
@@ -158,8 +159,8 @@ static gboolean create_rev_list(gpointer key, gpointer value, gpointer data) {
     return FALSE;
 }
 
-static void addCandidate(FITEM *array, int len, guint64 total,
-                         mpz_t *const it_cur, mpz_t *const it_tot, void *user_data) {
+static void addCandidate(DISKFIT_FITEM *array, int len, guint64 total,
+                         mpz_ptr it_cur, mpz_srcptr const it_tot, void *user_data) {
 
     FITEMLIST    *l = g_malloc(sizeof(FITEMLIST));
     CAND_PARAMS *cp = user_data;
@@ -167,7 +168,7 @@ static void addCandidate(FITEM *array, int len, guint64 total,
     if (l) {
 
         cp->chunk = l->entries = cp->chunk != NULL ? cp->chunk :
-                                 g_malloc(cp->chunksize * sizeof(FITEM));
+                                 g_malloc(cp->chunksize * sizeof(DISKFIT_FITEM));
         l->size  = len;
         l->total = total;
 
@@ -178,15 +179,15 @@ static void addCandidate(FITEM *array, int len, guint64 total,
             mpz_init(fc);
             mpz_init(n);
 
-            mpz_mul_ui(n, *it_cur, 100UL);
-            mpz_tdiv_q(fc, n, *it_tot);
+            mpz_mul_ui(n, it_cur, 100UL);
+            mpz_tdiv_q(fc, n, it_tot);
 
-            if (mpz_cmp(fc, *(cp->fak_last))) {
-                mpz_set(*(cp->fak_last), fc);
-                gmp_fprintf(stderr, "\033[sCalculating: %Zd%% ...\033[u", *(cp->fak_last));
+            if (mpz_cmp(fc, cp->fak_last)) {
+                mpz_set(cp->fak_last, fc);
+                gmp_fprintf(stderr, "\033[sCalculating: %Zd%% ...\033[u", cp->fak_last);
             }
 
-            memmove(l->entries, array, sizeof(FITEM) * len);
+            memmove(l->entries, array, sizeof(DISKFIT_FITEM) * len);
 
             if (g_tree_lookup(cp->candidates, l) == NULL) {
                 g_tree_insert(cp->candidates, l, l->entries);
@@ -222,7 +223,7 @@ static void print_copy() {
 
 static inline gint fitem_ccmp(gconstpointer a, gconstpointer b, gpointer d) {
     (void)d;
-    return strcasecmp(((FITEM *)a)->fname, ((FITEM *)b)->fname);
+    return strcasecmp(((DISKFIT_FITEM *)a)->fname, ((DISKFIT_FITEM *)b)->fname);
 }
 
 static void display_candidates(gpointer key, gpointer data) {
@@ -233,7 +234,7 @@ static void display_candidates(gpointer key, gpointer data) {
 
     fprintf(stdout, "[ ");
 
-    g_qsort_with_data(((FITEMLIST *)key)->entries, ((FITEMLIST *)key)->size, sizeof(FITEM),
+    g_qsort_with_data(((FITEMLIST *)key)->entries, ((FITEMLIST *)key)->size, sizeof(DISKFIT_FITEM),
                       fitem_ccmp, NULL);
 
     for (i = 0; i < ((FITEMLIST *)key)->size; ++i) {
@@ -339,7 +340,7 @@ int main(int argc, char *argv[]) {
 
         int i;
         size_t nitems = 0u;
-        FITEM *fitems = NULL;
+        DISKFIT_FITEM *fitems = NULL;
         guint64 tsize = 0u;
         const guint64 tg = diskfit_target_size(argc > 1 ? argv[1] : "dvd", tmap,
                                                has_rc ? rc : NULL);
@@ -359,7 +360,7 @@ int main(int argc, char *argv[]) {
             }
         }
 
-        if ((fitems = g_malloc(p.we_wordc * sizeof(FITEM)))) {
+        if ((fitems = g_malloc(p.we_wordc * sizeof(DISKFIT_FITEM)))) {
 
             size_t j = 0u;
 
@@ -389,7 +390,7 @@ int main(int argc, char *argv[]) {
 
                 if (nitems < p.we_wordc) {
 
-                    FITEM *f = g_realloc(fitems, nitems * sizeof(FITEM));
+                    DISKFIT_FITEM *f = g_realloc(fitems, nitems * sizeof(DISKFIT_FITEM));
 
                     if (f && f != fitems) {
                         fitems = f;
@@ -402,7 +403,7 @@ int main(int argc, char *argv[]) {
 
                 mpz_init(last_fac);
 
-                CAND_PARAMS cp = { g_tree_new(cand_cmp), &last_fac, NULL, nitems };
+                CAND_PARAMS cp = { g_tree_new(cand_cmp), last_fac, NULL, nitems };
 
                 diskfit_get_candidates(fitems, nitems, tsize, tg, addCandidate, &cp);
 

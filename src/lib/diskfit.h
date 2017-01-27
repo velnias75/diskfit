@@ -31,21 +31,19 @@ extern "C" {
 
 #include <gmp.h>
 
-    typedef struct {
-        char *fname;
-        uint64_t fsize;
-    } FITEM;
+    typedef struct _diskfit_fitem DISKFIT_FITEM;
 
-    typedef void (*INSERTER)(FITEM *fitems, int length, uint64_t total,
-                             mpz_t *const it_cur, mpz_t *const it_tot,
-                             void *user_data);
+    typedef void (*DISKFIT_INSERTER)(DISKFIT_FITEM *fitems, int length, uint64_t total,
+                                     mpz_ptr const it_cur, mpz_srcptr const it_tot,
+                                     void *user_data);
 
-    typedef int (*TARGETMAPPER)(const char *tgs, uint64_t *size, void *user_data);
+    typedef int (*DISKFIT_TARGETMAPPER)(const char *tgs, uint64_t *size, void *user_data);
 
     DISKFIT_EXPORT int diskfit_hrsize(uint64_t size, char *out, size_t len);
-    DISKFIT_EXPORT uint64_t diskfit_target_size(const char *tgs, TARGETMAPPER tmp, void *user_data);
-    DISKFIT_EXPORT void diskfit_get_candidates(FITEM *fitems, size_t length, uint64_t total,
-            uint64_t target, INSERTER inserter, void *user_data);
+    DISKFIT_EXPORT uint64_t diskfit_target_size(const char *tgs, DISKFIT_TARGETMAPPER tmp,
+            void *user_data);
+    DISKFIT_EXPORT void diskfit_get_candidates(DISKFIT_FITEM *fitems, size_t length, uint64_t total,
+            uint64_t target, DISKFIT_INSERTER inserter, void *user_data);
 
 #ifdef _cplusplus
 }

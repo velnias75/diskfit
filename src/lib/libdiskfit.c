@@ -25,31 +25,32 @@
 #include <inttypes.h>
 
 #include "diskfit.h"
+#include "fitem.h"
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
 
 typedef struct {
-    FITEM *array;
-    size_t length;
-    uint64_t total;
-    uint64_t target;
-    INSERTER adder;
-    mpz_t **it_cur;
-    mpz_t *it_tot;
-    void *user_data;
+    DISKFIT_FITEM   *array;
+    size_t           length;
+    uint64_t         total;
+    uint64_t         target;
+    DISKFIT_INSERTER adder;
+    mpz_ptr          it_cur;
+    mpz_srcptr       it_tot;
+    void            *user_data;
 } PERMUTE_ARGS;
 
-static inline void swap(FITEM *restrict a, FITEM *restrict b) {
+static inline void swap(DISKFIT_FITEM *restrict a, DISKFIT_FITEM *restrict b) {
 
     if (a != b) {
 
-        FITEM h;
+        DISKFIT_FITEM h;
 
-        memmove(&h, b, sizeof(FITEM));
-        memmove(b,  a, sizeof(FITEM));
-        memmove(a, &h, sizeof(FITEM));
+        memmove(&h, b, sizeof(DISKFIT_FITEM));
+        memmove(b,  a, sizeof(DISKFIT_FITEM));
+        memmove(a, &h, sizeof(DISKFIT_FITEM));
     }
 }
 
@@ -60,10 +61,10 @@ static inline void add(const PERMUTE_ARGS *const pa) {
 
     while (k >= 0 && (s -= pa->array[--k].fsize) > pa->target);
 
-    mpz_add_ui((mpz_ptr) * (pa->it_cur), (mpz_srcptr) * (pa->it_cur), 1UL);
+    mpz_add_ui(pa->it_cur, pa->it_cur, 1UL);
 
     if (pa->adder && s != 0 && s <= pa->target) {
-        pa->adder(pa->array, k, s, *(pa->it_cur), pa->it_tot, pa->user_data);
+        pa->adder(pa->array, k, s, pa->it_cur, pa->it_tot, pa->user_data);
     }
 }
 
@@ -106,41 +107,33 @@ static void permute(const PERMUTE_ARGS *const pa) {
     }
 }
 
-void diskfit_get_candidates(FITEM *array, size_t length, uint64_t total, uint64_t target,
-                            INSERTER adder, void *user_data) {
-
+void diskfit_get_candidates(DISKFIT_FITEM *array, size_t length, uint64_t total, uint64_t target,
+                            DISKFIT_INSERTER adder, void *user_data) {
     if (array) {
+
+        mpz_t it_cur, it_tot;
 
         if (total > target) {
 
-            mpz_t cur, *p_cur = &cur;
-            mpz_t it_tot;
-
             mpz_init(it_tot);
-            mpz_init_set_ui(cur, 0UL);
+            mpz_init_set_ui(it_cur, 0UL);
             mpz_fac_ui(it_tot, length);
 
-            const PERMUTE_ARGS pa = { array, length, total, target, adder, &p_cur, &it_tot,
+            const PERMUTE_ARGS pa = { array, length, total, target, adder, it_cur, it_tot,
                                       user_data
                                     };
             permute(&pa);
 
-            mpz_clear(cur);
-            mpz_clear(it_tot);
-
         } else {
-
-            mpz_t it_cur;
-            mpz_t it_tot;
 
             mpz_init_set_ui(it_cur, 1UL);
             mpz_init_set_ui(it_tot, 1UL);
 
-            adder(array, length, total, &it_cur, &it_tot, user_data);
-
-            mpz_clear(it_cur);
-            mpz_clear(it_tot);
+            adder(array, length, total, it_cur, it_tot, user_data);
         }
+
+        mpz_clear(it_cur);
+        mpz_clear(it_tot);
     }
 }
 
@@ -164,7 +157,7 @@ int diskfit_hrsize(uint64_t s, char *out, size_t len) {
     return -1;
 }
 
-uint64_t diskfit_target_size(const char *tgs, TARGETMAPPER tmp, void *user_data) {
+uint64_t diskfit_target_size(const char *tgs, DISKFIT_TARGETMAPPER tmp, void *user_data) {
 
     if (tgs) {
 
