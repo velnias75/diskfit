@@ -57,7 +57,11 @@ typedef struct {
     mpz_ptr        fc;
     mpz_ptr        n;
     DISKFIT_FITEM *chunk;
-    size_t chunksize;
+    size_t         nitems;
+    const gint64   mono_start;
+    mpf_ptr        mono_itert;
+    mpf_ptr        it_cur_f;
+    mpf_ptr        it_eta_f;
 } CAND_PARAMS;
 
 static inline gboolean includes(const DISKFIT_FITEM *first1, const DISKFIT_FITEM *last1,
@@ -170,20 +174,43 @@ static void addCandidate(DISKFIT_FITEM *array, int len, guint64 total,
         CAND_PARAMS *cp = user_data;
 
         cp->chunk = l->entries = cp->chunk != NULL ? cp->chunk :
-                                 g_try_malloc_n(cp->chunksize, sizeof(DISKFIT_FITEM));
+                                 g_try_malloc_n(cp->nitems, sizeof(DISKFIT_FITEM));
 
         if (l->entries) {
 
-            if (len < 20) {
-                mpz_set_ui(cp->fc, (mpz_get_ui(it_cur) * 100u) / mpz_get_ui(it_tot));
+            if (cp->nitems < 20) {
+                mpz_set_d(cp->fc, (mpz_get_d(it_cur) * 100u) / mpz_get_d(it_tot));
             } else {
                 mpz_mul_ui(cp->n, it_cur, 100UL);
                 mpz_tdiv_q(cp->fc, cp->n, it_tot);
             }
 
-            if (mpz_cmp(cp->fc, cp->fak_last)) {
+            if (mpz_cmp(cp->fc, cp->fak_last) || !mpz_cmp_ui(it_cur, 1UL)) {
+
                 mpz_set(cp->fak_last, cp->fc);
-                gmp_fprintf(stderr, "\033[sCalculating: %Zd%% ...\033[u", cp->fak_last);
+                mpz_sub(cp->n, it_tot, it_cur);
+                mpf_set_z(cp->it_eta_f, cp->n);
+                mpf_set_z(cp->it_cur_f, it_cur);
+                mpf_set_ui(cp->mono_itert, g_get_monotonic_time() - cp->mono_start);
+                mpf_div(cp->mono_itert, cp->mono_itert, cp->it_cur_f);
+                mpf_mul(cp->mono_itert, cp->mono_itert, cp->it_eta_f);
+                mpf_div_ui(cp->mono_itert, cp->mono_itert, G_USEC_PER_SEC);
+
+                GDateTime *d  = g_date_time_new_now_local();
+                GDateTime *d2 = g_date_time_add_seconds(d, mpf_get_d(cp->mono_itert));
+                gchar     *s  = d2 ?
+                                g_date_time_format(
+                                    d2, "\033[sCalculating: %%Zd%%%% ... %X ETA\033[u")
+                                : "\033[sCalculating: %Zd%% ...\033[u";
+
+                gmp_fprintf(stderr, s, cp->fak_last);
+
+                g_date_time_unref(d);
+
+                if (d2) {
+                    g_date_time_unref(d2);
+                    g_free(s);
+                }
             }
 
             l->size  = len;
@@ -399,18 +426,27 @@ int main(int argc, char *argv[]) {
                 fprintf(stderr, "\033[sCalculating: 0%% ...\033[u");
 
                 mpz_t last_fac, fc, n;
+                mpf_t mono_itert, it_cur_f, it_eta_f;
 
                 mpz_init2(last_fac, 128);
                 mpz_init2(fc, 128);
                 mpz_init2(n, 128);
+                mpf_init(mono_itert);
+                mpf_init(it_cur_f);
+                mpf_init(it_eta_f);
 
-                CAND_PARAMS cp = { g_tree_new(cand_cmp), last_fac, fc, n, NULL, nitems };
+                CAND_PARAMS cp = { g_tree_new(cand_cmp), last_fac, fc, n, NULL, nitems,
+                                   g_get_monotonic_time(), mono_itert, it_cur_f, it_eta_f
+                                 };
 
                 diskfit_get_candidates(fitems, nitems, tsize, tg, addCandidate, &cp);
 
                 mpz_clear(last_fac);
                 mpz_clear(fc);
                 mpz_clear(n);
+                mpf_clear(mono_itert);
+                mpf_clear(it_cur_f);
+                mpf_clear(it_eta_f);
 
                 DISP_PARAMS dp = { g_environ_getenv(env, "DISKFIT_STRIPDIR") != NULL, tg };
 
