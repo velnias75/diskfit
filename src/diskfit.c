@@ -198,12 +198,12 @@ static void addCandidate(DISKFIT_FITEM *array, int len, guint64 total,
 
                 GDateTime *d  = g_date_time_new_now_local();
                 GDateTime *d2 = g_date_time_add_seconds(d, mpf_get_d(cp->mono_itert));
-                gchar     *s  = d2 ?
-                                g_date_time_format(
-                                    d2, "\033[sCalculating: %%Zd%%%% ... %X ETA\033[u")
-                                : "\033[sCalculating: %Zd%% ...\033[u";
+                gchar     *s  = d2 ? g_date_time_format(
+                                    d2,
+                                    "\033[sComputing for %%zu files: %%Zd%%%% ... ETA: %X\033[u") :
+                                "\033[sComputing for %zu files: %Zd%% ...\033[u";
 
-                gmp_fprintf(stderr, s, cp->fak_last);
+                gmp_fprintf(stderr, s, cp->nitems, cp->fak_last);
 
                 g_date_time_unref(d);
 
@@ -386,6 +386,8 @@ int main(int argc, char *argv[]) {
             }
         }
 
+        const gint64 mono_start = g_get_monotonic_time();
+
         if ((fitems = g_try_malloc_n(p.we_wordc, sizeof(DISKFIT_FITEM)))) {
 
             size_t j = 0u;
@@ -471,8 +473,13 @@ int main(int argc, char *argv[]) {
 
         diskfit_hrsize(tsize, hr_tot, 1023);
         diskfit_hrsize(tg, hr_tg, 1023);
-        fprintf(stderr, "Total size: %s - Target size: %s - Total number of files: %zu\n", hr_tot,
-                hr_tg, nitems);
+
+        const long mono_eta = (g_get_monotonic_time() - mono_start) / G_USEC_PER_SEC;
+
+        fprintf(stderr,
+                "Total size: %s - Target size: %s - Total number of files: %zu - "
+                "Time: %ld:%02ld:%02ld\n", hr_tot, hr_tg, nitems,
+                mono_eta / 3600L, mono_eta / 60L, mono_eta % 60L);
     }
 
     g_strfreev(env);
