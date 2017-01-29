@@ -93,17 +93,22 @@ static inline void insertion_sort(DISKFIT_FITEM *a, size_t n) {
         register size_t j = i;
 
         while (j > 0u && a[j - 1u].fname > h.fname) {
-            memmove(&(a[j]), &(a[j - 1u]), sizeof(DISKFIT_FITEM));
+
+            a[j].fname = a[j - 1u].fname;
+            a[j].fsize = a[j - 1u].fsize;
+
             --j;
         }
 
-        memmove(&(a[j]), &h, sizeof(DISKFIT_FITEM));
+        a[j].fname = h.fname;
+        a[j].fsize = h.fsize;
     }
 }
 
 static inline gint cand_cmp(gconstpointer a, gconstpointer b) {
 
-    register const FITEMLIST *x = (FITEMLIST *)a, *y = (FITEMLIST *)b;
+    register const FITEMLIST *x = (FITEMLIST *)a;
+    register const FITEMLIST *y = (FITEMLIST *)b;
 
     if (x->total < y->total) {
         return 1;
@@ -225,7 +230,17 @@ static void addCandidate(DISKFIT_FITEM *array, int len, guint64 total,
             l->size  = len;
             l->total = total;
 
-            memmove(l->entries, array, sizeof(DISKFIT_FITEM) * len);
+            DISKFIT_FITEM *le_beg = l->entries, *ar_beg = array;
+            DISKFIT_FITEM *const le_end = l->entries + len;
+
+            while (le_beg < le_end) {
+
+                le_beg->fname = ar_beg->fname;
+                le_beg->fsize = ar_beg->fsize;
+
+                ++le_beg;
+                ++ar_beg;
+            }
 
             if (g_tree_lookup(cp->candidates, l) == NULL) {
                 g_tree_insert(cp->candidates, l, l->entries);
@@ -257,8 +272,18 @@ static void print_copy() {
 }
 
 static inline gint fitem_ccmp(gconstpointer a, gconstpointer b, gpointer d) {
+
     (void)d;
-    return strcasecmp(((DISKFIT_FITEM *)a)->fname, ((DISKFIT_FITEM *)b)->fname);
+
+    gchar *a_utf_cf = g_utf8_casefold(((DISKFIT_FITEM *)a)->fname, -1);
+    gchar *b_utf_cf = g_utf8_casefold(((DISKFIT_FITEM *)b)->fname, -1);
+
+    const gint r = g_strcmp0(a_utf_cf, b_utf_cf);
+
+    g_free(a_utf_cf);
+    g_free(b_utf_cf);
+
+    return r;
 }
 
 static void display_candidates(gpointer key, gpointer data) {
@@ -309,6 +334,8 @@ int main(int argc, char *argv[]) {
     const gboolean has_rc = g_key_file_load_from_dirs(rc, ".diskfitrc", sd, &rcfile,
                             G_KEY_FILE_NONE, NULL) || g_key_file_load_from_dirs(rc, "diskfitrc",
                                     sd, &rcfile, G_KEY_FILE_NONE, NULL);
+
+    diskfit_set_mem_funcs(g_try_malloc, g_free);
 
 #ifndef NDEBUG
 

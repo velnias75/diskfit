@@ -20,8 +20,6 @@
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
-#include <strings.h>
 #include <inttypes.h>
 
 #include "diskfit.h"
@@ -42,15 +40,20 @@ typedef struct {
     void            *const user_data;
 } PERMUTE_ARGS;
 
+static DISKFIT_ALLOC _diskfit_mem_alloc = malloc;
+static DISKFIT_FREE  _diskfit_mem_free  = free;
+
 static inline void swap(DISKFIT_FITEM *restrict a, DISKFIT_FITEM *restrict b) {
 
     if (a != b) {
 
-        DISKFIT_FITEM h;
+        DISKFIT_FITEM h = { b->fname, b->fsize };
 
-        memmove(&h, b, sizeof(DISKFIT_FITEM));
-        memmove(b,  a, sizeof(DISKFIT_FITEM));
-        memmove(a, &h, sizeof(DISKFIT_FITEM));
+        b->fname = a->fname;
+        b->fsize = a->fsize;
+
+        a->fname = h.fname;
+        a->fsize = h.fsize;
     }
 }
 
@@ -69,7 +72,7 @@ static inline void add(const PERMUTE_ARGS *const pa) {
 
 static void permute(const PERMUTE_ARGS *const pa) {
 
-    unsigned int *const p = malloc((pa->length + 1) * sizeof(int));
+    unsigned int *const p = _diskfit_mem_alloc((pa->length + 1) * sizeof(unsigned int));
 
     if (p) {
 
@@ -103,7 +106,7 @@ static void permute(const PERMUTE_ARGS *const pa) {
             }
         }
 
-        free(p);
+        _diskfit_mem_free(p);
     }
 }
 
@@ -206,6 +209,11 @@ uint64_t diskfit_target_size(const char *tgs, DISKFIT_TARGETMAPPER tmp, void *us
     }
 
     return 0u;
+}
+
+void diskfit_set_mem_funcs(DISKFIT_ALLOC a, DISKFIT_FREE f) {
+    _diskfit_mem_alloc = a ? a : malloc;
+    _diskfit_mem_free  = f ? f : free;
 }
 
 // kate: indent-mode cstyle; indent-width 4; replace-tabs on; 

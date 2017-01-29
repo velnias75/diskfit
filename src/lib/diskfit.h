@@ -33,6 +33,9 @@ extern "C" {
 
     typedef struct _diskfit_fitem DISKFIT_FITEM;
 
+    typedef void *(*DISKFIT_ALLOC)(size_t size);
+    typedef void (*DISKFIT_FREE)(void *ptr);
+
     typedef void (*DISKFIT_INSERTER)(DISKFIT_FITEM *fitems, int length, uint64_t total,
                                      mpz_ptr const it_cur, mpz_srcptr const it_tot,
                                      void *user_data);
@@ -44,6 +47,8 @@ extern "C" {
             void *user_data);
     DISKFIT_EXPORT void diskfit_get_candidates(DISKFIT_FITEM *fitems, size_t length, uint64_t total,
             uint64_t target, DISKFIT_INSERTER inserter, void *user_data);
+
+    DISKFIT_EXPORT void diskfit_set_mem_funcs(DISKFIT_ALLOC a, DISKFIT_FREE f);
 
 #ifdef _cplusplus
 }
