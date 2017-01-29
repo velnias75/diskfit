@@ -47,21 +47,23 @@ typedef struct {
 } FITEMLIST;
 
 typedef struct {
-    gboolean stripdir;
-    guint64  tg;
+    const gboolean stripdir;
+    const guint64  tg;
 } DISP_PARAMS;
 
 typedef struct {
-    GTree         *candidates;
-    mpz_ptr        fak_last;
-    mpz_ptr        fc;
-    mpz_ptr        n;
+    GTree         *const candidates;
+    const mpz_ptr  fak_last;
+    const mpz_ptr  fc;
+    const mpz_ptr  aux;
     DISKFIT_FITEM *chunk;
-    size_t         nitems;
+    const size_t   nitems;
     const gint64   mono_start;
-    mpf_ptr        mono_itert;
-    mpf_ptr        it_cur_f;
-    mpf_ptr        it_eta_f;
+    const mpf_ptr  mono_itert;
+    const mpf_ptr  it_cur_f;
+    const mpf_ptr  it_eta_f;
+    gboolean       first_it;
+    double         it_tot_d;
 } CAND_PARAMS;
 
 static inline gboolean includes(const DISKFIT_FITEM *first1, const DISKFIT_FITEM *last1,
@@ -87,7 +89,7 @@ static inline void insertion_sort(DISKFIT_FITEM *a, size_t n) {
 
     for (; i < n; ++i) {
 
-        DISKFIT_FITEM h = { a[i].fname, a[i].fsize };
+        const DISKFIT_FITEM h = { a[i].fname, a[i].fsize };
         register size_t j = i;
 
         while (j > 0u && a[j - 1u].fname > h.fname) {
@@ -141,8 +143,8 @@ static gint include_cmp(gconstpointer a, gconstpointer b) {
 
 static gboolean create_rev_list(gpointer key, gpointer value, gpointer data) {
 
-    GSList   **l = (GSList **)data;
-    FITEMLIST *k = key;
+    GSList    **const l = (GSList **)data;
+    FITEMLIST *const  k = key;
 
     (void)value;
 
@@ -167,11 +169,11 @@ static gboolean create_rev_list(gpointer key, gpointer value, gpointer data) {
 static void addCandidate(DISKFIT_FITEM *array, int len, guint64 total,
                          mpz_ptr it_cur, mpz_srcptr const it_tot, void *user_data) {
 
-    FITEMLIST *l = g_slice_new(FITEMLIST);
+    FITEMLIST *const l = g_slice_new(FITEMLIST);
 
     if (l) {
 
-        CAND_PARAMS *cp = user_data;
+        CAND_PARAMS *const cp = user_data;
 
         cp->chunk = l->entries = cp->chunk != NULL ? cp->chunk :
                                  g_try_malloc_n(cp->nitems, sizeof(DISKFIT_FITEM));
@@ -179,37 +181,44 @@ static void addCandidate(DISKFIT_FITEM *array, int len, guint64 total,
         if (l->entries) {
 
             if (cp->nitems < 20) {
-                mpz_set_d(cp->fc, (mpz_get_d(it_cur) * 100u) / mpz_get_d(it_tot));
+                mpz_set_d(cp->fc, (mpz_get_d(it_cur) * 100u) / (cp->it_tot_d != 0.0 ? cp->it_tot_d :
+                          (cp->it_tot_d = mpz_get_d(it_tot))));
             } else {
-                mpz_mul_ui(cp->n, it_cur, 100UL);
-                mpz_tdiv_q(cp->fc, cp->n, it_tot);
+                mpz_mul_ui(cp->aux, it_cur, 100UL);
+                mpz_tdiv_q(cp->fc, cp->aux, it_tot);
             }
 
-            if (mpz_cmp(cp->fc, cp->fak_last) || !mpz_cmp_ui(it_cur, 1UL)) {
+            if (cp->first_it || mpz_cmp(cp->fc, cp->fak_last)) {
+
+                cp->first_it = FALSE;
 
                 mpz_set(cp->fak_last, cp->fc);
-                mpz_sub(cp->n, it_tot, it_cur);
-                mpf_set_z(cp->it_eta_f, cp->n);
+                mpz_sub(cp->aux, it_tot, it_cur);
+                mpf_set_z(cp->it_eta_f, cp->aux);
                 mpf_set_z(cp->it_cur_f, it_cur);
                 mpf_set_ui(cp->mono_itert, g_get_monotonic_time() - cp->mono_start);
                 mpf_div(cp->mono_itert, cp->mono_itert, cp->it_cur_f);
                 mpf_mul(cp->mono_itert, cp->mono_itert, cp->it_eta_f);
                 mpf_div_ui(cp->mono_itert, cp->mono_itert, G_USEC_PER_SEC);
 
-                GDateTime *d  = g_date_time_new_now_local();
-                GDateTime *d2 = g_date_time_add_seconds(d, mpf_get_d(cp->mono_itert));
-                gchar     *s  = d2 ? g_date_time_format(
-                                    d2,
-                                    "\033[sComputing for %%zu files: %%Zd%%%% ... ETA: %X\033[u") :
-                                "\033[sComputing for %zu files: %Zd%% ...\033[u";
+                GDateTime *const d1 = g_date_time_new_now_local();
+                GDateTime *const d2 = d1 ? g_date_time_add_seconds(d1, mpf_get_d(cp->mono_itert)) :
+                                      NULL;
+                gchar     *const s0 =
+                    d2 ? g_date_time_format(
+                        d2, "\033[sComputing for %%zu files: %%Zd%%%% ... ETA: %X\033[u") :
+                    "\033[sComputing for %zu files: %Zd%% ...\033[u";
 
-                gmp_fprintf(stderr, s, cp->nitems, cp->fak_last);
+                gmp_fprintf(stderr, s0, cp->nitems, cp->fak_last);
 
-                g_date_time_unref(d);
+                if (d1) {
 
-                if (d2) {
-                    g_date_time_unref(d2);
-                    g_free(s);
+                    g_date_time_unref(d1);
+
+                    if (d2) {
+                        g_date_time_unref(d2);
+                        g_free(s0);
+                    }
                 }
             }
 
@@ -233,7 +242,7 @@ static void addCandidate(DISKFIT_FITEM *array, int len, guint64 total,
 
 static int tmap(const char *tgs, uint64_t *size, void *user_data) {
 
-    GKeyFile *rc = user_data;
+    GKeyFile *const rc = user_data;
 
     if (rc && g_key_file_has_group(rc, tgs) && g_key_file_has_key(rc, tgs, "size", NULL)) {
         *size = g_key_file_get_uint64(rc, tgs, "size", NULL);
@@ -254,8 +263,8 @@ static inline gint fitem_ccmp(gconstpointer a, gconstpointer b, gpointer d) {
 
 static void display_candidates(gpointer key, gpointer data) {
 
-    DISP_PARAMS *p = (DISP_PARAMS *)data;
-    FITEMLIST   *l = (FITEMLIST *)key;
+    const DISP_PARAMS *const p = (DISP_PARAMS *)data;
+    FITEMLIST *const l = (FITEMLIST *)key;
 
     char hrs[1024];
     size_t i;
@@ -266,7 +275,8 @@ static void display_candidates(gpointer key, gpointer data) {
 
     for (i = 0; i < l->size; ++i) {
 
-        char *bc = p->stripdir ? g_path_get_basename(l->entries[i].fname) : l->entries[i].fname;
+        char *const bc = p->stripdir ? g_path_get_basename(l->entries[i].fname) :
+                         l->entries[i].fname;
 
         fprintf(stdout, "'%s' ", bc);
 
@@ -285,8 +295,8 @@ static void display_candidates(gpointer key, gpointer data) {
 
 int main(int argc, char *argv[]) {
 
-    GKeyFile *rc = g_key_file_new();
-    gchar **env = g_get_environ();
+    GKeyFile *const rc = g_key_file_new();
+    gchar **const env = g_get_environ();
     gchar *rcfile = NULL;
 
     const gchar *sd[] = {
@@ -324,7 +334,7 @@ int main(int argc, char *argv[]) {
 
             char hr_ptg[1024];
             gsize pi, plength;
-            gchar **profiles = g_key_file_get_groups(rc, &plength);
+            gchar **const profiles = g_key_file_get_groups(rc, &plength);
 
             for (pi = 0; pi < plength; ++pi) {
                 diskfit_hrsize(diskfit_target_size(profiles[pi], tmap, rc), hr_ptg, 1023);
@@ -418,14 +428,12 @@ int main(int argc, char *argv[]) {
 
                 if (nitems < p.we_wordc) {
 
-                    DISKFIT_FITEM *f = g_try_realloc_n(fitems, nitems, sizeof(DISKFIT_FITEM));
+                    DISKFIT_FITEM *const f = g_try_realloc_n(fitems, nitems, sizeof(DISKFIT_FITEM));
 
                     if (f && f != fitems) {
                         fitems = f;
                     }
                 }
-
-                fprintf(stderr, "\033[sCalculating: 0%% ...\033[u");
 
                 mpz_t last_fac, fc, n;
                 mpf_t mono_itert, it_cur_f, it_eta_f;
@@ -438,7 +446,8 @@ int main(int argc, char *argv[]) {
                 mpf_init(it_eta_f);
 
                 CAND_PARAMS cp = { g_tree_new(cand_cmp), last_fac, fc, n, NULL, nitems,
-                                   g_get_monotonic_time(), mono_itert, it_cur_f, it_eta_f
+                                   g_get_monotonic_time(), mono_itert, it_cur_f, it_eta_f,
+                                   TRUE, 0.0
                                  };
 
                 diskfit_get_candidates(fitems, nitems, tsize, tg, addCandidate, &cp);

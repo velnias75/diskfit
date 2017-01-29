@@ -32,14 +32,14 @@
 #endif
 
 typedef struct {
-    DISKFIT_FITEM   *array;
-    size_t           length;
-    uint64_t         total;
-    uint64_t         target;
+    DISKFIT_FITEM   *const array;
+    const size_t     length;
+    const uint64_t   total;
+    const uint64_t   target;
     DISKFIT_INSERTER adder;
-    mpz_ptr          it_cur;
-    mpz_srcptr       it_tot;
-    void            *user_data;
+    const mpz_ptr    it_cur;
+    const mpz_srcptr it_tot;
+    void            *const user_data;
 } PERMUTE_ARGS;
 
 static inline void swap(DISKFIT_FITEM *restrict a, DISKFIT_FITEM *restrict b) {
@@ -56,8 +56,8 @@ static inline void swap(DISKFIT_FITEM *restrict a, DISKFIT_FITEM *restrict b) {
 
 static inline void add(const PERMUTE_ARGS *const pa) {
 
-    int      k = pa->length;
-    uint64_t s = pa->total;
+    register int k = pa->length;
+    uint64_t     s = pa->total;
 
     while (k >= 0 && (s -= pa->array[--k].fsize) > pa->target);
 
@@ -69,11 +69,12 @@ static inline void add(const PERMUTE_ARGS *const pa) {
 
 static void permute(const PERMUTE_ARGS *const pa) {
 
-    unsigned int *p = malloc((pa->length + 1) * sizeof(int));
+    unsigned int *const p = malloc((pa->length + 1) * sizeof(int));
 
     if (p) {
 
-        unsigned int i, j;
+        register unsigned int i;
+        register unsigned int j;
 
         for (i = 0; i < pa->length; ++i) {
             p[i] = i;
