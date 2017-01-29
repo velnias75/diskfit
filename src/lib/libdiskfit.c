@@ -69,7 +69,7 @@ static inline void add(const PERMUTE_ARGS *const pa) {
 
 static void permute(const PERMUTE_ARGS *const pa) {
 
-    unsigned int *const p = malloc((pa->length + 1) * sizeof(int));
+    unsigned int *const p = malloc((pa->length + 1) * sizeof(unsigned int));
 
     if (p) {
 
