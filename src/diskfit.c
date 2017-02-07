@@ -24,6 +24,7 @@
 #include <errno.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <signal.h>
 
 #include <wordexp.h>
 #include <libgen.h>
@@ -65,6 +66,17 @@ typedef struct {
     gboolean       first_it;
     double         it_tot_d;
 } CAND_PARAMS;
+
+static volatile int _interrupted = 0;
+
+static void term_handler(int sig, siginfo_t *si, void *unused) {
+
+    (void) sig;
+    (void) si;
+    (void) unused;
+
+    _interrupted = 1;
+}
 
 static inline gboolean includes(const DISKFIT_FITEM *first1, const DISKFIT_FITEM *last1,
                                 const DISKFIT_FITEM *first2, const DISKFIT_FITEM *last2) {
@@ -423,6 +435,7 @@ int main(int argc, char *argv[]) {
             }
         }
 
+        int isInterrupted = 0;
         const gint64 mono_start = g_get_monotonic_time();
 
         if ((fitems = g_try_malloc_n(p.we_wordc, sizeof(DISKFIT_FITEM)))) {
@@ -477,7 +490,22 @@ int main(int argc, char *argv[]) {
                                    TRUE, 0.0
                                  };
 
-                diskfit_get_candidates(fitems, nitems, tsize, tg, addCandidate, &cp);
+                struct sigaction sa, sa_old;
+
+                sa.sa_flags = SA_SIGINFO;
+                sigemptyset(&sa.sa_mask);
+                sa.sa_sigaction = term_handler;
+
+                if (sigaction(SIGINT, &sa, &sa_old) == -1) {
+                    error(0, errno, "%s@%s:%d", __FUNCTION__, __FILE__, __LINE__);
+                }
+
+                isInterrupted = diskfit_get_candidates(fitems, nitems, tsize, tg, addCandidate,
+                                                       &cp, &_interrupted);
+
+                if (sigaction(SIGINT, &sa_old, NULL) == -1) {
+                    error(0, errno, "%s@%s:%d", __FUNCTION__, __FILE__, __LINE__);
+                }
 
                 mpz_clear(last_fac);
                 mpz_clear(fc);
@@ -514,8 +542,14 @@ int main(int argc, char *argv[]) {
 
         fprintf(stderr,
                 "Total size: %s - Target size: %s - Total number of files: %zu - "
-                "Time: %ld:%02ld:%02ld\n", hr_tot, hr_tg, nitems,
+                "Time: %ld:%02ld:%02ld", hr_tot, hr_tg, nitems,
                 mono_eta / 3600L, mono_eta / 60L, mono_eta % 60L);
+
+        if (isInterrupted) {
+            fprintf(stderr, " (interrupted)");
+        }
+
+        fprintf(stderr, "\n");
     }
 
     g_strfreev(env);

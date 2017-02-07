@@ -37,6 +37,7 @@ typedef struct {
     DISKFIT_INSERTER adder;
     const mpz_ptr    it_cur;
     const mpz_srcptr it_tot;
+    volatile int    *const interrupted;
     void            *const user_data;
 } PERMUTE_ARGS;
 
@@ -89,7 +90,7 @@ static void permute(const PERMUTE_ARGS *const pa) {
 
         i = 1;
 
-        while (i < pa->length) {
+        while (i < pa->length && !(*(pa->interrupted))) {
 
             --p[i];
 
@@ -100,7 +101,7 @@ static void permute(const PERMUTE_ARGS *const pa) {
 
             i = 1;
 
-            while (!p[i]) {
+            while (!p[i] && !(*(pa->interrupted))) {
                 p[i] = i;
                 ++i;
             }
@@ -110,8 +111,8 @@ static void permute(const PERMUTE_ARGS *const pa) {
     }
 }
 
-void diskfit_get_candidates(DISKFIT_FITEM *array, size_t length, uint64_t total, uint64_t target,
-                            DISKFIT_INSERTER adder, void *user_data) {
+int diskfit_get_candidates(DISKFIT_FITEM *array, size_t length, uint64_t total, uint64_t target,
+                           DISKFIT_INSERTER adder, void *user_data, volatile int *interrupted) {
     if (array) {
 
         mpz_t it_cur, it_tot;
@@ -123,7 +124,7 @@ void diskfit_get_candidates(DISKFIT_FITEM *array, size_t length, uint64_t total,
             mpz_fac_ui(it_tot, length);
 
             const PERMUTE_ARGS pa = { array, length, total, target, adder, it_cur, it_tot,
-                                      user_data
+                                      interrupted, user_data
                                     };
             permute(&pa);
 
@@ -138,6 +139,8 @@ void diskfit_get_candidates(DISKFIT_FITEM *array, size_t length, uint64_t total,
         mpz_clear(it_cur);
         mpz_clear(it_tot);
     }
+
+    return *interrupted;
 }
 
 int diskfit_hrsize(uint64_t s, char *out, size_t len) {

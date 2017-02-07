@@ -45,8 +45,8 @@ extern "C" {
     DISKFIT_EXPORT int diskfit_hrsize(uint64_t size, char *out, size_t len);
     DISKFIT_EXPORT uint64_t diskfit_target_size(const char *tgs, DISKFIT_TARGETMAPPER tmp,
             void *user_data);
-    DISKFIT_EXPORT void diskfit_get_candidates(DISKFIT_FITEM *fitems, size_t length, uint64_t total,
-            uint64_t target, DISKFIT_INSERTER inserter, void *user_data);
+    DISKFIT_EXPORT int diskfit_get_candidates(DISKFIT_FITEM *fitems, size_t length, uint64_t total,
+            uint64_t target, DISKFIT_INSERTER inserter, void *user_data, volatile int *interrupted);
 
     DISKFIT_EXPORT void diskfit_set_mem_funcs(DISKFIT_ALLOC a, DISKFIT_FREE f);
 
