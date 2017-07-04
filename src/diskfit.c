@@ -64,7 +64,7 @@ typedef struct {
     const mpf_ptr  it_cur_f;
     const mpf_ptr  it_eta_f;
     gboolean       first_it;
-    double         it_tot_d;
+    //double         it_tot_d;
 } CAND_PARAMS;
 
 static volatile int _interrupted = 0;
@@ -183,8 +183,49 @@ static gboolean create_rev_list(gpointer key, gpointer value, gpointer data) {
     return FALSE;
 }
 
-static void addCandidate(DISKFIT_FITEM *array, int len, guint64 total,
-                         mpz_ptr it_cur, mpz_srcptr const it_tot, void *user_data) {
+static void printProgress(mpz_ptr it_cur, mpz_srcptr const it_tot, void *user_data) {
+
+    CAND_PARAMS *const cp = user_data;
+
+    mpz_mul_ui(cp->aux, it_cur, 100UL);
+    mpz_tdiv_q(cp->fc, cp->aux, it_tot);
+
+    if (cp->first_it || mpz_cmp(cp->fc, cp->fak_last)) {
+
+        cp->first_it = FALSE;
+
+        mpz_set(cp->fak_last, cp->fc);
+        mpz_sub(cp->aux, it_tot, it_cur);
+        mpf_set_z(cp->it_eta_f, cp->aux);
+        mpf_set_z(cp->it_cur_f, it_cur);
+        mpf_set_ui(cp->mono_itert, g_get_monotonic_time() - cp->mono_start);
+        mpf_div(cp->mono_itert, cp->mono_itert, cp->it_cur_f);
+        mpf_mul(cp->mono_itert, cp->mono_itert, cp->it_eta_f);
+        mpf_div_ui(cp->mono_itert, cp->mono_itert, G_USEC_PER_SEC);
+
+        GDateTime *const d1 = g_date_time_new_now_local();
+        GDateTime *const d2 = d1 ? g_date_time_add_seconds(d1, mpf_get_d(cp->mono_itert)) :
+                              NULL;
+        gchar     *const s0 =
+            d2 ? g_date_time_format(
+                d2, "\033[sComputing for %%zu files: %%Zd%%%% ... ETA: %X\033[u") :
+            "\033[sComputing for %zu files: %Zd%% ...\033[u";
+
+        gmp_fprintf(stderr, s0, cp->nitems, cp->fak_last);
+
+        if (d1) {
+
+            g_date_time_unref(d1);
+
+            if (d2) {
+                g_date_time_unref(d2);
+                g_free(s0);
+            }
+        }
+    }
+}
+
+static void addCandidate(DISKFIT_FITEM *array, int len, guint64 total, void *user_data) {
 
     FITEMLIST *const l = g_slice_new(FITEMLIST);
 
@@ -196,48 +237,6 @@ static void addCandidate(DISKFIT_FITEM *array, int len, guint64 total,
                                  g_try_malloc_n(cp->nitems, sizeof(DISKFIT_FITEM));
 
         if (l->entries) {
-
-            if (cp->nitems < 20) {
-                mpz_set_d(cp->fc, (mpz_get_d(it_cur) * 100u) / (cp->it_tot_d != 0.0 ? cp->it_tot_d :
-                          (cp->it_tot_d = mpz_get_d(it_tot))));
-            } else {
-                mpz_mul_ui(cp->aux, it_cur, 100UL);
-                mpz_tdiv_q(cp->fc, cp->aux, it_tot);
-            }
-
-            if (cp->first_it || mpz_cmp(cp->fc, cp->fak_last)) {
-
-                cp->first_it = FALSE;
-
-                mpz_set(cp->fak_last, cp->fc);
-                mpz_sub(cp->aux, it_tot, it_cur);
-                mpf_set_z(cp->it_eta_f, cp->aux);
-                mpf_set_z(cp->it_cur_f, it_cur);
-                mpf_set_ui(cp->mono_itert, g_get_monotonic_time() - cp->mono_start);
-                mpf_div(cp->mono_itert, cp->mono_itert, cp->it_cur_f);
-                mpf_mul(cp->mono_itert, cp->mono_itert, cp->it_eta_f);
-                mpf_div_ui(cp->mono_itert, cp->mono_itert, G_USEC_PER_SEC);
-
-                GDateTime *const d1 = g_date_time_new_now_local();
-                GDateTime *const d2 = d1 ? g_date_time_add_seconds(d1, mpf_get_d(cp->mono_itert)) :
-                                      NULL;
-                gchar     *const s0 =
-                    d2 ? g_date_time_format(
-                        d2, "\033[sComputing for %%zu files: %%Zd%%%% ... ETA: %X\033[u") :
-                    "\033[sComputing for %zu files: %Zd%% ...\033[u";
-
-                gmp_fprintf(stderr, s0, cp->nitems, cp->fak_last);
-
-                if (d1) {
-
-                    g_date_time_unref(d1);
-
-                    if (d2) {
-                        g_date_time_unref(d2);
-                        g_free(s0);
-                    }
-                }
-            }
 
             l->size  = len;
             l->total = total;
@@ -254,12 +253,8 @@ static void addCandidate(DISKFIT_FITEM *array, int len, guint64 total,
                 ++ar_beg;
             }
 
-            //if (g_tree_lookup(cp->candidates, l) == NULL) {
-                g_tree_insert(cp->candidates, l, l->entries);
-                cp->chunk = NULL;
-            /*} else {
-                g_slice_free(FITEMLIST, l);
-            } */
+            g_tree_insert(cp->candidates, l, l->entries);
+            cp->chunk = NULL;
 
         } else {
             g_slice_free(FITEMLIST, l);
@@ -487,7 +482,7 @@ int main(int argc, char *argv[]) {
 
                 CAND_PARAMS cp = { g_tree_new(cand_cmp), last_fac, fc, n, NULL, nitems,
                                    g_get_monotonic_time(), mono_itert, it_cur_f, it_eta_f,
-                                   TRUE, 0.0
+                                   TRUE
                                  };
 
                 struct sigaction sa, sa_old;
@@ -501,7 +496,7 @@ int main(int argc, char *argv[]) {
                 }
 
                 isInterrupted = diskfit_get_candidates(fitems, nitems, tsize, tg, addCandidate,
-                                                       &cp, &_interrupted);
+                                                       printProgress, &cp, &_interrupted);
 
                 if (sigaction(SIGINT, &sa_old, NULL) == -1) {
                     error(0, errno, "%s@%s:%d", __FUNCTION__, __FILE__, __LINE__);
