@@ -15,7 +15,3 @@ It outputs in ascending order all combinations of files which will fit within th
 ``diskfit (cd|dvd|target_size[G|M|K]) file_pattern...``
 
 Set environment variable `DISKFIT_STRIPDIR` to any value to strip directories.
-
-### Caveats
-Since it uses an algorithm not optimized for large sets of small files, it will be painful slow in such 
-scenarios, but performs reasonable for rather large files on media like `DVD` and `CD`.
