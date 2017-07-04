@@ -183,48 +183,6 @@ static gboolean create_rev_list(gpointer key, gpointer value, gpointer data) {
     return FALSE;
 }
 
-static void printProgress(mpz_ptr it_cur, mpz_srcptr const it_tot, void *user_data) {
-
-    CAND_PARAMS *const cp = user_data;
-
-    mpz_mul_ui(cp->aux, it_cur, 100UL);
-    mpz_tdiv_q(cp->fc, cp->aux, it_tot);
-
-    if (cp->first_it || mpz_cmp(cp->fc, cp->fak_last)) {
-
-        cp->first_it = FALSE;
-
-        mpz_set(cp->fak_last, cp->fc);
-        mpz_sub(cp->aux, it_tot, it_cur);
-        mpf_set_z(cp->it_eta_f, cp->aux);
-        mpf_set_z(cp->it_cur_f, it_cur);
-        mpf_set_ui(cp->mono_itert, g_get_monotonic_time() - cp->mono_start);
-        mpf_div(cp->mono_itert, cp->mono_itert, cp->it_cur_f);
-        mpf_mul(cp->mono_itert, cp->mono_itert, cp->it_eta_f);
-        mpf_div_ui(cp->mono_itert, cp->mono_itert, G_USEC_PER_SEC);
-
-        GDateTime *const d1 = g_date_time_new_now_local();
-        GDateTime *const d2 = d1 ? g_date_time_add_seconds(d1, mpf_get_d(cp->mono_itert)) :
-                              NULL;
-        gchar     *const s0 =
-            d2 ? g_date_time_format(
-                d2, "\033[sComputing for %%zu files: %%Zd%%%% ... ETA: %X\033[u") :
-            "\033[sComputing for %zu files: %Zd%% ...\033[u";
-
-        gmp_fprintf(stderr, s0, cp->nitems, cp->fak_last);
-
-        if (d1) {
-
-            g_date_time_unref(d1);
-
-            if (d2) {
-                g_date_time_unref(d2);
-                g_free(s0);
-            }
-        }
-    }
-}
-
 static void addCandidate(DISKFIT_FITEM *array, int len, guint64 total, void *user_data) {
 
     FITEMLIST *const l = g_slice_new(FITEMLIST);
@@ -253,8 +211,12 @@ static void addCandidate(DISKFIT_FITEM *array, int len, guint64 total, void *use
                 ++ar_beg;
             }
 
-            g_tree_insert(cp->candidates, l, l->entries);
-            cp->chunk = NULL;
+            if (g_tree_lookup(cp->candidates, l) == NULL) {
+                g_tree_insert(cp->candidates, l, l->entries);
+                cp->chunk = NULL;
+            } else {
+                g_slice_free(FITEMLIST, l);
+            }
 
         } else {
             g_slice_free(FITEMLIST, l);
@@ -323,6 +285,48 @@ static void display_candidates(gpointer key, gpointer data) {
 
     g_free(l->entries);
     g_slice_free(FITEMLIST, l);
+}
+
+static void printProgress(mpz_ptr it_cur, mpz_srcptr const it_tot, void *user_data) {
+
+    CAND_PARAMS *const cp = user_data;
+
+    mpz_mul_ui(cp->aux, it_cur, 100UL);
+    mpz_tdiv_q(cp->fc, cp->aux, it_tot);
+
+    if (cp->first_it || mpz_cmp(cp->fc, cp->fak_last)) {
+
+        cp->first_it = FALSE;
+
+        mpz_set(cp->fak_last, cp->fc);
+        mpz_sub(cp->aux, it_tot, it_cur);
+        mpf_set_z(cp->it_eta_f, cp->aux);
+        mpf_set_z(cp->it_cur_f, it_cur);
+        mpf_set_ui(cp->mono_itert, g_get_monotonic_time() - cp->mono_start);
+        mpf_div(cp->mono_itert, cp->mono_itert, cp->it_cur_f);
+        mpf_mul(cp->mono_itert, cp->mono_itert, cp->it_eta_f);
+        mpf_div_ui(cp->mono_itert, cp->mono_itert, G_USEC_PER_SEC);
+
+        GDateTime *const d1 = g_date_time_new_now_local();
+        GDateTime *const d2 = d1 ? g_date_time_add_seconds(d1, mpf_get_d(cp->mono_itert)) :
+                              NULL;
+        gchar     *const s0 =
+            d2 ? g_date_time_format(
+                d2, "\033[sComputing for %%zu files: %%Zd%%%% ... ETA: %X\033[u") :
+            "\033[sComputing for %zu files: %Zd%% ...\033[u";
+
+        gmp_fprintf(stderr, s0, cp->nitems, cp->fak_last);
+
+        if (d1) {
+
+            g_date_time_unref(d1);
+
+            if (d2) {
+                g_date_time_unref(d2);
+                g_free(s0);
+            }
+        }
+    }
 }
 
 int main(int argc, char *argv[]) {
@@ -555,4 +559,4 @@ int main(int argc, char *argv[]) {
     return EXIT_SUCCESS;
 }
 
-// kate: indent-mode cstyle; indent-width 4; replace-tabs on;
+// kate: indent-mode cstyle; indent-width 4; replace-tabs on; 

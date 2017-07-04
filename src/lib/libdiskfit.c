@@ -64,9 +64,12 @@ static inline void add(const PERMUTE_ARGS *const pa) {
             for (ci = 0; ci < ck; ++ci) {
 
                 DISKFIT_FITEM *cp = &p[ci];
-                memcpy(cp, &pa->array[gsl_combination_get(pa->combination, ci)], sizeof(DISKFIT_FITEM));
+                memcpy(cp, &pa->array[gsl_combination_get(pa->combination, ci)],
+                       sizeof(DISKFIT_FITEM));
 
-                if ((cs += cp->fsize) > pa->target) break;
+                if ((cs += cp->fsize) > pa->target) {
+                    break;
+                }
             }
 
             mpz_add_ui(pa->it_cur, pa->it_cur, 1UL);
@@ -106,7 +109,9 @@ int diskfit_get_candidates(DISKFIT_FITEM *array, size_t length, uint64_t total, 
 
             for (i = 0; i <= length; i++) {
 
-                if (*interrupted) break;
+                if (*interrupted) {
+                    break;
+                }
 
                 c = gsl_combination_calloc(length, i);
 
@@ -117,7 +122,9 @@ int diskfit_get_candidates(DISKFIT_FITEM *array, size_t length, uint64_t total, 
                                             };
                     add(&pa);
 
-                    if (*interrupted) break;
+                    if (*interrupted) {
+                        break;
+                    }
 
                 } while (gsl_combination_next(c) == GSL_SUCCESS);
 
