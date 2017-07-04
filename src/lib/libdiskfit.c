@@ -20,6 +20,7 @@
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <inttypes.h>
 
 #include "diskfit.h"
@@ -29,86 +30,44 @@
 #include "config.h"
 #endif
 
+#include <gsl/gsl_combination.h>
+
 typedef struct {
-    DISKFIT_FITEM   *const array;
-    const size_t     length;
-    const uint64_t   total;
-    const uint64_t   target;
-    DISKFIT_INSERTER adder;
-    const mpz_ptr    it_cur;
-    const mpz_srcptr it_tot;
-    volatile int    *const interrupted;
-    void            *const user_data;
+    DISKFIT_FITEM         *const array;
+    const gsl_combination *combination;
+    const size_t           length;
+    const uint64_t         total;
+    const uint64_t         target;
+    DISKFIT_INSERTER       adder;
+    const mpz_ptr          it_cur;
+    const mpz_srcptr       it_tot;
+    volatile int          *const interrupted;
+    void                  *const user_data;
 } PERMUTE_ARGS;
 
 static DISKFIT_ALLOC _diskfit_mem_alloc = malloc;
 static DISKFIT_FREE  _diskfit_mem_free  = free;
 
-static inline void swap(DISKFIT_FITEM *restrict a, DISKFIT_FITEM *restrict b) {
-
-    if (a != b) {
-
-        DISKFIT_FITEM h = { b->fname, b->fsize };
-
-        b->fname = a->fname;
-        b->fsize = a->fsize;
-
-        a->fname = h.fname;
-        a->fsize = h.fsize;
-    }
-}
-
 static inline void add(const PERMUTE_ARGS *const pa) {
 
-    register int k = pa->length;
-    uint64_t     s = pa->total;
+    uint64_t   cs = 0u;
+    size_t ci, ck = gsl_combination_k(pa->combination);
 
-    while (k >= 0 && (s -= pa->array[--k].fsize) > pa->target);
+    DISKFIT_FITEM *const p = _diskfit_mem_alloc(ck * sizeof(DISKFIT_FITEM));
 
-    if (pa->adder && s != 0 && s <= pa->target) {
+    for(ci = 0; ci < ck; ++ci) {
+
+		DISKFIT_FITEM *cp = &p[ci];
+		memcpy(cp, &pa->array[gsl_combination_get(pa->combination, ci)], sizeof(DISKFIT_FITEM));
+		cs += cp->fsize;
+	}
+
+    if (pa->adder && cs != 0 && cs <= pa->target) {
         mpz_add_ui(pa->it_cur, pa->it_cur, 1UL);
-        pa->adder(pa->array, k, s, pa->it_cur, pa->it_tot, pa->user_data);
+        pa->adder(p, ck, cs, pa->it_cur, pa->it_tot, pa->user_data);
     }
-}
 
-static void permute(const PERMUTE_ARGS *const pa) {
-
-    unsigned int *const p = _diskfit_mem_alloc((pa->length + 1) * sizeof(unsigned int));
-
-    if (p) {
-
-        register unsigned int i;
-        register unsigned int j;
-
-        for (i = 0; i < pa->length; ++i) {
-            p[i] = i;
-        }
-
-        p[pa->length] = pa->length;
-
-        add(pa);
-
-        i = 1;
-
-        while (i < pa->length && !(*(pa->interrupted))) {
-
-            --p[i];
-
-            j = (i & 1) * p[i];
-
-            swap(&(pa->array[j]), &(pa->array[i]));
-            add(pa);
-
-            i = 1;
-
-            while (!p[i] && !(*(pa->interrupted))) {
-                p[i] = i;
-                ++i;
-            }
-        }
-
-        _diskfit_mem_free(p);
-    }
+    _diskfit_mem_free(p);
 }
 
 int diskfit_get_candidates(DISKFIT_FITEM *array, size_t length, uint64_t total, uint64_t target,
@@ -123,10 +82,24 @@ int diskfit_get_candidates(DISKFIT_FITEM *array, size_t length, uint64_t total, 
             mpz_init_set_ui(it_cur, 0UL);
             mpz_fac_ui(it_tot, length);
 
-            const PERMUTE_ARGS pa = { array, length, total, target, adder, it_cur, it_tot,
-                                      interrupted, user_data
-                                    };
-            permute(&pa);
+            gsl_combination *c;
+			size_t i;
+
+			for(i = 0; i <= length; i++) {
+
+				c = gsl_combination_calloc(length, i);
+
+				do {
+
+					const PERMUTE_ARGS pa = { array, c, length, total, target, adder, it_cur,
+						it_tot, interrupted, user_data };
+
+					add(&pa);
+
+				} while(gsl_combination_next(c) == GSL_SUCCESS);
+
+				gsl_combination_free(c);
+			}
 
         } else {
 
@@ -219,4 +192,4 @@ void diskfit_set_mem_funcs(DISKFIT_ALLOC a, DISKFIT_FREE f) {
     _diskfit_mem_free  = f ? f : free;
 }
 
-// kate: indent-mode cstyle; indent-width 4; replace-tabs on; 
+// kate: indent-mode cstyle; indent-width 4; replace-tabs on;
