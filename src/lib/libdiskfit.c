@@ -50,24 +50,27 @@ static DISKFIT_FREE  _diskfit_mem_free  = free;
 
 static inline void add(const PERMUTE_ARGS *const pa) {
 
-    uint64_t   cs = 0u;
-    size_t ci, ck = gsl_combination_k(pa->combination);
+	if(!*pa->interrupted) {
 
-    DISKFIT_FITEM *const p = _diskfit_mem_alloc(ck * sizeof(DISKFIT_FITEM));
+		uint64_t   cs = 0u;
+		size_t ci, ck = gsl_combination_k(pa->combination);
 
-    for(ci = 0; ci < ck; ++ci) {
+		DISKFIT_FITEM *const p = _diskfit_mem_alloc(ck * sizeof(DISKFIT_FITEM));
 
-		DISKFIT_FITEM *cp = &p[ci];
-		memcpy(cp, &pa->array[gsl_combination_get(pa->combination, ci)], sizeof(DISKFIT_FITEM));
-		cs += cp->fsize;
+		for(ci = 0; ci < ck; ++ci) {
+
+			DISKFIT_FITEM *cp = &p[ci];
+			memcpy(cp, &pa->array[gsl_combination_get(pa->combination, ci)], sizeof(DISKFIT_FITEM));
+			if((cs += cp->fsize) > pa->target) break;
+		}
+
+		if (pa->adder && cs != 0 && cs <= pa->target) {
+			mpz_add_ui(pa->it_cur, pa->it_cur, 1UL);
+			pa->adder(p, ck, cs, pa->it_cur, pa->it_tot, pa->user_data);
+		}
+
+		_diskfit_mem_free(p);
 	}
-
-    if (pa->adder && cs != 0 && cs <= pa->target) {
-        mpz_add_ui(pa->it_cur, pa->it_cur, 1UL);
-        pa->adder(p, ck, cs, pa->it_cur, pa->it_tot, pa->user_data);
-    }
-
-    _diskfit_mem_free(p);
 }
 
 int diskfit_get_candidates(DISKFIT_FITEM *array, size_t length, uint64_t total, uint64_t target,
@@ -87,6 +90,8 @@ int diskfit_get_candidates(DISKFIT_FITEM *array, size_t length, uint64_t total, 
 
 			for(i = 0; i <= length; i++) {
 
+				if(*interrupted) break;
+
 				c = gsl_combination_calloc(length, i);
 
 				do {
@@ -96,7 +101,7 @@ int diskfit_get_candidates(DISKFIT_FITEM *array, size_t length, uint64_t total, 
 
 					add(&pa);
 
-				} while(gsl_combination_next(c) == GSL_SUCCESS);
+				} while(!*interrupted && gsl_combination_next(c) == GSL_SUCCESS);
 
 				gsl_combination_free(c);
 			}
