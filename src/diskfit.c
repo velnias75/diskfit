@@ -59,13 +59,15 @@ typedef struct {
     const mpz_ptr  aux;
     DISKFIT_FITEM *chunk;
     const size_t   nitems;
-    const gint64   mono_start;
-    const mpf_ptr  mono_itert;
-    const mpf_ptr  it_cur_f;
-    const mpf_ptr  it_eta_f;
     gboolean       first_it;
-    //double         it_tot_d;
 } CAND_PARAMS;
+
+typedef struct {
+    GSList               *rl;
+    CAND_PARAMS          *cp;
+    const mpz_ptr    rev_cur;
+    const mpz_srcptr rev_tot;
+} REV_PARAMS;
 
 static volatile int _interrupted = 0;
 
@@ -76,6 +78,25 @@ static void term_handler(int sig, siginfo_t *si, void *unused) {
     (void) unused;
 
     _interrupted = 1;
+}
+
+static void printProgress(mpz_ptr it_cur, mpz_srcptr const it_tot, void *user_data) {
+
+    CAND_PARAMS *const cp = user_data;
+
+    mpz_mul_ui(cp->aux, it_cur, 100UL);
+    mpz_tdiv_q(cp->fc, cp->aux, it_tot);
+
+    if (cp->first_it || mpz_cmp(cp->fc, cp->fak_last)) {
+
+        cp->first_it = FALSE;
+
+        mpz_set(cp->fak_last, cp->fc);
+        mpz_sub(cp->aux, it_tot, it_cur);
+
+        gmp_fprintf(stderr, "\033[sComputing for %zu files: %Zd%% ...\033[u",
+                    cp->nitems, cp->fak_last);
+    }
 }
 
 static inline gboolean includes(const DISKFIT_FITEM *first1, const DISKFIT_FITEM *last1,
@@ -160,24 +181,28 @@ static gint include_cmp(gconstpointer a, gconstpointer b) {
 
 static gboolean create_rev_list(gpointer key, gpointer value, gpointer data) {
 
-    GSList    **const l = (GSList **)data;
-    FITEMLIST *const  k = key;
+    REV_PARAMS     *rp = (REV_PARAMS *)data;
+    FITEMLIST *const k = key;
 
     (void)value;
 
+    mpz_add_ui(rp->rev_cur, rp->rev_cur, 1U);
+
+    printProgress(rp->rev_cur, rp->rev_tot, rp->cp);
+
     insertion_sort(k->entries, k->size);
 
-    if (*l) {
+    if (rp->rl) {
 
-        if (g_slist_find_custom(*l, k, include_cmp) == NULL) {
-            *l = g_slist_prepend(*l, k);
+        if (g_slist_find_custom(rp->rl, k, include_cmp) == NULL) {
+            rp->rl = g_slist_prepend(rp->rl, k);
         } else {
             g_free(k->entries);
             g_slice_free(FITEMLIST, k);
         }
 
     } else {
-        *l = g_slist_prepend(*l, k);
+        rp->rl = g_slist_prepend(rp->rl, k);
     }
 
     return FALSE;
@@ -285,48 +310,6 @@ static void display_candidates(gpointer key, gpointer data) {
 
     g_free(l->entries);
     g_slice_free(FITEMLIST, l);
-}
-
-static void printProgress(mpz_ptr it_cur, mpz_srcptr const it_tot, void *user_data) {
-
-    CAND_PARAMS *const cp = user_data;
-
-    mpz_mul_ui(cp->aux, it_cur, 100UL);
-    mpz_tdiv_q(cp->fc, cp->aux, it_tot);
-
-    if (cp->first_it || mpz_cmp(cp->fc, cp->fak_last)) {
-
-        cp->first_it = FALSE;
-
-        mpz_set(cp->fak_last, cp->fc);
-        mpz_sub(cp->aux, it_tot, it_cur);
-        mpf_set_z(cp->it_eta_f, cp->aux);
-        mpf_set_z(cp->it_cur_f, it_cur);
-        mpf_set_ui(cp->mono_itert, g_get_monotonic_time() - cp->mono_start);
-        mpf_div(cp->mono_itert, cp->mono_itert, cp->it_cur_f);
-        mpf_mul(cp->mono_itert, cp->mono_itert, cp->it_eta_f);
-        mpf_div_ui(cp->mono_itert, cp->mono_itert, G_USEC_PER_SEC);
-
-        GDateTime *const d1 = g_date_time_new_now_local();
-        GDateTime *const d2 = d1 ? g_date_time_add_seconds(d1, mpf_get_d(cp->mono_itert)) :
-                              NULL;
-        gchar     *const s0 =
-            d2 ? g_date_time_format(
-                d2, "\033[sComputing for %%zu files: %%Zd%%%% ... ETA: %X\033[u") :
-            "\033[sComputing for %zu files: %Zd%% ...\033[u";
-
-        gmp_fprintf(stderr, s0, cp->nitems, cp->fak_last);
-
-        if (d1) {
-
-            g_date_time_unref(d1);
-
-            if (d2) {
-                g_date_time_unref(d2);
-                g_free(s0);
-            }
-        }
-    }
 }
 
 int main(int argc, char *argv[]) {
@@ -475,17 +458,12 @@ int main(int argc, char *argv[]) {
                 }
 
                 mpz_t last_fac, fc, n;
-                mpf_t mono_itert, it_cur_f, it_eta_f;
 
                 mpz_init2(last_fac, 128);
                 mpz_init2(fc, 128);
                 mpz_init2(n, 128);
-                mpf_init(mono_itert);
-                mpf_init(it_cur_f);
-                mpf_init(it_eta_f);
 
                 CAND_PARAMS cp = { g_tree_new(cand_cmp), last_fac, fc, n, NULL, nitems,
-                                   g_get_monotonic_time(), mono_itert, it_cur_f, it_eta_f,
                                    TRUE
                                  };
 
@@ -506,21 +484,26 @@ int main(int argc, char *argv[]) {
                     error(0, errno, "%s@%s:%d", __FUNCTION__, __FILE__, __LINE__);
                 }
 
-                mpz_clear(last_fac);
-                mpz_clear(fc);
-                mpz_clear(n);
-                mpf_clear(mono_itert);
-                mpf_clear(it_cur_f);
-                mpf_clear(it_eta_f);
+                mpz_t rev_cur, rev_tot;
+                const gint nodes = g_tree_nnodes(cp.candidates);
+
+                mpz_init_set_ui(rev_tot, 2 * nodes);
+                mpz_init_set_ui(rev_cur, nodes);
 
                 DISP_PARAMS dp = { g_environ_getenv(env, "DISKFIT_STRIPDIR") != NULL, tg };
+                REV_PARAMS  rp = { NULL, &cp, rev_cur, rev_tot };
 
-                GSList *rl = NULL;
+                g_tree_foreach(cp.candidates, create_rev_list, &rp);
 
-                g_tree_foreach(cp.candidates, create_rev_list, &rl);
-                g_slist_foreach(rl, display_candidates, &dp);
+                mpz_clear(n);
+                mpz_clear(last_fac);
+                mpz_clear(fc);
+                mpz_clear(rev_cur);
+                mpz_clear(rev_tot);
 
-                g_slist_free(rl);
+                g_slist_foreach(rp.rl, display_candidates, &dp);
+
+                g_slist_free(rp.rl);
                 g_tree_destroy(cp.candidates);
 
                 g_free(cp.chunk);
@@ -559,4 +542,4 @@ int main(int argc, char *argv[]) {
     return EXIT_SUCCESS;
 }
 
-// kate: indent-mode cstyle; indent-width 4; replace-tabs on; 
+// kate: indent-mode cstyle; indent-width 4; replace-tabs on;

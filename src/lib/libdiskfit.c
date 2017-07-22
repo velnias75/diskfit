@@ -105,6 +105,7 @@ int diskfit_get_candidates(DISKFIT_FITEM *array, size_t length, uint64_t total, 
                 mpz_add(it_tot, it_tot, aux);
             }
 
+            mpz_mul_ui(it_tot, it_tot, 2U);
             mpz_clear(aux);
 
             for (i = 0; i <= length; i++) {
