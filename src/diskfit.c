@@ -205,7 +205,7 @@ static gboolean create_rev_list(gpointer key, gpointer value, gpointer data) {
         rp->rl = g_slist_prepend(rp->rl, k);
     }
 
-    return FALSE;
+    return _interrupted;
 }
 
 static void addCandidate(DISKFIT_FITEM *array, int len, guint64 total, void *user_data) {
@@ -479,11 +479,6 @@ int main(int argc, char *argv[]) {
 
                 isInterrupted = diskfit_get_candidates(fitems, nitems, tsize, tg, addCandidate,
                                                        printProgress, &cp, &_interrupted);
-
-                if (sigaction(SIGINT, &sa_old, NULL) == -1) {
-                    error(0, errno, "%s@%s:%d", __FUNCTION__, __FILE__, __LINE__);
-                }
-
                 mpz_t rev_cur, rev_tot;
                 const gint nodes = g_tree_nnodes(cp.candidates);
 
@@ -494,6 +489,10 @@ int main(int argc, char *argv[]) {
                 REV_PARAMS  rp = { NULL, &cp, rev_cur, rev_tot };
 
                 g_tree_foreach(cp.candidates, create_rev_list, &rp);
+
+                if (sigaction(SIGINT, &sa_old, NULL) == -1) {
+                    error(0, errno, "%s@%s:%d", __FUNCTION__, __FILE__, __LINE__);
+                }
 
                 mpz_clear(n);
                 mpz_clear(last_fac);
@@ -527,7 +526,7 @@ int main(int argc, char *argv[]) {
                 "Time: %ld:%02ld:%02ld", hr_tot, hr_tg, nitems,
                 mono_eta / 3600L, mono_eta / 60L, mono_eta % 60L);
 
-        if (isInterrupted) {
+        if (isInterrupted || _interrupted) {
             fprintf(stderr, " (interrupted)");
         }
 
