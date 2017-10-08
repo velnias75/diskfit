@@ -151,6 +151,33 @@ static gint include_cmp(restrict gconstpointer a, restrict gconstpointer b) {
     return cand_cmp(a, b);
 }
 
+static gboolean create_rev_list(gpointer key, gpointer value, gpointer data) {
+
+    REV_PARAMS     *rp = (REV_PARAMS *)data;
+    FITEMLIST *const k = key;
+
+    (void)value;
+
+    mpz_add_ui(rp->rev_cur, rp->rev_cur, 1U);
+
+    printProgress(rp->rev_cur, rp->rev_tot, rp->cp);
+
+    if (rp->rl) {
+
+        if (g_slist_find_custom(rp->rl, k, include_cmp) == NULL) {
+            rp->rl = g_slist_prepend(rp->rl, k);
+        } else {
+            g_free(k->entries);
+            g_slice_free(FITEMLIST, k);
+        }
+
+    } else {
+        rp->rl = g_slist_prepend(rp->rl, k);
+    }
+
+    return _interrupted;
+}
+
 static inline void insertion_sort(DISKFIT_FITEM *a, size_t n) {
 
     register size_t i = 1u;
@@ -171,35 +198,6 @@ static inline void insertion_sort(DISKFIT_FITEM *a, size_t n) {
         a[j].fname = h.fname;
         a[j].fsize = h.fsize;
     }
-}
-
-static gboolean create_rev_list(gpointer key, gpointer value, gpointer data) {
-
-    REV_PARAMS     *rp = (REV_PARAMS *)data;
-    FITEMLIST *const k = key;
-
-    (void)value;
-
-    mpz_add_ui(rp->rev_cur, rp->rev_cur, 1U);
-
-    printProgress(rp->rev_cur, rp->rev_tot, rp->cp);
-
-    insertion_sort(k->entries, k->size);
-
-    if (rp->rl) {
-
-        if (g_slist_find_custom(rp->rl, k, include_cmp) == NULL) {
-            rp->rl = g_slist_prepend(rp->rl, k);
-        } else {
-            g_free(k->entries);
-            g_slice_free(FITEMLIST, k);
-        }
-
-    } else {
-        rp->rl = g_slist_prepend(rp->rl, k);
-    }
-
-    return _interrupted;
 }
 
 static void addCandidate(DISKFIT_FITEM *array, int len, guint64 total, void *user_data) {
@@ -229,6 +227,7 @@ static void addCandidate(DISKFIT_FITEM *array, int len, guint64 total, void *use
                 ++ar_beg;
             }
 
+            insertion_sort(l->entries, l->size);
             g_tree_insert(cp->candidates, l, l->entries);
 
         } else {
