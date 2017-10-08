@@ -163,15 +163,12 @@ static inline gint cand_cmp(restrict gconstpointer a, restrict gconstpointer b) 
 
 static gint include_cmp(restrict gconstpointer a, restrict gconstpointer b) {
 
-    if ((((FITEMLIST *)a)->total > ((FITEMLIST *)b)->total) ||
-        (((FITEMLIST *)a)->size > ((FITEMLIST *)b)->size)) {
+    if ((((FITEMLIST *)a)->size > ((FITEMLIST *)b)->size) ||
+        (((FITEMLIST *)a)->total > ((FITEMLIST *)b)->total)) {
 
-        register const FITEMLIST *x = a, *y = b;
-        register const FITEMLIST *min = x->size < y->size ? x : y;
-        register const FITEMLIST *max = x->size < y->size ? y : x;
-
-        return includes(max->entries, max->entries + max->size,
-                        min->entries, min->entries + min->size) ? 0 : cand_cmp(a, b);
+        return includes(((FITEMLIST *)a)->entries, ((FITEMLIST *)a)->entries + ((FITEMLIST *)a)->size,
+                        ((FITEMLIST *)b)->entries, ((FITEMLIST *)b)->entries + ((FITEMLIST *)b)->size) ?
+                            0 : cand_cmp(a, b);
     }
 
     return cand_cmp(a, b);
