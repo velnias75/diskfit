@@ -137,7 +137,7 @@ static inline void insertion_sort(DISKFIT_FITEM *a, size_t n) {
     }
 }
 
-static inline gint cand_cmp(gconstpointer a, gconstpointer b) {
+static inline gint cand_cmp(restrict gconstpointer a, restrict gconstpointer b) {
 
     register const FITEMLIST *x = (FITEMLIST *)a;
     register const FITEMLIST *y = (FITEMLIST *)b;
@@ -161,21 +161,20 @@ static inline gint cand_cmp(gconstpointer a, gconstpointer b) {
     return 0;
 }
 
-static gint include_cmp(gconstpointer a, gconstpointer b) {
+static gint include_cmp(restrict gconstpointer a, restrict gconstpointer b) {
 
-    const gint c = cand_cmp(a, b);
-
-    if (c < 0) {
+    if ((((FITEMLIST *)a)->total > ((FITEMLIST *)b)->total) ||
+        (((FITEMLIST *)a)->size > ((FITEMLIST *)b)->size)) {
 
         register const FITEMLIST *x = a, *y = b;
         register const FITEMLIST *min = x->size < y->size ? x : y;
         register const FITEMLIST *max = x->size < y->size ? y : x;
 
         return includes(max->entries, max->entries + max->size,
-                        min->entries, min->entries + min->size) ? 0 : c;
+                        min->entries, min->entries + min->size) ? 0 : cand_cmp(a, b);
     }
 
-    return c;
+    return cand_cmp(a, b);
 }
 
 static gboolean create_rev_list(gpointer key, gpointer value, gpointer data) {
@@ -258,7 +257,7 @@ static void print_copy() {
     fprintf(stderr, PACKAGE_STRING " - \u00a9 2016-2017 by Heiko Sch\u00e4fer <heiko@rangun.de>\n");
 }
 
-static inline gint fitem_ccmp(gconstpointer a, gconstpointer b, gpointer d) {
+static inline gint fitem_ccmp(restrict gconstpointer a, restrict gconstpointer b, gpointer d) {
 
     (void)d;
 
