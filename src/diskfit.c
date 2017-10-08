@@ -57,7 +57,6 @@ typedef struct {
     const mpz_ptr  fak_last;
     const mpz_ptr  fc;
     const mpz_ptr  aux;
-    DISKFIT_FITEM *chunk;
     const size_t   nitems;
     gboolean       first_it;
 } CAND_PARAMS;
@@ -216,8 +215,7 @@ static void addCandidate(DISKFIT_FITEM *array, int len, guint64 total, void *use
 
         CAND_PARAMS *const cp = user_data;
 
-        cp->chunk = l->entries = cp->chunk != NULL ? cp->chunk :
-                                 g_try_malloc_n(cp->nitems, sizeof(DISKFIT_FITEM));
+        l->entries = g_try_malloc_n(cp->nitems, sizeof(DISKFIT_FITEM));
 
         if (l->entries) {
 
@@ -236,12 +234,7 @@ static void addCandidate(DISKFIT_FITEM *array, int len, guint64 total, void *use
                 ++ar_beg;
             }
 
-            //if (g_tree_lookup(cp->candidates, l) == NULL) {
-                g_tree_insert(cp->candidates, l, l->entries);
-                cp->chunk = NULL;
-            //} else {
-            //    g_slice_free(FITEMLIST, l);
-            //}
+            g_tree_insert(cp->candidates, l, l->entries);
 
         } else {
             g_slice_free(FITEMLIST, l);
@@ -463,9 +456,7 @@ int main(int argc, char *argv[]) {
                 mpz_init2(fc, 128);
                 mpz_init2(n, 128);
 
-                CAND_PARAMS cp = { g_tree_new(cand_cmp), last_fac, fc, n, NULL, nitems,
-                                   TRUE
-                                 };
+                CAND_PARAMS cp = { g_tree_new(cand_cmp), last_fac, fc, n, nitems, TRUE };
 
                 struct sigaction sa, sa_old;
 
@@ -504,8 +495,6 @@ int main(int argc, char *argv[]) {
 
                 g_slist_free(rp.rl);
                 g_tree_destroy(cp.candidates);
-
-                g_free(cp.chunk);
             }
 
             g_free(fitems);
