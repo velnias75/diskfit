@@ -117,28 +117,6 @@ static inline gboolean includes(const DISKFIT_FITEM *first1, const DISKFIT_FITEM
     return TRUE;
 }
 
-static inline void insertion_sort(DISKFIT_FITEM *a, size_t n) {
-
-    register size_t i = 1u;
-
-    for (; i < n; ++i) {
-
-        const DISKFIT_FITEM h = { a[i].fname, a[i].fsize };
-        register size_t j = i;
-
-        while (j > 0u && a[j - 1u].fname > h.fname) {
-
-            a[j].fname = a[j - 1u].fname;
-            a[j].fsize = a[j - 1u].fsize;
-
-            --j;
-        }
-
-        a[j].fname = h.fname;
-        a[j].fsize = h.fsize;
-    }
-}
-
 static inline gint cand_cmp(restrict gconstpointer a, restrict gconstpointer b) {
 
     if (PTR2FITEMLIST(a)->total < PTR2FITEMLIST(b)->total) {
@@ -171,6 +149,28 @@ static gint include_cmp(restrict gconstpointer a, restrict gconstpointer b) {
     }
 
     return cand_cmp(a, b);
+}
+
+static inline void insertion_sort(DISKFIT_FITEM *a, size_t n) {
+
+    register size_t i = 1u;
+
+    for (; i < n; ++i) {
+
+        const DISKFIT_FITEM h = { a[i].fname, a[i].fsize };
+        register size_t j = i;
+
+        while (j > 0u && a[j - 1u].fname > h.fname) {
+
+            a[j].fname = a[j - 1u].fname;
+            a[j].fsize = a[j - 1u].fsize;
+
+            --j;
+        }
+
+        a[j].fname = h.fname;
+        a[j].fsize = h.fsize;
+    }
 }
 
 static gboolean create_rev_list(gpointer key, gpointer value, gpointer data) {
