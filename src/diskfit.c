@@ -38,6 +38,8 @@
 
 #include <glib.h>
 
+#define PTR2FITEMLIST(ptr) ((FITEMLIST *)ptr)
+
 #define FITEM_CMP(a, b) ((a)->fsize == (b)->fsize ? ((a)->fname == (b)->fname ? 0 : \
                          ((a)->fname < (b)->fname ? -1 : 1)) : ((a)->fsize < (b)->fsize ? -1 : 0))
 
@@ -139,22 +141,19 @@ static inline void insertion_sort(DISKFIT_FITEM *a, size_t n) {
 
 static inline gint cand_cmp(restrict gconstpointer a, restrict gconstpointer b) {
 
-    register const FITEMLIST *x = (FITEMLIST *)a;
-    register const FITEMLIST *y = (FITEMLIST *)b;
-
-    if (x->total < y->total) {
+    if (PTR2FITEMLIST(a)->total < PTR2FITEMLIST(b)->total) {
         return 1;
     }
 
-    if (x->total > y->total) {
+    if (PTR2FITEMLIST(a)->total > PTR2FITEMLIST(b)->total) {
         return -1;
     }
 
-    if (x->size < y->size) {
+    if (PTR2FITEMLIST(a)->size < PTR2FITEMLIST(b)->size) {
         return 1;
     }
 
-    if (x->size > y->size) {
+    if (PTR2FITEMLIST(a)->size > PTR2FITEMLIST(b)->size) {
         return -1;
     }
 
