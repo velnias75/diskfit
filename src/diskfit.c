@@ -236,12 +236,12 @@ static void addCandidate(DISKFIT_FITEM *array, int len, guint64 total, void *use
                 ++ar_beg;
             }
 
-            if (g_tree_lookup(cp->candidates, l) == NULL) {
+            //if (g_tree_lookup(cp->candidates, l) == NULL) {
                 g_tree_insert(cp->candidates, l, l->entries);
                 cp->chunk = NULL;
-            } else {
-                g_slice_free(FITEMLIST, l);
-            }
+            //} else {
+            //    g_slice_free(FITEMLIST, l);
+            //}
 
         } else {
             g_slice_free(FITEMLIST, l);
