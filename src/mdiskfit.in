@@ -1,0 +1,33 @@
+#!/usr/bin/env bash
+
+shopt -s nullglob
+
+if [ "$#" -ne 3 ]; then
+    echo "usage: $0 TARGET MAND_PAT FIT_PAT"
+    echo
+    echo "TARGET   is the target size"
+    echo "MAND_PAT is the pattern to select the mandatory files"
+    echo "FIT_PAT  is the patterm to select the files to finally fit"
+    echo
+    echo "Note: this script is very simple and does almost no parameter checking"
+    echo
+    exit 1
+fi
+
+DISKFIT=@bindir@/diskfit
+
+MANDATORY=($2)
+FITTING=$3
+
+declare -i mSize=0
+declare -i tSize=`$DISKFIT $1`
+
+for e in "${MANDATORY[@]}"; do
+    let mSize+=`du -b "$e" | cut -f1`
+done
+
+declare -i rSize=$tSize-$mSize
+
+$DISKFIT $rSize "$FITTING"
+
+exit 0

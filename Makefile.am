@@ -18,5 +18,5 @@ DISTCLEANFILES = $(dist_completions_DATA)
 
 if INSTALL_BASHCOMP
 diskfit: $(top_srcdir)/diskfit.bc.in
-	$(AM_V_GEN)$(SED) -e 's|@bindir[@]|$(bindir)|g' < $< > $@
+	$(AM_V_GEN)$(SED) -e 's|@bindir[@]|$(DESTDIR)$(bindir)|g' < $< > $@
 endif
