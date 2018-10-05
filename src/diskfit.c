@@ -432,11 +432,13 @@ int main(int argc, char *argv[]) {
                 if (!stat(p.we_wordv[j], &st)) {
 
                     if (S_ISREG(st.st_mode)) {
+                        
+                        const uint64_t padding = (bs > 0u ? bs - (st.st_size & (bs - 1u)) : 0u);
 
-                        tsize += st.st_size;
+                        tsize += (st.st_size + padding);
 
                         fitems[nitems].fname = p.we_wordv[j];
-                        fitems[nitems].fsize = st.st_size + (bs > 0u ? bs - (st.st_size & (bs - 1u)) : 0u);
+                        fitems[nitems].fsize = st.st_size + padding;
 
                         ++nitems;
                     }
