@@ -22,6 +22,7 @@
 #include <string.h>
 #include <error.h>
 #include <errno.h>
+#include <inttypes.h>
 #include <sys/stat.h>
 #include <unistd.h>
 #include <signal.h>
@@ -261,6 +262,16 @@ static int tmap(const char *tgs, uint64_t *size, void *user_data) {
     return 0;
 }
 
+static uint64_t blocksize(const char *grp, GKeyFile *rc) {
+
+    if (rc && g_key_file_has_group(rc, grp) && g_key_file_has_key(rc, grp, "bs", NULL)) {
+        return g_key_file_get_uint64(rc, grp, "bs", NULL);
+    }
+
+    return 0u;
+}
+
+
 static void print_copy() {
     fprintf(stderr, PACKAGE_STRING " - \u00a9 2016-2018 by Heiko Sch\u00e4fer <heiko@rangun.de>\n");
 }
@@ -354,12 +365,16 @@ int main(int argc, char *argv[]) {
         if (has_rc) {
 
             char hr_ptg[1024];
+            char bsize[1024];
             gsize pi, plength;
             gchar **const profiles = g_key_file_get_groups(rc, &plength);
 
             for (pi = 0; pi < plength; ++pi) {
+                *bsize = 0;
                 diskfit_hrsize(diskfit_target_size(profiles[pi], tmap, rc), hr_ptg, 1023);
-                fprintf(stdout, "\t%s = %s\n", profiles[pi], hr_ptg);
+                const uint64_t bs = blocksize(profiles[pi], rc);
+                if(bs) snprintf(bsize, 1023, "; block size = %" PRIu64 " byte%s", bs, bs > 1u ? "s" : "");
+                fprintf(stdout, "\t%s = %s%s\n", profiles[pi], hr_ptg, bsize);
             }
 
             g_strfreev(profiles);
@@ -399,7 +414,8 @@ int main(int argc, char *argv[]) {
         size_t nitems = 0u;
         DISKFIT_FITEM *fitems = NULL;
         guint64 tsize = 0u;
-        const guint64 tg = diskfit_target_size(argc > 1 ? argv[1] : "dvd", tmap,
+        const uint64_t bs = has_rc ? blocksize(argc > 1 ? argv[1] : "dvd", rc) : 0u;
+        const guint64  tg = diskfit_target_size(argc > 1 ? argv[1] : "dvd", tmap,
                                                has_rc ? rc : NULL);
         char hr_tot[1024], hr_tg[1024];
         wordexp_t p;
@@ -419,7 +435,6 @@ int main(int argc, char *argv[]) {
 
         int isInterrupted = 0;
         const gint64 mono_start = g_get_monotonic_time();
-        const uint64_t bs = 2048u;
 
         if ((fitems = g_try_malloc_n(p.we_wordc, sizeof(DISKFIT_FITEM)))) {
 
