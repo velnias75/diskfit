@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2017 by Heiko Schäfer <heiko@rangun.de>
+ * Copyright 2016-2018 by Heiko Schäfer <heiko@rangun.de>
  *
  * This file is part of DiskFit.
  *
@@ -262,7 +262,7 @@ static int tmap(const char *tgs, uint64_t *size, void *user_data) {
 }
 
 static void print_copy() {
-    fprintf(stderr, PACKAGE_STRING " - \u00a9 2016-2017 by Heiko Sch\u00e4fer <heiko@rangun.de>\n");
+    fprintf(stderr, PACKAGE_STRING " - \u00a9 2016-2018 by Heiko Sch\u00e4fer <heiko@rangun.de>\n");
 }
 
 static inline gint fitem_ccmp(gconstpointer a, gconstpointer b, gpointer d) {
@@ -419,6 +419,7 @@ int main(int argc, char *argv[]) {
 
         int isInterrupted = 0;
         const gint64 mono_start = g_get_monotonic_time();
+        const uint64_t bs = 2048u;
 
         if ((fitems = g_try_malloc_n(p.we_wordc, sizeof(DISKFIT_FITEM)))) {
 
@@ -435,7 +436,7 @@ int main(int argc, char *argv[]) {
                         tsize += st.st_size;
 
                         fitems[nitems].fname = p.we_wordv[j];
-                        fitems[nitems].fsize = st.st_size;
+                        fitems[nitems].fsize = st.st_size + (bs > 0u ? bs - (st.st_size & (bs - 1u)) : 0u);
 
                         ++nitems;
                     }
