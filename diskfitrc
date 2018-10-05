@@ -1,7 +1,11 @@
 # DiskFit targets
+# block sizes (bs) have to be a power of 2
+# and are optional
 
 [dvd]
 size=4705954816
+bs=2048
 
 [cd]
 size=734003200
+bs=2048
