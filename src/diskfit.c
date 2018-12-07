@@ -42,6 +42,10 @@
 #define FITEM_CMP(a, b) ((a)->fsize == (b)->fsize ? ((a)->fname == (b)->fname ? 0 : \
                          ((a)->fname < (b)->fname ? -1 : 1)) : ((a)->fsize < (b)->fsize ? -1 : 0))
 
+#define FITEMLIST_CAST(x) ((FITEMLIST *const)(x))
+#define REV_PARAMS_CAST(x) ((REV_PARAMS *)(x))
+#define CAND_PARAMS_CAST(x) ((CAND_PARAMS *const)(x))
+
 typedef struct {
     DISKFIT_FITEM *entries;
     size_t         size;
@@ -83,20 +87,18 @@ static void term_handler(int sig, siginfo_t *si, void *unused) {
 
 static void printProgress(mpz_ptr it_cur, mpz_srcptr const it_tot, void *user_data) {
 
-    CAND_PARAMS *const cp = user_data;
+    mpz_mul_ui(CAND_PARAMS_CAST(user_data)->aux, it_cur, 100UL);
+    mpz_tdiv_q(CAND_PARAMS_CAST(user_data)->fc, CAND_PARAMS_CAST(user_data)->aux, it_tot);
 
-    mpz_mul_ui(cp->aux, it_cur, 100UL);
-    mpz_tdiv_q(cp->fc, cp->aux, it_tot);
+    if (CAND_PARAMS_CAST(user_data)->first_it || mpz_cmp(CAND_PARAMS_CAST(user_data)->fc, CAND_PARAMS_CAST(user_data)->fak_last)) {
 
-    if (cp->first_it || mpz_cmp(cp->fc, cp->fak_last)) {
+        CAND_PARAMS_CAST(user_data)->first_it = FALSE;
 
-        cp->first_it = FALSE;
-
-        mpz_set(cp->fak_last, cp->fc);
-        mpz_sub(cp->aux, it_tot, it_cur);
+        mpz_set(CAND_PARAMS_CAST(user_data)->fak_last, CAND_PARAMS_CAST(user_data)->fc);
+        mpz_sub(CAND_PARAMS_CAST(user_data)->aux, it_tot, it_cur);
 
         gmp_fprintf(stderr, "\033[sComputing for %zu files: %Zd%% ...\033[u",
-                    cp->nitems, cp->fak_last);
+                    CAND_PARAMS_CAST(user_data)->nitems, CAND_PARAMS_CAST(user_data)->fak_last);
     }
 }
 
@@ -119,17 +121,17 @@ static inline gboolean includes(const DISKFIT_FITEM *first1, const DISKFIT_FITEM
 
 static inline void insertion_sort(DISKFIT_FITEM *a, size_t n) {
 
-    register size_t i = 1u;
+    register size_t i = 1u, jdec;
 
     for (; i < n; ++i) {
 
         const DISKFIT_FITEM h = { a[i].fname, a[i].fsize };
         register size_t j = i;
 
-        while (j > 0u && a[j - 1u].fname > h.fname) {
+        while (j > 0u && a[(jdec = j - 1u)].fname > h.fname) {
 
-            a[j].fname = a[j - 1u].fname;
-            a[j].fsize = a[j - 1u].fsize;
+            a[j].fname = a[jdec].fname;
+            a[j].fsize = a[jdec].fsize;
 
             --j;
         }
@@ -141,22 +143,19 @@ static inline void insertion_sort(DISKFIT_FITEM *a, size_t n) {
 
 static inline gint cand_cmp(gconstpointer a, gconstpointer b) {
 
-    register const FITEMLIST *x = (FITEMLIST *)a;
-    register const FITEMLIST *y = (FITEMLIST *)b;
-
-    if (x->total < y->total) {
-        return 1;
-    }
-
-    if (x->total > y->total) {
+    if (FITEMLIST_CAST(a)->total > FITEMLIST_CAST(b)->total) {
         return -1;
     }
 
-    if (x->size < y->size) {
+    if (FITEMLIST_CAST(a)->total < FITEMLIST_CAST(b)->total) {
         return 1;
     }
 
-    if (x->size > y->size) {
+    if (FITEMLIST_CAST(a)->size < FITEMLIST_CAST(b)->size) {
+        return 1;
+    }
+
+    if (FITEMLIST_CAST(a)->size > FITEMLIST_CAST(b)->size) {
         return -1;
     }
 
@@ -165,45 +164,34 @@ static inline gint cand_cmp(gconstpointer a, gconstpointer b) {
 
 static gint include_cmp(gconstpointer a, gconstpointer b) {
 
-    const gint c = cand_cmp(a, b);
+    register const FITEMLIST *min = FITEMLIST_CAST(a)->size < FITEMLIST_CAST(b)->size ? FITEMLIST_CAST(a) : FITEMLIST_CAST(b);
+    register const FITEMLIST *max = FITEMLIST_CAST(a)->size < FITEMLIST_CAST(b)->size ? FITEMLIST_CAST(b) : ((FITEMLIST *)a);
 
-    if (c < 0) {
-
-        register const FITEMLIST *x = a, *y = b;
-        register const FITEMLIST *min = x->size < y->size ? x : y;
-        register const FITEMLIST *max = x->size < y->size ? y : x;
-
-        return includes(max->entries, max->entries + max->size,
-                        min->entries, min->entries + min->size) ? 0 : c;
-    }
-
-    return c;
+    return includes(max->entries, max->entries + max->size,
+                    min->entries, min->entries + min->size) ? 0 : cand_cmp(a, b);
 }
 
 static gboolean create_rev_list(gpointer key, gpointer value, gpointer data) {
 
-    REV_PARAMS     *rp = (REV_PARAMS *)data;
-    FITEMLIST *const k = key;
-
     (void)value;
 
-    mpz_add_ui(rp->rev_cur, rp->rev_cur, 1U);
+    mpz_add_ui(REV_PARAMS_CAST(data)->rev_cur, REV_PARAMS_CAST(data)->rev_cur, 1U);
 
-    printProgress(rp->rev_cur, rp->rev_tot, rp->cp);
+    printProgress(REV_PARAMS_CAST(data)->rev_cur, REV_PARAMS_CAST(data)->rev_tot, REV_PARAMS_CAST(data)->cp);
 
-    insertion_sort(k->entries, k->size);
+    insertion_sort(FITEMLIST_CAST(key)->entries, FITEMLIST_CAST(key)->size);
 
-    if (rp->rl) {
+    if (REV_PARAMS_CAST(data)->rl) {
 
-        if (g_slist_find_custom(rp->rl, k, include_cmp) == NULL) {
-            rp->rl = g_slist_prepend(rp->rl, k);
+        if (g_slist_find_custom(REV_PARAMS_CAST(data)->rl, FITEMLIST_CAST(key), include_cmp) == NULL) {
+            REV_PARAMS_CAST(data)->rl = g_slist_prepend(REV_PARAMS_CAST(data)->rl, FITEMLIST_CAST(key));
         } else {
-            g_free(k->entries);
-            g_slice_free(FITEMLIST, k);
+            g_free(FITEMLIST_CAST(key)->entries);
+            g_slice_free(FITEMLIST, FITEMLIST_CAST(key));
         }
 
     } else {
-        rp->rl = g_slist_prepend(rp->rl, k);
+        REV_PARAMS_CAST(data)->rl = g_slist_prepend(REV_PARAMS_CAST(data)->rl, FITEMLIST_CAST(key));
     }
 
     return _interrupted;
@@ -215,10 +203,8 @@ static void addCandidate(DISKFIT_FITEM *array, int len, guint64 total, void *use
 
     if (l) {
 
-        CAND_PARAMS *const cp = user_data;
-
-        cp->chunk = l->entries = cp->chunk != NULL ? cp->chunk :
-                                 g_try_malloc_n(cp->nitems, sizeof(DISKFIT_FITEM));
+        CAND_PARAMS_CAST(user_data)->chunk = l->entries = CAND_PARAMS_CAST(user_data)->chunk != NULL ? CAND_PARAMS_CAST(user_data)->chunk :
+                                 g_try_malloc_n(CAND_PARAMS_CAST(user_data)->nitems, sizeof(DISKFIT_FITEM));
 
         if (l->entries) {
 
@@ -237,9 +223,9 @@ static void addCandidate(DISKFIT_FITEM *array, int len, guint64 total, void *use
                 ++ar_beg;
             }
 
-            if (g_tree_lookup(cp->candidates, l) == NULL) {
-                g_tree_insert(cp->candidates, l, l->entries);
-                cp->chunk = NULL;
+            if (g_tree_lookup(CAND_PARAMS_CAST(user_data)->candidates, l) == NULL) {
+                g_tree_insert(CAND_PARAMS_CAST(user_data)->candidates, l, l->entries);
+                CAND_PARAMS_CAST(user_data)->chunk = NULL;
             } else {
                 g_slice_free(FITEMLIST, l);
             }
@@ -294,19 +280,18 @@ static inline gint fitem_ccmp(gconstpointer a, gconstpointer b, gpointer d) {
 static void display_candidates(gpointer key, gpointer data) {
 
     const DISP_PARAMS *const p = (DISP_PARAMS *)data;
-    FITEMLIST *const l = (FITEMLIST *)key;
 
     char hrs[1024];
     size_t i;
 
     fprintf(stdout, "[ ");
 
-    g_qsort_with_data(l->entries, l->size, sizeof(DISKFIT_FITEM), fitem_ccmp, NULL);
+    g_qsort_with_data(FITEMLIST_CAST(key)->entries, FITEMLIST_CAST(key)->size, sizeof(DISKFIT_FITEM), fitem_ccmp, NULL);
 
-    for (i = 0; i < l->size; ++i) {
+    for (i = 0; i < FITEMLIST_CAST(key)->size; ++i) {
 
-        char *const bc = p->stripdir ? g_path_get_basename(l->entries[i].fname) :
-                         l->entries[i].fname;
+        char *const bc = p->stripdir ? g_path_get_basename(FITEMLIST_CAST(key)->entries[i].fname) :
+                         FITEMLIST_CAST(key)->entries[i].fname;
 
         fprintf(stdout, "'%s' ", bc);
 
@@ -315,12 +300,12 @@ static void display_candidates(gpointer key, gpointer data) {
         }
     }
 
-    diskfit_hrsize(l->total, hrs, 1023);
-    fprintf(stdout, "]:%zu = %s (%.3f%%)\n", l->size, hrs,
-            (float)(l->total * 100u) / (float)p->tg);
+    diskfit_hrsize(FITEMLIST_CAST(key)->total, hrs, 1023);
+    fprintf(stdout, "]:%zu = %s (%.3f%%)\n", FITEMLIST_CAST(key)->size, hrs,
+            (float)(FITEMLIST_CAST(key)->total * 100u) / (float)p->tg);
 
-    g_free(l->entries);
-    g_slice_free(FITEMLIST, l);
+    g_free(FITEMLIST_CAST(key)->entries);
+    g_slice_free(FITEMLIST, FITEMLIST_CAST(key));
 }
 
 int main(int argc, char *argv[]) {
