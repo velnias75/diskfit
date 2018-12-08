@@ -162,13 +162,12 @@ static inline gint cand_cmp(gconstpointer a, gconstpointer b) {
     return 0;
 }
 
-static gint include_cmp(gconstpointer a, gconstpointer b) {
+static inline gint include_cmp(gconstpointer a, gconstpointer b) {
 
-    register const FITEMLIST *min = FITEMLIST_CAST(a)->size < FITEMLIST_CAST(b)->size ? FITEMLIST_CAST(a) : FITEMLIST_CAST(b);
-    register const FITEMLIST *max = FITEMLIST_CAST(a)->size < FITEMLIST_CAST(b)->size ? FITEMLIST_CAST(b) : ((FITEMLIST *)a);
-
-    return includes(max->entries, max->entries + max->size,
-                    min->entries, min->entries + min->size) ? 0 : cand_cmp(a, b);
+    return (FITEMLIST_CAST(a)->size > FITEMLIST_CAST(b)->size ?
+                            includes(FITEMLIST_CAST(a)->entries, FITEMLIST_CAST(a)->entries + FITEMLIST_CAST(a)->size,
+                                     FITEMLIST_CAST(b)->entries, FITEMLIST_CAST(b)->entries + FITEMLIST_CAST(b)->size) :
+                                     FALSE) ? 0 : cand_cmp(a, b);
 }
 
 static gboolean create_rev_list(gpointer key, gpointer value, gpointer data) {
