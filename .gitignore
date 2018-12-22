@@ -27,3 +27,5 @@ diskfit
 diskfit.bc
 src/mdiskfit
 *.gcda
+debug/
+release/

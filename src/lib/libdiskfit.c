@@ -59,27 +59,25 @@ static inline void add(const PERMUTE_ARGS *const pa) {
 
         if (ck) {
 
-            DISKFIT_FITEM *const p = _diskfit_mem_alloc(ck * sizeof(DISKFIT_FITEM));
-
             for (ci = 0; ci < ck; ++ci) {
-
-                DISKFIT_FITEM *cp = &p[ci];
-                memcpy(cp, &pa->array[gsl_combination_get(pa->combination, ci)],
-                       sizeof(DISKFIT_FITEM));
-
-                if ((cs += cp->fsize) > pa->target) {
-                    break;
-                }
+                cs += pa->array[gsl_combination_get(pa->combination, ci)].fsize;
             }
 
             mpz_add_ui(pa->it_cur, pa->it_cur, 1UL);
             pa->progress(pa->it_cur, pa->it_tot, pa->user_data);
 
-            if (pa->adder && cs != 0 && cs <= pa->target) {
-                pa->adder(p, ck, cs, pa->user_data);
-            }
+            if (cs != 0 && cs <= pa->target && pa->adder) {
 
-            _diskfit_mem_free(p);
+                DISKFIT_FITEM *const p = _diskfit_mem_alloc(ck * sizeof(DISKFIT_FITEM));
+
+                for (ci = 0; ci < ck; ++ci) {
+                    memcpy(&p[ci], &pa->array[gsl_combination_get(pa->combination, ci)],
+                       sizeof(DISKFIT_FITEM));
+                }
+
+                pa->adder(p, ck, cs, pa->user_data);
+                _diskfit_mem_free(p);
+            }
         }
     }
 }
