@@ -521,12 +521,15 @@ int main(int argc, char *argv[]) {
         diskfit_hrsize(tsize, hr_tot, 1023);
         diskfit_hrsize(tg, hr_tg, 1023);
 
-        const long mono_eta = (g_get_monotonic_time() - mono_start) / G_USEC_PER_SEC;
+        const gint64 mono_eta = (g_get_monotonic_time() - mono_start) / G_USEC_PER_SEC;
+        const gint64 mono_h   = mono_eta / (gint64)3600;
+        const gint64 mono_m   = (mono_eta - (mono_h * (gint64)3600)) / (gint64)60;
+        const gint64 mono_s   = (mono_eta - (mono_h * (gint64)600) - (mono_m * (gint)60)) % (gint64)60;
 
         fprintf(stderr,
                 "Total size: %s - Target size: %s - Total number of files: %zu - "
-                "Time: %ld:%02ld:%02ld", hr_tot, hr_tg, nitems,
-                mono_eta / 3600L, mono_eta / 60L, mono_eta % 60L);
+                "Time: %" G_GINT64_MODIFIER "d:%02" G_GINT64_MODIFIER "d:%02" G_GINT64_MODIFIER "d",
+                hr_tot, hr_tg, nitems, mono_h, mono_m, mono_s);
 
         if (isInterrupted || _interrupted) {
             fprintf(stderr, " (interrupted)");
