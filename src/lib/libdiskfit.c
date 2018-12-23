@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2017 by Heiko Schäfer <heiko@rangun.de>
+ * Copyright 2016-2018 by Heiko Schäfer <heiko@rangun.de>
  *
  * This file is part of DiskFit.
  *
@@ -54,12 +54,13 @@ static inline void add(const PERMUTE_ARGS *const pa) {
 
     if (!*pa->interrupted) {
 
-        uint64_t   cs = 0u;
-        size_t ci, ck = gsl_combination_k(pa->combination);
+        register const size_t ck = gsl_combination_k(pa->combination);
 
         if (ck) {
 
-            for (ci = 0; ci < ck; ++ci) {
+            uint64_t cs = 0u;
+
+            for (register size_t ci = 0; ci < ck; ++ci) {
                 cs += pa->array[gsl_combination_get(pa->combination, ci)].fsize;
             }
 
@@ -70,7 +71,7 @@ static inline void add(const PERMUTE_ARGS *const pa) {
 
                 DISKFIT_FITEM *const p = _diskfit_mem_alloc(ck * sizeof(DISKFIT_FITEM));
 
-                for (ci = 0; ci < ck; ++ci) {
+                for (register size_t ci = 0; ci < ck; ++ci) {
                     memcpy(&p[ci], &pa->array[gsl_combination_get(pa->combination, ci)],
                        sizeof(DISKFIT_FITEM));
                 }
@@ -96,7 +97,7 @@ int diskfit_get_candidates(DISKFIT_FITEM *array, size_t length, uint64_t total, 
             mpz_init_set_ui(it_cur, 0UL);
 
             gsl_combination *c;
-            size_t i;
+            register size_t i;
 
             for (i = 0; i < length; i++) {
                 mpz_bin_uiui(aux, length, i);
@@ -106,26 +107,15 @@ int diskfit_get_candidates(DISKFIT_FITEM *array, size_t length, uint64_t total, 
             mpz_mul_ui(it_tot, it_tot, 2U);
             mpz_clear(aux);
 
-            for (i = 0; i <= length; i++) {
-
-                if (*interrupted) {
-                    break;
-                }
+            for (i = 0; i <= length && !(*interrupted); i++) {
 
                 c = gsl_combination_calloc(length, i);
 
+                const PERMUTE_ARGS pa = { array, c, i, length, total, target, adder, progress,
+                                              it_cur, it_tot, interrupted, user_data };
                 do {
-
-                    const PERMUTE_ARGS pa = { array, c, i, length, total, target, adder, progress,
-                                              it_cur, it_tot, interrupted, user_data
-                                            };
                     add(&pa);
-
-                    if (*interrupted) {
-                        break;
-                    }
-
-                } while (gsl_combination_next(c) == GSL_SUCCESS);
+                } while (gsl_combination_next(c) == GSL_SUCCESS && !(*interrupted));
 
                 gsl_combination_free(c);
             }

@@ -64,7 +64,6 @@ typedef struct {
     const mpz_ptr  aux;
     DISKFIT_FITEM *chunk;
     const size_t   nitems;
-    gboolean       first_it;
 } CAND_PARAMS;
 
 typedef struct {
@@ -83,23 +82,6 @@ static void term_handler(int sig, siginfo_t *si, void *unused) {
     (void) unused;
 
     _interrupted = 1;
-}
-
-static void printProgress(mpz_ptr it_cur, mpz_srcptr const it_tot, void *user_data) {
-
-    mpz_mul_ui(CAND_PARAMS_CAST(user_data)->aux, it_cur, 100UL);
-    mpz_tdiv_q(CAND_PARAMS_CAST(user_data)->fc, CAND_PARAMS_CAST(user_data)->aux, it_tot);
-
-    if (CAND_PARAMS_CAST(user_data)->first_it || mpz_cmp(CAND_PARAMS_CAST(user_data)->fc, CAND_PARAMS_CAST(user_data)->fak_last)) {
-
-        CAND_PARAMS_CAST(user_data)->first_it = FALSE;
-
-        mpz_set(CAND_PARAMS_CAST(user_data)->fak_last, CAND_PARAMS_CAST(user_data)->fc);
-        mpz_sub(CAND_PARAMS_CAST(user_data)->aux, it_tot, it_cur);
-
-        gmp_fprintf(stderr, "\033[sComputing for %zu files: %Zd%% ...\033[u",
-                    CAND_PARAMS_CAST(user_data)->nitems, CAND_PARAMS_CAST(user_data)->fak_last);
-    }
 }
 
 static inline gboolean includes(const DISKFIT_FITEM *first1, const DISKFIT_FITEM *last1,
@@ -170,6 +152,19 @@ static inline gint include_cmp(gconstpointer a, gconstpointer b) {
                                      FALSE) ? 0 : cand_cmp(a, b);
 }
 
+static void printProgress(mpz_ptr it_cur, mpz_srcptr const it_tot, void *user_data) {
+
+    mpz_mul_ui(CAND_PARAMS_CAST(user_data)->aux, it_cur, 100UL);
+    mpz_tdiv_q(CAND_PARAMS_CAST(user_data)->fc, CAND_PARAMS_CAST(user_data)->aux, it_tot);
+
+    if (mpz_cmp(CAND_PARAMS_CAST(user_data)->fc, CAND_PARAMS_CAST(user_data)->fak_last) || !mpz_cmp_ui(it_cur, 1UL)) {
+
+        mpz_set(CAND_PARAMS_CAST(user_data)->fak_last, CAND_PARAMS_CAST(user_data)->fc);
+        gmp_fprintf(stderr, "\033[sComputing for %zu files: %Zd%% ...\033[u",
+                    CAND_PARAMS_CAST(user_data)->nitems, CAND_PARAMS_CAST(user_data)->fak_last);
+    }
+}
+
 static gboolean create_rev_list(gpointer key, gpointer value, gpointer data) {
 
     (void)value;
@@ -177,8 +172,6 @@ static gboolean create_rev_list(gpointer key, gpointer value, gpointer data) {
     mpz_add_ui(REV_PARAMS_CAST(data)->rev_cur, REV_PARAMS_CAST(data)->rev_cur, 1U);
 
     printProgress(REV_PARAMS_CAST(data)->rev_cur, REV_PARAMS_CAST(data)->rev_tot, REV_PARAMS_CAST(data)->cp);
-
-    insertion_sort(FITEMLIST_CAST(key)->entries, FITEMLIST_CAST(key)->size);
 
     if (REV_PARAMS_CAST(data)->rl) {
 
@@ -210,17 +203,7 @@ static void addCandidate(DISKFIT_FITEM *array, int len, guint64 total, void *use
             l->size  = len;
             l->total = total;
 
-            DISKFIT_FITEM *le_beg = l->entries, *ar_beg = array;
-            DISKFIT_FITEM *const le_end = l->entries + len;
-
-            while (le_beg < le_end) {
-
-                le_beg->fname = ar_beg->fname;
-                le_beg->fsize = ar_beg->fsize;
-
-                ++le_beg;
-                ++ar_beg;
-            }
+            memcpy(l->entries, array, l->size * sizeof(DISKFIT_FITEM));
 
             if (g_tree_lookup(CAND_PARAMS_CAST(user_data)->candidates, l) == NULL) {
                 g_tree_insert(CAND_PARAMS_CAST(user_data)->candidates, l, l->entries);
@@ -465,9 +448,7 @@ int main(int argc, char *argv[]) {
                 mpz_init2(fc, 128);
                 mpz_init2(n, 128);
 
-                CAND_PARAMS cp = { g_tree_new(cand_cmp), last_fac, fc, n, NULL, nitems,
-                                   TRUE
-                                 };
+                CAND_PARAMS cp = { g_tree_new(cand_cmp), last_fac, fc, n, NULL, nitems };
 
                 struct sigaction sa, sa_old;
 
@@ -478,6 +459,8 @@ int main(int argc, char *argv[]) {
                 if (sigaction(SIGINT, &sa, &sa_old) == -1) {
                     error(0, errno, "%s@%s:%d", __FUNCTION__, __FILE__, __LINE__);
                 }
+
+                insertion_sort(fitems, nitems);
 
                 isInterrupted = diskfit_get_candidates(fitems, nitems, tsize, tg, addCandidate,
                                                        printProgress, &cp, &_interrupted);
