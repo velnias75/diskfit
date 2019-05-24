@@ -282,7 +282,7 @@ def main(args=None):
     app = QApplication(sys.argv)
 
     app.setApplicationName("QDiskFit")
-    app.setApplicationVersion("2.0.2.5")
+    app.setApplicationVersion("2.0.2.6")
     app.setApplicationDisplayName(app.applicationName() + " " +
                                   app.applicationVersion())
     app.setOrganizationDomain("rangun.de")
