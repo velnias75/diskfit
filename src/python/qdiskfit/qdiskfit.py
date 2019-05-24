@@ -137,7 +137,7 @@ class MainWindow(QMainWindow):
 
     @pyqtSlot()
     def about(self):
-        QMessageBox.about(None, self.tr("About"),
+        QMessageBox.about(self, self.tr("About"),
                           QApplication.applicationName() + " " +
                           QApplication.applicationVersion() + "\n" +
                           self.tr("A simple disk fit calculator (GUI)") +

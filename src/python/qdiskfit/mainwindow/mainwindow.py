@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'qdiskfit/mainwindow/mainwindow.ui'
+# Form implementation generated from reading ui file '/home/heiko/projects/diskfit/src/python/qdiskfit/mainwindow/mainwindow.ui'
 #
 # Created by: PyQt5 UI code generator 5.10.1
 #
@@ -12,6 +12,8 @@ class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
         MainWindow.resize(539, 695)
+        icon = QtGui.QIcon.fromTheme("qdiskfit")
+        MainWindow.setWindowIcon(icon)
         self.centralwidget = QtWidgets.QWidget(MainWindow)
         self.centralwidget.setObjectName("centralwidget")
         self.verticalLayout_2 = QtWidgets.QVBoxLayout(self.centralwidget)
@@ -274,11 +276,11 @@ class Ui_MainWindow(object):
         self.action_Start.setShortcut(_translate("MainWindow", "Ctrl+R"))
         self.action_InputAdd.setText(_translate("MainWindow", "&Add input files..."))
         self.action_InputAdd.setShortcut(_translate("MainWindow", "Ctrl++"))
-        self.actionAbout.setText(_translate("MainWindow", "About"))
+        self.actionAbout.setText(_translate("MainWindow", "&About"))
         self.action_InputRemove.setText(_translate("MainWindow", "&Remove input files"))
         self.action_InputRemove.setShortcut(_translate("MainWindow", "Del"))
         self.action_SelectAll.setText(_translate("MainWindow", "&Select all input files"))
         self.action_SelectAll.setShortcut(_translate("MainWindow", "Ctrl+A"))
-        self.action_inputRemoveAll.setText(_translate("MainWindow", "&Remove all input files"))
+        self.action_inputRemoveAll.setText(_translate("MainWindow", "Remove all &input files"))
         self.action_inputRemoveAll.setShortcut(_translate("MainWindow", "Shift+Del"))
 

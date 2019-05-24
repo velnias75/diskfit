@@ -1,6 +1,6 @@
 SUBDIRS = qdiskfit
 
-EXTRA_DIST = LICENSE README setup.py
+EXTRA_DIST = LICENSE README setup.py qdiskfit.svg qdiskfit.desktop
 
 all-local:
 	(cd $(srcdir); $(PYTHON) setup.py build \

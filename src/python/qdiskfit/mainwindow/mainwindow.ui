@@ -10,6 +10,9 @@
     <height>695</height>
    </rect>
   </property>
+  <property name="windowIcon">
+   <iconset theme="qdiskfit"/>
+  </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QVBoxLayout" name="verticalLayout_2">
     <item>
@@ -248,7 +251,8 @@
                     <string>&amp;Clear</string>
                    </property>
                    <property name="icon">
-                    <iconset theme="user-trash"/>
+                    <iconset theme="user-trash">
+                     <normaloff>.</normaloff>.</iconset>
                    </property>
                   </widget>
                  </item>
@@ -443,10 +447,11 @@
   </action>
   <action name="actionAbout">
    <property name="icon">
-    <iconset theme="help-about"/>
+    <iconset theme="help-about">
+     <normaloff>.</normaloff>.</iconset>
    </property>
    <property name="text">
-    <string>About</string>
+    <string>&amp;About</string>
    </property>
   </action>
   <action name="action_InputRemove">
@@ -454,7 +459,8 @@
     <bool>false</bool>
    </property>
    <property name="icon">
-    <iconset theme="list-remove"/>
+    <iconset theme="list-remove">
+     <normaloff>.</normaloff>.</iconset>
    </property>
    <property name="text">
     <string>&amp;Remove input files</string>
@@ -468,7 +474,8 @@
     <bool>false</bool>
    </property>
    <property name="icon">
-    <iconset theme="edit-select-all"/>
+    <iconset theme="edit-select-all">
+     <normaloff>.</normaloff>.</iconset>
    </property>
    <property name="text">
     <string>&amp;Select all input files</string>
@@ -482,10 +489,11 @@
     <bool>false</bool>
    </property>
    <property name="icon">
-    <iconset theme="user-trash"/>
+    <iconset theme="user-trash">
+     <normaloff>.</normaloff>.</iconset>
    </property>
    <property name="text">
-    <string>&amp;Remove all input files</string>
+    <string>Remove all &amp;input files</string>
    </property>
    <property name="shortcut">
     <string>Shift+Del</string>
