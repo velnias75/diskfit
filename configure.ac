@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ([2.69])
-AC_INIT([DiskFit], [2.0.2.4], [heiko@rangun.de])
+AC_INIT([DiskFit], [2.0.2.5], [heiko@rangun.de])
 AC_CONFIG_SRCDIR([src/diskfit.c])
 AC_CONFIG_HEADERS([config.h])
 
@@ -14,6 +14,7 @@ AC_CONFIG_MACRO_DIR([m4])
 AC_SYS_LARGEFILE
 
 # Checks for programs.
+AM_PATH_PYTHON([3])
 AC_PROG_CC_C99
 AC_LANG_PUSH([C])
 
@@ -68,14 +69,32 @@ AC_ARG_WITH([bash-completion-dir], [AS_HELP_STRING([--with-bash-completion-dir=D
   [ if test "x$with_bash_completion_dir" != "xno"; then
       AM_CONDITIONAL([INSTALL_BASHCOMP], [ true ])
       bashcompdir="$with_bash_completion_dir"
-        fi ],
-  [  AM_CONDITIONAL([INSTALL_BASHCOMP], [ true ])
+    fi ],
+  [ AM_CONDITIONAL([INSTALL_BASHCOMP], [ true ])
      PKG_CHECK_VAR(bashcompdir, [bash-completion], [completionsdir], ,
       bashcompdir="${sysconfdir}/bash_completion.d")
   ])
+  
+AM_CONDITIONAL([INSTALL_GUI], [ false ])
+
+AC_ARG_ENABLE([gui], [AS_HELP_STRING([--enable-gui],
+  [build the PyQt-GUI])],
+  [ if test "x$enable_gui" != "xno"; then
+      AM_CONDITIONAL([INSTALL_GUI], [ true ])
+    fi ],
+  [ AM_CONDITIONAL([INSTALL_GUI], [ true ]) ])
 
 AC_SUBST([bashcompdir])
 
 AC_LANG_POP([C])
 
-AC_OUTPUT([Makefile src/Makefile src/lib/Makefile])
+AC_OUTPUT([
+    Makefile 
+    src/Makefile 
+    src/lib/Makefile 
+    src/python/Makefile
+    src/python/qdiskfit/Makefile
+    src/python/qdiskfit/mainwindow/Makefile
+    src/python/qdiskfit/models/Makefile
+    src/python/qdiskfit/models/modelitems/Makefile
+])

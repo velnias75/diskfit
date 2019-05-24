@@ -1,5 +1,9 @@
 SUBDIRS = lib
 
+if INSTALL_GUI
+SUBDIRS += python
+endif
+
 bin_PROGRAMS = diskfit
 
 diskfit_CFLAGS = $(GLIB2_CFLAGS) -fstrict-aliasing -finline-functions
