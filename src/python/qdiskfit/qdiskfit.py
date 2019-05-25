@@ -36,6 +36,8 @@ from .models.outputmodel import OutputModel
 from .models.inputmodel import InputModel
 from .mainwindow import mainwindow
 from shlex import quote
+import os.path
+import json
 import sys
 import re
 
@@ -287,6 +289,15 @@ class MainWindow(QMainWindow):
 
 def main(args=None):
 
+    siteJSONFile = os.path.dirname(os.path.realpath(__file__)) + "/site.json"
+
+    transPath = "/usr/share/qdiskfit"
+
+    if os.path.isfile(siteJSONFile):
+        with open(siteJSONFile) as json_conf:
+            siteJSON = json.load(json_conf)
+            transPath = siteJSON["transPath"]
+
     app = QApplication(sys.argv)
 
     translator = QTranslator()
@@ -298,8 +309,7 @@ def main(args=None):
     app.setOrganizationDomain("rangun.de")
     app.setOrganizationName("diskfit")
 
-    if translator.load(QLocale(), "qdiskfit", "_",
-                       "/home/heiko/projects/diskfit/src/python"):
+    if translator.load(QLocale(), "qdiskfit", "_", transPath):
         app.installTranslator(translator)
     else:
         qDebug("Translations not found!")
