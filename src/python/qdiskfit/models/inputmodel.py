@@ -155,7 +155,14 @@ class InputModel(QStandardItemModel, HRSize):
 
         fdlg_.setDirectory(settings.value("inputDir"))
         fdlg_.setFileMode(QFileDialog.ExistingFiles)
-
+        fdlg_.setNameFilters((self.tr("Any files (*)"),
+                              self.tr("Video files (*.mp4 *.mpg *.m3u8 *.ts "
+                                      "*.avi *.wmv *.flv *.webm *.ogv *.vob "
+                                      "*.mpeg)"),
+                              self.tr("Audio files (*.mp3 *.wav *.ogg "
+                                      "*.wma *.au)"),
+                              self.tr("Image files (*.png *.xpm *.jpg "
+                                      "*.gif *.svg *.svgz)")))
         fdlg_.exec_()
 
         settings.setValue("inputFDlgGeometry", fdlg_.saveGeometry())

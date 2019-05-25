@@ -20,6 +20,8 @@
 
 from PyQt5.QtCore import QUrl
 from PyQt5.QtCore import qDebug
+from PyQt5.QtCore import QFileInfo
+from PyQt5.QtCore import QSettings
 from PyQt5.QtCore import QMimeData
 from PyQt5.QtCore import pyqtSlot
 from PyQt5.QtCore import pyqtSignal
@@ -107,9 +109,19 @@ class OutputModel(QStandardItemModel):
 
         f_ = None
 
+        settings = QSettings()
+        dir_ = settings.value("saveDir", "qdiskfit.txt")
+
         try:
-            f_ = open(QFileDialog.getSaveFileName(None, self.tr("Save result"),
-                                                  "qdiskfit.txt")[0], "wt")
+            f_ = open(QFileDialog.
+                      getSaveFileName(None,
+                                      self.tr("Save result"), dir_,
+                                      self.tr("Text file (*.txt);;"
+                                              "All files (*)"))[0], "wt")
+
+            settings.setValue("saveDir", QFileInfo(f_.name).
+                              absoluteFilePath())
+
             for r_ in range(0, self.rowCount()):
                 f_.write("[ ")
                 for fi_ in self.item(r_, 0).files():
@@ -117,10 +129,12 @@ class OutputModel(QStandardItemModel):
                 f_.write("]:" + self.item(r_, 1).text() + " = " +
                          self.item(r_, 2).text() + " (" +
                          self.item(r_, 3).text() + ")\n")
+
         except OSError as e:
-            QMessageBox.critical(None, self.tr("Error saving result"),
-                                 "\'" + e.filename + "\': " +
-                                 e.strerror + " (" + str(e.errno) + ")")
+            if len(e.filename):
+                QMessageBox.critical(None, self.tr("Error saving result"),
+                                     "\'" + e.filename + "\': " +
+                                     e.strerror + " (" + str(e.errno) + ")")
         finally:
             try:
                 if f_ is not None:
