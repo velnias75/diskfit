@@ -153,10 +153,6 @@ class InputModel(QStandardItemModel, HRSize):
         if geomy_ is not None:
             fdlg_.restoreGeometry(geomy_)
 
-        filtr_ = settings.value("inputFilters")
-        if filtr_ is not None:
-            fdlg_.setNameFilters(filtr_)
-
         fdlg_.setDirectory(settings.value("inputDir"))
         fdlg_.setFileMode(QFileDialog.ExistingFiles)
 
@@ -164,7 +160,6 @@ class InputModel(QStandardItemModel, HRSize):
 
         settings.setValue("inputFDlgGeometry", fdlg_.saveGeometry())
         settings.setValue("inputFDlgState", fdlg_.saveState())
-        settings.setValue("inputFilters", fdlg_.nameFilters())
         settings.setValue("inputDir", fdlg_.directory().absolutePath())
 
         self.addFileList(fdlg_.selectedFiles())

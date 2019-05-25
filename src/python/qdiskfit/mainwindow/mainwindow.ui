@@ -11,7 +11,8 @@
    </rect>
   </property>
   <property name="windowIcon">
-   <iconset theme="qdiskfit"/>
+   <iconset theme="qdiskfit">
+    <normaloff>.</normaloff>.</iconset>
   </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QVBoxLayout" name="verticalLayout_2">
@@ -342,6 +343,8 @@
     <addaction name="action_Start"/>
     <addaction name="actionStop"/>
     <addaction name="separator"/>
+    <addaction name="action_Save"/>
+    <addaction name="separator"/>
     <addaction name="actionQuit"/>
    </widget>
    <widget class="QMenu" name="menu_Help">
@@ -497,6 +500,20 @@
    </property>
    <property name="shortcut">
     <string>Shift+Del</string>
+   </property>
+  </action>
+  <action name="action_Save">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="icon">
+    <iconset theme="document-save"/>
+   </property>
+   <property name="text">
+    <string>&amp;Save...</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+S</string>
    </property>
   </action>
  </widget>

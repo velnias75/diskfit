@@ -20,9 +20,12 @@
 # along with DiskFit.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+from PyQt5.QtCore import QTranslator
 from PyQt5.QtCore import QSettings
 from PyQt5.QtCore import QProcess
+from PyQt5.QtCore import QLocale
 from PyQt5.QtCore import pyqtSlot
+from PyQt5.QtCore import qDebug
 from PyQt5.QtWidgets import QDesktopWidget
 from PyQt5.QtWidgets import QApplication
 from PyQt5.QtWidgets import QProgressBar
@@ -47,7 +50,7 @@ class MainWindow(QMainWindow):
     __proc3 = QProcess()
     __inputModel = None
     __outputModel = None
-    __diskfit = "/usr/bin/diskfit"
+    __diskfit = "diskfit"
     __diskfitProgress = None
     __lastResult = list()
     __resultBuf = ""
@@ -94,6 +97,10 @@ class MainWindow(QMainWindow):
             setSectionResizeMode(2, QHeaderView.ResizeToContents)
         self.__ui.table_output.header(). \
             setSectionResizeMode(3, QHeaderView.ResizeToContents)
+
+        self.__outputModel.modelSaveable. \
+            connect(self.__ui.action_Save.setEnabled)
+        self.__ui.action_Save.triggered.connect(self.__outputModel.saveModel)
 
         self.__ui.button_InputAdd.clicked.connect(self.__inputModel.addFiles)
         self.__ui.button_clearInput.clicked. \
@@ -279,7 +286,10 @@ class MainWindow(QMainWindow):
 
 
 def main(args=None):
+
     app = QApplication(sys.argv)
+
+    translator = QTranslator()
 
     app.setApplicationName("QDiskFit")
     app.setApplicationVersion("2.0.2.6")
@@ -287,6 +297,12 @@ def main(args=None):
                                   app.applicationVersion())
     app.setOrganizationDomain("rangun.de")
     app.setOrganizationName("diskfit")
+
+    if translator.load(QLocale(), "qdiskfit", "_",
+                       "/home/heiko/projects/diskfit/src/python"):
+        app.installTranslator(translator)
+    else:
+        qDebug("Translations not found!")
 
     dw = QDesktopWidget()
 

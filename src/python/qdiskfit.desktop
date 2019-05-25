@@ -1,6 +1,6 @@
 [Desktop Entry]
 Categories=Qt;Utility;
-Comment[de_DE]=Optimale Belegung von Dateoen ermitteln
+Comment[de_DE]=Optimale Belegung von Dateien ermitteln
 Comment=Calculate the optimale combination of files
 Exec=qdiskfit
 GenericName[de_DE]=Graphische Oberfläche zu DiskFit

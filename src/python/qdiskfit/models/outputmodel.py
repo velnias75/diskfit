@@ -21,6 +21,10 @@
 from PyQt5.QtCore import QUrl
 from PyQt5.QtCore import qDebug
 from PyQt5.QtCore import QMimeData
+from PyQt5.QtCore import pyqtSlot
+from PyQt5.QtCore import pyqtSignal
+from PyQt5.QtWidgets import QFileDialog
+from PyQt5.QtWidgets import QMessageBox
 from PyQt5.QtGui import QStandardItemModel
 from .modelitems.iconfileitem import IconFileItem
 from .modelitems.echotooltipitem import EchoTooltipItem
@@ -29,6 +33,8 @@ import re
 
 
 class OutputModel(QStandardItemModel):
+
+    modelSaveable = pyqtSignal(bool)
 
     __par = None
     __sum = None
@@ -93,6 +99,34 @@ class OutputModel(QStandardItemModel):
         self.__par.scrollToBottom()
         self.__sum.setText(str(self.rowCount()) +
                            self.tr(" results found", "OutputModel"))
+
+        self.modelSaveable.emit(self.rowCount() > 0)
+
+    @pyqtSlot()
+    def saveModel(self):
+
+        f_ = None
+
+        try:
+            f_ = open(QFileDialog.getSaveFileName(None, self.tr("Save result"),
+                                                  "qdiskfit.txt")[0], "wt")
+            for r_ in range(0, self.rowCount()):
+                f_.write("[ ")
+                for fi_ in self.item(r_, 0).files():
+                    f_.write("\'" + fi_ + "\' ")
+                f_.write("]:" + self.item(r_, 1).text() + " = " +
+                         self.item(r_, 2).text() + " (" +
+                         self.item(r_, 3).text() + ")\n")
+        except OSError as e:
+            QMessageBox.critical(None, self.tr("Error saving result"),
+                                 "\'" + e.filename + "\': " +
+                                 e.strerror + " (" + str(e.errno) + ")")
+        finally:
+            try:
+                if f_ is not None:
+                    f_.close()
+            except OSError:
+                pass
 
     def mimeTypes(self):
         return list("text/uri-list")

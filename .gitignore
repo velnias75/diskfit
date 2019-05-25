@@ -33,3 +33,4 @@ __pycache__
 src/python/qdiskfit.egg-info
 src/python/python.kdev4
 src/python/build
+*.qm
