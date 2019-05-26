@@ -37,6 +37,7 @@ import re
 class OutputModel(QStandardItemModel):
 
     modelSaveable = pyqtSignal(bool)
+    resultReady = pyqtSignal()
 
     __par = None
     __sum = None
@@ -60,11 +61,11 @@ class OutputModel(QStandardItemModel):
         self.__sum = summary_
         self.__imd = in_model_
 
-    def setLastResult(self, result_):
+    def setLastResult(self, result_, progress_):
 
         self.removeRows(0, self.rowCount())
 
-        for r_ in result_:
+        for pv_, r_ in enumerate(result_):
 
             fa_ = self.__rex.findall(r_[0])
 
@@ -98,11 +99,15 @@ class OutputModel(QStandardItemModel):
 
             self.appendRow(l_)
 
+            if pv_ % 500 == 0:
+                progress_.setValue(pv_)
+
         self.__par.scrollToBottom()
         self.__sum.setText(str(self.rowCount()) +
                            self.tr(" results found", "OutputModel"))
 
         self.modelSaveable.emit(self.rowCount() > 0)
+        self.resultReady.emit()
 
     @pyqtSlot()
     def saveModel(self):

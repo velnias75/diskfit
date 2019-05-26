@@ -26,6 +26,8 @@ from PyQt5.QtCore import QProcess
 from PyQt5.QtCore import QLocale
 from PyQt5.QtCore import pyqtSlot
 from PyQt5.QtCore import qDebug
+from PyQt5.QtCore import Qt
+from PyQt5.QtWidgets import QProgressDialog
 from PyQt5.QtWidgets import QDesktopWidget
 from PyQt5.QtWidgets import QApplication
 from PyQt5.QtWidgets import QProgressBar
@@ -116,6 +118,8 @@ class MainWindow(QMainWindow):
         self.__ui.action_Start.triggered.connect(self.start)
         self.__ui.actionAbout.triggered.connect(self.about)
 
+        self.__outputModel.resultReady.connect(self.resultReady)
+
         self.readSettings()
         self.getTargets()
 
@@ -192,8 +196,22 @@ class MainWindow(QMainWindow):
     @pyqtSlot(int, QProcess.ExitStatus)
     def finished(self, ec, es):
 
+        self.__proc3.finished.disconnect(self.finished)
+
         if not QProcess.CrashExit or ec == 0:
-            for r_ in self.__resultBuf.splitlines(False):
+
+            rbs_ = self.__resultBuf.splitlines(False)
+            prm_ = self.tr("Processing result …")
+
+            progress_ = QProgressDialog(prm_, None, 0, len(rbs_) * 2)
+            progress_.setWindowModality(Qt.WindowModal)
+            progress_.setMinimumDuration(750)
+            progress_.setAutoReset(True)
+            progress_.setAutoClose(True)
+
+            self.__statusBar.showMessage(prm_)
+
+            for pv_, r_ in enumerate(rbs_):
                 r_match_ = r_rex.search(r_)
                 if r_match_:
                     self.__lastResult.append((r_match_.group(1),
@@ -201,15 +219,21 @@ class MainWindow(QMainWindow):
                                               r_match_.group(3),
                                               r_match_.group(4)))
 
-            self.__statusBar.showMessage(self.tr("Processing result …"))
-            self.__outputModel.setLastResult(self.__lastResult)
+            progress_.setMaximum(len(self.__lastResult))
+
+            self.__outputModel.setLastResult(self.__lastResult, progress_)
             self.__statusBar.clearMessage()
+
+            progress_.reset()
+
         else:
             self.__statusBar.showMessage(self.tr("Calculation interrupted"),
                                          5000)
 
         self.__resultBuf = ""
 
+    @pyqtSlot()
+    def resultReady(self):
         self.__ui.action_Start.setEnabled(True)
         self.__ui.actionStop.setEnabled(False)
         self.__ui.group_InputFiles.setEnabled(True)
