@@ -25,14 +25,28 @@ from .echotooltipitem import EchoTooltipItem
 
 class IconFileItem(EchoTooltipItem):
 
+    __name = None
+    __path = None
+
     def __init__(self, file_):
 
         fi_ = QFileInfo(file_)
+
+        self.__name = fi_.fileName()
+
         if fi_.isSymLink():
             fp_ = fi_.symLinkTarget()
+            self.__path = QFileInfo(fp_).absoluteDir().absolutePath()
         else:
             fp_ = file_
+            self.__path = fi_.absoluteDir().absolutePath()
 
         super(IconFileItem, self).__init__(fp_)
 
         self.setIcon(QFileIconProvider().icon(fi_))
+
+    def name(self):
+        return self.__name
+
+    def path(self):
+        return self.__path

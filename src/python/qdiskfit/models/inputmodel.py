@@ -60,28 +60,28 @@ class InputModel(QStandardItemModel, HRSize):
         self.rowsRemoved.connect(self.modelChanged)
 
     def sort(self, col, order):
+
+        l_ = list()
+
+        while self.rowCount() > 0:
+            s_ = self.__par.selectionModel().isRowSelected(0, QModelIndex())
+            r_ = self.takeRow(0)
+            l_.append((r_[0], r_[1], s_))
+
         if col == 0:
-            super().sort(col, order)
+            l_.sort(key=lambda name: name[0].name() + "|" + name[0].path(),
+                    reverse=(order == Qt.DescendingOrder))
         else:
-
-            l_ = list()
-
-            while self.rowCount() > 0:
-                s_ = self.__par.selectionModel().isRowSelected(0,
-                                                               QModelIndex())
-                r_ = self.takeRow(0)
-                l_.append((r_[0], r_[1], s_))
-
             l_.sort(key=lambda size: size[1].num(),
                     reverse=(order == Qt.DescendingOrder))
 
-            for row in l_:
-                self.appendRow((row[0], row[1]))
-                if row[2]:
-                    self.__par.selectionModel(). \
-                        select(row[0].index(), QItemSelectionModel.Select)
-                    self.__par.selectionModel(). \
-                        select(row[1].index(), QItemSelectionModel.Select)
+        for row in l_:
+            self.appendRow((row[0], row[1]))
+            if row[2]:
+                self.__par.selectionModel(). \
+                    select(row[0].index(), QItemSelectionModel.Select)
+                self.__par.selectionModel(). \
+                    select(row[1].index(), QItemSelectionModel.Select)
 
     def files(self):
 
