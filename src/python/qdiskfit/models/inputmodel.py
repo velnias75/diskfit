@@ -124,11 +124,10 @@ class InputModel(QStandardItemModel, HRSize):
             tot_ += self.item(r, 1).num()
 
         if len_ > 0:
-            self.__sum.setText(self.sizeString(tot_) +
-                               self.tr(" in ", "InputModel") +
-                               str(len_) + self.tr(" files", "InputModel"))
+            self.__sum.setText(self.tr("{0} in {1} files").
+                               format(self.sizeString(tot_), str(len_)))
         else:
-            self.__sum.setText(self.tr("No files", "InputModel"))
+            self.__sum.setText(self.tr("No files"))
 
         self.__par.header().setSortIndicatorShown(len_ > 0)
         self.__sta.setEnabled(len_ > 0)
@@ -186,3 +185,5 @@ class InputModel(QStandardItemModel, HRSize):
         while len(self.__par.selectionModel().selectedIndexes()):
             self.removeRow(self.__par.selectionModel().
                            selectedIndexes()[0].row())
+
+# kate: indent-mode: python

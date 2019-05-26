@@ -89,8 +89,8 @@ class OutputModel(QStandardItemModel):
                                         1)
 
                 rsit_ = EchoTooltipItem(item_.relativeSizePctString(ts_))
-                rsit_.setToolTip(rsit_.text() + self.tr(" of ", "OutputModel")
-                                 + r_[2])
+                rsit_.setToolTip(self.tr("{0} of {1}").
+                                 format(rsit_.text(), r_[2]))
 
                 l_[0].setChild(i_, 0, IconFileItem(ma_))
                 l_[0].setChild(i_, 1, EchoTooltipItem("1"))
@@ -103,8 +103,8 @@ class OutputModel(QStandardItemModel):
                 progress_.setValue(pv_)
 
         self.__par.scrollToBottom()
-        self.__sum.setText(str(self.rowCount()) +
-                           self.tr(" results found", "OutputModel"))
+        self.__sum.setText(self.tr("{} results found").
+                           format(str(self.rowCount())))
 
         self.modelSaveable.emit(self.rowCount() > 0)
         self.resultReady.emit()
@@ -163,3 +163,5 @@ class OutputModel(QStandardItemModel):
         mime_.setUrls(urls_)
 
         return mime_
+
+# kate: indent-mode: python

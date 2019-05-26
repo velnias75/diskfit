@@ -27,3 +27,5 @@ class EchoTooltipItem(QStandardItem):
         super(EchoTooltipItem, self).__init__(txt_)
         self.setToolTip(txt_)
         self.setDragEnabled(drag_)
+
+# kate: indent-mode: python

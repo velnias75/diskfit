@@ -50,3 +50,5 @@ class IconFileItem(EchoTooltipItem):
 
     def path(self):
         return self.__path
+
+# kate: indent-mode: python

@@ -31,3 +31,5 @@ class MultiFileDragItem(EchoTooltipItem):
 
     def files(self):
         return self.__files
+
+# kate: indent-mode: python

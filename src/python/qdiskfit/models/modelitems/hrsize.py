@@ -38,3 +38,5 @@ class HRSize:
             return format(size_/1024.0, ".2f") + " KByte"
         else:
             return str(size_) + " Byte"
+
+# kate: indent-mode: python

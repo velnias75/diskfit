@@ -52,3 +52,5 @@ class HRFileItem(EchoTooltipItem, HRSize):
 
     def num(self):
         return self.__size
+
+# kate: indent-mode: python

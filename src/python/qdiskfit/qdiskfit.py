@@ -20,6 +20,7 @@
 # along with DiskFit.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+from PyQt5.QtCore import QT_TR_NOOP
 from PyQt5.QtCore import QTranslator
 from PyQt5.QtCore import QSettings
 from PyQt5.QtCore import QProcess
@@ -179,9 +180,8 @@ class MainWindow(QMainWindow):
         self.__proc3.readyReadStandardOutput.connect(self.resultAvailable)
         self.__proc3.finished.connect(self.finished)
 
-        self.__statusBar.showMessage(self.tr("Calculating for ") +
-                                     str(self.__inputModel.rowCount()) +
-                                     self.tr(" files …"))
+        self.__statusBar.showMessage(self.tr("Calculating for {} files ...").
+                                     format(str(self.__inputModel.rowCount())))
 
         self.__proc3.start(self.__diskfit, args_, QProcess.ReadOnly)
         self.__proc3.waitForStarted()
@@ -194,7 +194,8 @@ class MainWindow(QMainWindow):
     def error(self, err):
         if err == QProcess.FailedToStart:
             QMessageBox.critical(None, self.tr("Error"),
-                                 self.tr("Failed to launch " + self.__diskfit))
+                                 self.tr("Failed to launch {}".
+                                         format(self.__diskfit)))
         self.finished(0, QProcess.NormalExit)
 
     @pyqtSlot(int, QProcess.ExitStatus)
@@ -206,15 +207,18 @@ class MainWindow(QMainWindow):
                 self.__proc3.finished.disconnect(self.finished)
 
             rbs_ = self.__resultBuf.splitlines(False)
-            prm_ = self.tr("Processing result …")
+            prm_ = QT_TR_NOOP("Processing result ...")
 
-            progress_ = QProgressDialog(prm_, None, 0, len(rbs_) * 2)
+            progress_ = QProgressDialog(QApplication.
+                                        translate("@default", prm_), None, 0,
+                                        len(rbs_) * 2)
             progress_.setWindowModality(Qt.WindowModal)
             progress_.setMinimumDuration(750)
             progress_.setAutoReset(True)
             progress_.setAutoClose(True)
 
-            self.__statusBar.showMessage(prm_)
+            self.__statusBar.showMessage(QApplication.translate("@default",
+                                                                prm_))
 
             for pv_, r_ in enumerate(rbs_):
                 r_match_ = r_rex.search(r_)
@@ -226,10 +230,12 @@ class MainWindow(QMainWindow):
 
             progress_.setMaximum(len(self.__lastResult))
 
+            self.__ui.table_output.setEnabled(False)
             self.__outputModel.setLastResult(self.__lastResult, progress_)
             self.__statusBar.clearMessage()
 
             progress_.reset()
+            self.__ui.table_output.setEnabled(True)
 
         else:
             self.__statusBar.showMessage(self.tr("Calculation interrupted"),
@@ -366,3 +372,5 @@ r_rex = re.compile('\[([^\]]*)\]:([^ ]+) = ([^\(]+) \(([0-9\.%]*)\)')
 
 if __name__ == "__main__":
     main()
+
+# kate: indent-mode: python
