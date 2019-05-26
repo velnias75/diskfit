@@ -158,6 +158,10 @@ class MainWindow(QMainWindow):
 
     @pyqtSlot()
     def start(self):
+        self.__ui.action_SelectAll.setEnabled(False)
+        self.__ui.action_inputRemoveAll.setEnabled(False)
+        self.__ui.action_InputRemove.setEnabled(False)
+        self.__ui.action_InputAdd.setEnabled(False)
         self.__ui.action_Start.setEnabled(False)
         self.__ui.actionStop.setEnabled(True)
         self.__ui.group_InputFiles.setEnabled(False)
@@ -196,9 +200,10 @@ class MainWindow(QMainWindow):
     @pyqtSlot(int, QProcess.ExitStatus)
     def finished(self, ec, es):
 
-        self.__proc3.finished.disconnect(self.finished)
-
         if not QProcess.CrashExit or ec == 0:
+
+            if self.__proc3.receivers(self.__proc3.finished):
+                self.__proc3.finished.disconnect(self.finished)
 
             rbs_ = self.__resultBuf.splitlines(False)
             prm_ = self.tr("Processing result …")
@@ -234,6 +239,13 @@ class MainWindow(QMainWindow):
 
     @pyqtSlot()
     def resultReady(self):
+        self.__ui.action_SelectAll. \
+            setEnabled(self.__inputModel.rowCount() > 0)
+        self.__ui.action_inputRemoveAll. \
+            setEnabled(self.__inputModel.rowCount() > 0)
+        self.__ui.action_InputRemove. \
+            setEnabled(len(self.__ui.table_input.selectedIndexes()) > 0)
+        self.__ui.action_InputAdd.setEnabled(True)
         self.__ui.action_Start.setEnabled(True)
         self.__ui.actionStop.setEnabled(False)
         self.__ui.group_InputFiles.setEnabled(True)

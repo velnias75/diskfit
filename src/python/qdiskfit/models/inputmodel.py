@@ -173,7 +173,9 @@ class InputModel(QStandardItemModel, HRSize):
 
     def addFileList(self, files_):
         for file_ in files_:
-            self.appendRow((IconFileItem(file_), HRFileItem(file_)))
+            ifi_ = IconFileItem(file_)
+            if not len(self.findItems(ifi_.text())):
+                self.appendRow((ifi_, HRFileItem(file_)))
 
     @pyqtSlot()
     def removeAll(self):
