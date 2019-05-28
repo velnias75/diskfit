@@ -44,9 +44,10 @@ class Site:
                 return self.siteJSON_.get(name_, default_)
             return default_
 
-    def __init__(self):
+    def __new__(cls):
         if not Site.__instance:
             Site.__instance = Site.__Site()
+        return Site.__instance
 
     def __getattr__(self, atname_):
         return getattr(self.__instance, atname_)
