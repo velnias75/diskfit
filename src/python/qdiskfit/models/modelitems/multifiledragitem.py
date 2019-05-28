@@ -26,8 +26,9 @@ class MultiFileDragItem(EchoTooltipItem):
     __files = None
 
     def __init__(self, files_):
-        super(MultiFileDragItem, self).__init__(", ".join(files_), True)
-        self.__files = files_
+        super(MultiFileDragItem, self).__init__(", ".join(sorted(files_)),
+                                                True)
+        self.__files = sorted(files_)
 
     def files(self):
         return self.__files
