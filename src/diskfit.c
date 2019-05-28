@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2018 by Heiko Schäfer <heiko@rangun.de>
+ * Copyright 2016-2019 by Heiko Schäfer <heiko@rangun.de>
  *
  * This file is part of DiskFit.
  *
@@ -241,7 +241,7 @@ static uint64_t blocksize(const char *grp, GKeyFile *rc) {
 
 
 static void print_copy() {
-    fprintf(stderr, PACKAGE_STRING " - \u00a9 2016-2018 by Heiko Sch\u00e4fer <heiko@rangun.de>\n");
+    fprintf(stderr, PACKAGE_STRING " - \u00a9 2016-2019 by Heiko Sch\u00e4fer <heiko@rangun.de>\n");
 }
 
 static inline gint fitem_ccmp(gconstpointer a, gconstpointer b, gpointer d) {
