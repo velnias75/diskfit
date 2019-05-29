@@ -1,8 +1,4 @@
-SUBDIRS = lib
-
-if INSTALL_GUI
-SUBDIRS += python
-endif
+SUBDIRS = lib python
 
 bin_PROGRAMS = diskfit
 

@@ -14,7 +14,6 @@ AC_CONFIG_MACRO_DIR([m4])
 AC_SYS_LARGEFILE
 
 # Checks for programs.
-AM_PATH_PYTHON([3])
 AC_PROG_CC_C99
 AC_LANG_PUSH([C])
 
@@ -78,11 +77,16 @@ AC_ARG_WITH([bash-completion-dir], [AS_HELP_STRING([--with-bash-completion-dir=D
 AM_CONDITIONAL([INSTALL_GUI], [ false ])
 
 AC_ARG_ENABLE([gui], [AS_HELP_STRING([--enable-gui],
-  [build the PyQt-GUI])],
+  [enable the build of the PyQt-GUI])],
   [ if test "x$enable_gui" != "xno"; then
-      AM_CONDITIONAL([INSTALL_GUI], [ true ])
+      AM_PATH_PYTHON([3], [
+        AM_CONDITIONAL([INSTALL_GUI], [ true ])
+      ], [
+        AC_MSG_WARN([no python3 found, won't build PyQt-GUI])
+        AM_CONDITIONAL([INSTALL_GUI], [ false ])
+      ])
     fi ],
-  [ AM_CONDITIONAL([INSTALL_GUI], [ true ]) ])
+  [ AM_CONDITIONAL([INSTALL_GUI], [ false ]) ])
 
 AC_SUBST([bashcompdir])
 

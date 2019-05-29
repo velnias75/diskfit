@@ -2,7 +2,7 @@ SUBDIRS = src
 
 ACLOCAL_AMFLAGS = -Im4
 
-AM_DISTCHECK_CONFIGURE_FLAGS = --with-bash-completion-dir=no
+AM_DISTCHECK_CONFIGURE_FLAGS = --with-bash-completion-dir=no --disable-gui
 
 doc_DATA = README.md
 sysconf_DATA = diskfitrc

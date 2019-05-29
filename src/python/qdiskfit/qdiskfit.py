@@ -27,6 +27,7 @@ from PyQt5.QtCore import QProcess
 from PyQt5.QtCore import QLocale
 from PyQt5.QtCore import pyqtSlot
 from PyQt5.QtCore import qDebug
+from PyQt5.QtCore import QTime
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QProgressDialog
 from PyQt5.QtWidgets import QDesktopWidget
@@ -40,6 +41,7 @@ from .models.inputmodel import InputModel
 from .mainwindow import mainwindow
 from shlex import quote
 from .site import Site
+import time
 import sys
 import re
 
@@ -54,11 +56,12 @@ class MainWindow(QMainWindow):
     __proc3 = QProcess()
     __inputModel = None
     __outputModel = None
-    __diskfit = Site().get("diskfitPath", "/usr/bin/diskfit");
+    __diskfit = Site().get("diskfitPath", "/usr/bin/diskfit")
     __diskfitProgress = None
     __lastResult = list()
     __resultBuf = ""
     __statusBar = None
+    __runningTime = None
 
     def __init__(self):
 
@@ -184,6 +187,7 @@ class MainWindow(QMainWindow):
 
         self.__proc3.start(self.__diskfit, args_, QProcess.ReadOnly)
         self.__proc3.waitForStarted()
+        self.__runningTime = time.clock_gettime(time.CLOCK_MONOTONIC_RAW)
 
         self.__lastResult.clear()
 
@@ -205,6 +209,9 @@ class MainWindow(QMainWindow):
             if self.__proc3.receivers(self.__proc3.finished):
                 self.__proc3.finished.disconnect(self.finished)
 
+            elapsedTime_ = time.clock_gettime(time.CLOCK_MONOTONIC_RAW) - \
+                self.__runningTime
+
             rbs_ = self.__resultBuf.splitlines(False)
             prm_ = QT_TR_NOOP("Processing result ...")
 
@@ -218,7 +225,6 @@ class MainWindow(QMainWindow):
 
             self.__statusBar.showMessage(QApplication.translate("@default",
                                                                 prm_))
-
             for pv_, r_ in enumerate(rbs_):
                 r_match_ = r_rex.search(r_)
                 if r_match_:
@@ -231,7 +237,11 @@ class MainWindow(QMainWindow):
 
             self.__ui.table_output.setEnabled(False)
             self.__outputModel.setLastResult(self.__lastResult, progress_)
-            self.__statusBar.clearMessage()
+            self.__statusBar. \
+                showMessage(self.tr("Calculation took {}").
+                            format(time.strftime("%H:%M:%S", time.
+                                                 gmtime(int(elapsedTime_)))),
+                            0)
 
             progress_.reset()
             self.__ui.table_output.setEnabled(True)

@@ -22,6 +22,7 @@ import os
 import setuptools
 from setuptools.command.egg_info import egg_info
 
+
 class EggInfoCommand(egg_info):
 
     def run(self):
@@ -30,9 +31,11 @@ class EggInfoCommand(egg_info):
 
             self.egg_base = build_command.build_base
 
-            self.egg_info = os.path.join(self.egg_base, os.path.basename(self.egg_info))
+            self.egg_info = os.path.join(self.egg_base,
+                                         os.path.basename(self.egg_info))
 
         egg_info.run(self)
+
 
 SRC_PATH = os.path.relpath(os.path.join(os.path.dirname(__file__), "."))
 
@@ -43,12 +46,16 @@ setuptools.setup(name='qdiskfit',
                  author='Heiko Schaefer',
                  author_email='heiko@rangun.de',
                  packages=setuptools.find_packages(),
-#                 install_requires=["PyQt5>=5.5"],
                  package_dir={
                     "": SRC_PATH,
                     },
                  package_data={
-                    '': ['*.ui']
+                    '': ['*.ui'],
+                    '': ['*.svg'],
+                    '': ['*.pro'],
+                    '': ['*.ts'],
+                    '': ['*.qm'],
+                    '': ['*.desktop']
                     },
                  entry_points={
                      'gui_scripts': [

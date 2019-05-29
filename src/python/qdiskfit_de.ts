@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!DOCTYPE TS><TS version="2.0" language="de_DE" sourcelanguage="">
+<!DOCTYPE TS>
+<TS version="2.1" language="de_DE">
 <context>
     <name>@default</name>
     <message>
-        <location filename="qdiskfit/qdiskfit.py" line="211"/>
+        <location filename="qdiskfit/qdiskfit.py" line="217"/>
         <source>Processing result ...</source>
         <translation>Verarbeite Ergebnis ...</translation>
     </message>
@@ -56,27 +57,27 @@
 <context>
     <name>MainWindow</name>
     <message>
-        <location filename="qdiskfit/qdiskfit.py" line="155"/>
+        <location filename="qdiskfit/qdiskfit.py" line="157"/>
         <source>About</source>
         <translation>Über</translation>
     </message>
     <message>
-        <location filename="qdiskfit/qdiskfit.py" line="155"/>
+        <location filename="qdiskfit/qdiskfit.py" line="157"/>
         <source>A simple disk fit calculator (GUI)</source>
         <translation>Optimale Belegung von Dateien ermitteln (GUI)</translation>
     </message>
     <message>
-        <location filename="qdiskfit/qdiskfit.py" line="184"/>
+        <location filename="qdiskfit/qdiskfit.py" line="186"/>
         <source>Calculating for {} files ...</source>
         <translation>Berechne für {} Dateien ...</translation>
     </message>
     <message>
-        <location filename="qdiskfit/qdiskfit.py" line="197"/>
+        <location filename="qdiskfit/qdiskfit.py" line="200"/>
         <source>Error</source>
         <translation>Fehler</translation>
     </message>
     <message>
-        <location filename="qdiskfit/qdiskfit.py" line="240"/>
+        <location filename="qdiskfit/qdiskfit.py" line="251"/>
         <source>Calculation interrupted</source>
         <translation>Berechnung unterbrochen</translation>
     </message>
@@ -286,9 +287,14 @@
         <translation></translation>
     </message>
     <message>
-        <location filename="qdiskfit/qdiskfit.py" line="197"/>
+        <location filename="qdiskfit/qdiskfit.py" line="200"/>
         <source>Failed to launch {}</source>
         <translation>Konnte {} nicht starten</translation>
+    </message>
+    <message>
+        <location filename="qdiskfit/qdiskfit.py" line="242"/>
+        <source>Calculation took {}</source>
+        <translation>Die Berechnung benötigte {}</translation>
     </message>
 </context>
 <context>

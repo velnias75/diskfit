@@ -9,6 +9,7 @@ EXTRA_DIST = LICENSE \
              qdiskfit_de.qm \
              qdiskfit_de.ts
 
+if INSTALL_GUI
 all-local:
 	(cd $(srcdir); $(PYTHON) setup.py build \
 		--build-base $(shell readlink -f $(builddir))/build \
@@ -28,3 +29,4 @@ uninstall-local:
 
 clean-local:
 	rm -rf build *.egg-info
+endif
