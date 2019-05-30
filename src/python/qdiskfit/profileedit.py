@@ -18,17 +18,17 @@
 # along with DiskFit.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+from .models.targetmodel import TargetModel
 from .dialogs.profile import Ui_ProfileEditor
+from PyQt5.QtWidgets import QHeaderView
 from PyQt5.QtWidgets import QDialog
-from gi.repository import GLib
-from .site import Site
-import os
+from PyQt5.QtCore import pyqtSlot
 
 
 class ProfileEdit(QDialog):
 
     __ui = None
-    __rc = GLib.KeyFile.new()
+    __tm = None
 
     def __init__(self):
 
@@ -37,13 +37,31 @@ class ProfileEdit(QDialog):
         self.__ui = Ui_ProfileEditor()
         self.__ui.setupUi(self)
 
-        sd_ = ["./",
-               os.environ["HOME"] + "/",
-               Site().get("sysconfdir", "/etc/diskfit"),
-               None
-               ]
+        self.__tm = TargetModel(self.__ui.table_targets)
 
-        has_rc_ = (self.__rc.
-                   load_from_dirs(".diskfitrc", sd_, GLib.KeyFileFlags.NONE) or
-                   self.__rc.
-                   load_from_dirs("diskfitrc", sd_, GLib.KeyFileFlags.NONE))
+        self.__ui.table_targets.setModel(self.__tm)
+        self.__ui.table_targets.horizontalHeader(). \
+            setSectionResizeMode(0, QHeaderView.Stretch)
+        self.__ui.table_targets.horizontalHeader(). \
+            setSectionResizeMode(1, QHeaderView.ResizeToContents)
+        self.__ui.table_targets.horizontalHeader(). \
+            setSectionResizeMode(2, QHeaderView.ResizeToContents)
+
+        self.__ui.button_add.clicked.connect(self.__tm.addTarget)
+        self.__ui.button_remove.clicked.connect(self.__tm.removeTarget)
+
+        self.__ui.table_targets.selectionModel().selectionChanged. \
+            connect(self.targetSelectionChanged)
+        self.__tm.row_added.connect(self.__ui.table_targets.scrollToBottom)
+
+    @pyqtSlot()
+    def targetSelectionChanged(self):
+        self.__ui.button_remove.setEnabled(self.__ui.table_targets.
+                                           selectionModel().hasSelection())
+
+    @pyqtSlot()
+    def accept(self):
+        super(ProfileEdit, self).accept()
+        self.__tm.saveRC()
+
+# kate: indent-mode: python

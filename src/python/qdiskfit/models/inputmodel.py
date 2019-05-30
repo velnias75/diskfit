@@ -46,8 +46,8 @@ class InputModel(QStandardItemModel, HRSize):
         super(InputModel, self).__init__()
 
         self.setHorizontalHeaderLabels([
-            self.tr("File", "InputModel"),
-            self.tr("Size", "InputModel")])
+            self.tr("File"),
+            self.tr("Size")])
 
         self.__sum = summary_
         self.__sta = start_

@@ -133,6 +133,10 @@ class MainWindow(QMainWindow):
         self.__proc1.errorOccurred.connect(self.error)
         self.__proc1.readyReadStandardOutput.connect(self.targetsAvailable)
         self.__proc1.start(self.__diskfit, list(), QProcess.ReadOnly)
+
+        while self.__ui.combo_target.count() > 1:
+            self.__ui.combo_target.removeItem(0)
+
         self.__proc1.waitForStarted(-1)
 
     def closeEvent(self, evt):
@@ -342,7 +346,9 @@ class MainWindow(QMainWindow):
 
     @pyqtSlot()
     def editProfile(self):
-        ProfileEdit().exec()
+        dlg_ = ProfileEdit()
+        if dlg_.exec() == ProfileEdit.Accepted:
+            self.getTargets()
 
 
 def main(args=None):
