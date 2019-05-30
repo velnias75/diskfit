@@ -51,7 +51,7 @@ setuptools.setup(name='qdiskfit',
                     },
                  package_data={
                     '': ['*.ui'],
-                    '': ['*.svg'],
+                    '': ['*.svgz'],
                     '': ['*.pro'],
                     '': ['*.ts'],
                     '': ['*.qm'],

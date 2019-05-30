@@ -1,6 +1,7 @@
 TRANSLATIONS = qdiskfit_de.ts
 
-FORMS = qdiskfit/mainwindow/mainwindow.ui
+FORMS = qdiskfit/mainwindow/mainwindow.ui \
+        qdiskfit/dialogs/profile.ui
 
 SOURCES = qdiskfit/qdiskfit.py \
           qdiskfit/models/inputmodel.py \

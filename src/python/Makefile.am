@@ -4,7 +4,7 @@ EXTRA_DIST = LICENSE \
              README \
              setup.py \
              qdiskfit.pro \
-             qdiskfit.svg \
+             qdiskfit.svgz \
              qdiskfit.desktop \
              qdiskfit_de.qm \
              qdiskfit_de.ts

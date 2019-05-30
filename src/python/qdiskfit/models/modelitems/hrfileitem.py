@@ -20,7 +20,7 @@
 
 from PyQt5.QtCore import Qt
 from PyQt5.QtCore import QFileInfo
-from .hrsize import HRSize
+from ...util.hrsize import HRSize
 from .echotooltipitem import EchoTooltipItem
 
 

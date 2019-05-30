@@ -44,6 +44,7 @@ from .site import Site
 import time
 import sys
 import re
+from .profileedit import ProfileEdit
 
 
 class MainWindow(QMainWindow):
@@ -122,6 +123,8 @@ class MainWindow(QMainWindow):
         self.__ui.actionAbout.triggered.connect(self.about)
 
         self.__outputModel.resultReady.connect(self.resultReady)
+
+        self.__ui.actionProfileeditor.triggered.connect(self.editProfile)
 
         self.readSettings()
         self.getTargets()
@@ -336,6 +339,10 @@ class MainWindow(QMainWindow):
     @pyqtSlot(int)
     def sortInput(self, idx):
         self.__ui.table_input.header().setSortIndicatorShown(True)
+
+    @pyqtSlot()
+    def editProfile(self):
+        ProfileEdit().exec()
 
 
 def main(args=None):

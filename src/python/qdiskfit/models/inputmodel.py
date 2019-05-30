@@ -28,7 +28,7 @@ from PyQt5.QtGui import QStandardItemModel
 from PyQt5.QtWidgets import QFileDialog
 from .modelitems.hrfileitem import HRFileItem
 from .modelitems.iconfileitem import IconFileItem
-from .modelitems.hrsize import HRSize
+from ..util.hrsize import HRSize
 
 
 class InputModel(QStandardItemModel, HRSize):

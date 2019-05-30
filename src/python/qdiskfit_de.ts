@@ -1,12 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!DOCTYPE TS>
-<TS version="2.1" language="de_DE">
+<!DOCTYPE TS><TS version="2.0" language="de_DE" sourcelanguage="">
 <context>
     <name>@default</name>
     <message>
         <location filename="qdiskfit/qdiskfit.py" line="217"/>
         <source>Processing result ...</source>
         <translation>Verarbeite Ergebnis ...</translation>
+    </message>
+</context>
+<context>
+    <name>Dialog</name>
+    <message>
+        <location filename="qdiskfit/dialogs/profile.ui" line="14"/>
+        <source>Dialog</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>

@@ -98,7 +98,9 @@ AC_OUTPUT([
     src/lib/Makefile 
     src/python/Makefile
     src/python/qdiskfit/Makefile
+    src/python/qdiskfit/dialogs/Makefile
     src/python/qdiskfit/mainwindow/Makefile
     src/python/qdiskfit/models/Makefile
     src/python/qdiskfit/models/modelitems/Makefile
+    src/python/qdiskfit/util/Makefile
 ])

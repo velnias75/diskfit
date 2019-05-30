@@ -362,6 +362,8 @@
     <addaction name="action_inputRemoveAll"/>
     <addaction name="separator"/>
     <addaction name="action_SelectAll"/>
+    <addaction name="separator"/>
+    <addaction name="actionProfileeditor"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menu_Edit"/>
@@ -507,13 +509,19 @@
     <bool>false</bool>
    </property>
    <property name="icon">
-    <iconset theme="document-save"/>
+    <iconset theme="document-save">
+     <normaloff>.</normaloff>.</iconset>
    </property>
    <property name="text">
-    <string>&amp;Save...</string>
+    <string>S&amp;ave...</string>
    </property>
    <property name="shortcut">
     <string>Ctrl+S</string>
+   </property>
+  </action>
+  <action name="actionProfileeditor">
+   <property name="text">
+    <string>Profileeditor...</string>
    </property>
   </action>
  </widget>
