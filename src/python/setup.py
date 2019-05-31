@@ -40,7 +40,7 @@ class EggInfoCommand(egg_info):
 SRC_PATH = os.path.relpath(os.path.join(os.path.dirname(__file__), "."))
 
 setuptools.setup(name='qdiskfit',
-                 version='2.0.2.7',
+                 version='2.0.2.8',
                  description='Simple disk fit calculator (GUI)',
                  url='https://github.com/velnias75/diskfit',
                  author='Heiko Schaefer',
