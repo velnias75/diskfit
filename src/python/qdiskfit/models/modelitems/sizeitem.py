@@ -18,40 +18,24 @@
 # along with DiskFit.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-from math import log
-from math import trunc
+from .validatingitem import ValidatingItem
+from ...util.hrsize import HRSize
+from PyQt5.QtCore import Qt
 
 
-class HRSize:
+class SizeItem(ValidatingItem):
 
-    __dec = 2
+    def __init__(self, dbl_):
+        super(SizeItem, self).__init__(dbl_)
+        self.setTextAlignment(Qt.AlignRight)
 
-    def __init__(self, dec_=2):
-        self.__dec = dec_
+    def validate(self, value):
+        return value > 0 and value <= 18446744073709551616
 
-    def __getFormatted(self, size_):
+    def displayValue(self, value):
+        return HRSize(5).sizeString(self.data(Qt.UserRole+1))
 
-        if trunc(size_) == size_:
-            format_ = ".0f"
-        else:
-            format_ = "." + str(self.__dec) + "f"
-
-        return format(size_, format_)
-
-    def sizeString(self, size_):
-
-        if size_ > 0:
-            d_ = log(size_, 2)
-        else:
-            d_ = 0
-
-        if d_ >= 30.0:
-            return self.__getFormatted(size_/1073741824.0) + " GByte"
-        elif d_ >= 20.0:
-            return self.__getFormatted(size_/1048576.0) + " MByte"
-        elif d_ >= 10.0:
-            return self.__getFormatted(size_/1024.0) + " KByte"
-
-        return str(size_) + " Byte"
+    def convertValue(self, value):
+        return int(value)
 
 # kate: indent-mode: python

@@ -18,10 +18,11 @@
 # along with DiskFit.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+from .modelitems.targetnameitem import TargetNameItem
 from PyQt5.QtGui import QStandardItemModel
 from PyQt5.QtCore import QCoreApplication
+from .modelitems.sizeitem import SizeItem
 from PyQt5.QtWidgets import QMessageBox
-from PyQt5.QtGui import QStandardItem
 from PyQt5.QtCore import pyqtSignal
 from PyQt5.QtCore import pyqtSlot
 from PyQt5.QtCore import qDebug
@@ -73,29 +74,30 @@ class TargetModel(QStandardItemModel):
             qDebug("No key file found")
 
         self.setHorizontalHeaderLabels([
-            self.tr("Name"),
+            self.tr("Target"),
             self.tr("Total size"),
             self.tr("Block size")])
 
         for grp_ in self.__rc.get_groups()[0]:
 
-            grp_item_ = QStandardItem(grp_)
-            size_item_ = QStandardItem("0")
-            bs_item_ = QStandardItem("2048")
+            grp_item_ = TargetNameItem(grp_, self)
+            size_item_ = SizeItem(0)
+            bs_item_ = SizeItem(2048)
 
             for key_ in self.__rc.get_keys(grp_)[0]:
                 if key_ == "size":
-                    size_item_.setText(str(self.__rc.get_value(grp_, key_)))
+                    size_item_.setData(int(self.__rc.get_value(grp_, key_)))
                 if key_ == "bs":
-                    bs_item_.setText(str(self.__rc.get_value(grp_, key_)))
+                    bs_item_.setData(int(self.__rc.get_value(grp_, key_)))
 
             self.appendRow((grp_item_, size_item_, bs_item_))
 
     @pyqtSlot()
     def addTarget(self):
-        self.appendRow((QStandardItem(self.tr("New_target")),
-                        QStandardItem("2048"),
-                        QStandardItem("2048")))
+        self.appendRow((TargetNameItem("", self, False),
+                        SizeItem(0),
+                        SizeItem(2048)))
+
         self.row_added.emit()
 
     @pyqtSlot()
@@ -117,9 +119,14 @@ class TargetModel(QStandardItemModel):
                               QCoreApplication.applicationVersion())
 
         for r_ in range(0, self.rowCount()):
-            grp_ = self.item(r_, 0).text()
-            self.__rc.set_uint64(grp_, "size", int(self.item(r_, 1).text()))
-            self.__rc.set_uint64(grp_, "bs", int(self.item(r_, 2).text()))
+            if self.item(r_, 0).isValid() and \
+               self.item(r_, 1).isValid() and \
+               self.item(r_, 2).isValid():
+                grp_ = self.item(r_, 0).text()
+                self.__rc.set_uint64(grp_, "size",
+                                     int(self.item(r_, 1).data()))
+                self.__rc.set_uint64(grp_, "bs",
+                                     int(self.item(r_, 2).data()))
 
         try:
             self.__rc.save_to_file(os.environ["HOME"] + "/.diskfitrc")

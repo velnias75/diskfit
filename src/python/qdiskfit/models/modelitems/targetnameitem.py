@@ -18,40 +18,30 @@
 # along with DiskFit.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-from math import log
-from math import trunc
+from .validatingitem import ValidatingItem
 
 
-class HRSize:
+class TargetNameItem(ValidatingItem):
 
-    __dec = 2
+    __model = None
+    __in_rc = True
 
-    def __init__(self, dec_=2):
-        self.__dec = dec_
+    def __init__(self, name_, model_, in_rc_=True):
+        super(TargetNameItem, self).__init__(name_)
+        self.__model = model_
+        self.__in_rc = in_rc_
 
-    def __getFormatted(self, size_):
+    def validate(self, value):
 
-        if trunc(size_) == size_:
-            format_ = ".0f"
-        else:
-            format_ = "." + str(self.__dec) + "f"
+        if not self.__in_rc:
+            for r_ in range(0, self.__model.rowCount()):
+                if self.__model.item(r_, 0) is not self and \
+                   self.__model.item(r_, 0).text() == value:
+                    return False
 
-        return format(size_, format_)
+        return len(value) > 0 and " " not in value
 
-    def sizeString(self, size_):
-
-        if size_ > 0:
-            d_ = log(size_, 2)
-        else:
-            d_ = 0
-
-        if d_ >= 30.0:
-            return self.__getFormatted(size_/1073741824.0) + " GByte"
-        elif d_ >= 20.0:
-            return self.__getFormatted(size_/1048576.0) + " MByte"
-        elif d_ >= 10.0:
-            return self.__getFormatted(size_/1024.0) + " KByte"
-
-        return str(size_) + " Byte"
+    def convertValue(self, value):
+        return str(value)
 
 # kate: indent-mode: python
