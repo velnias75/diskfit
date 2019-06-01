@@ -1,7 +1,7 @@
 SUBDIRS = qdiskfit
 
 EXTRA_DIST = LICENSE \
-             README \
+             README.md \
              setup.py \
              qdiskfit.pro \
              qdiskfit.svgz \
