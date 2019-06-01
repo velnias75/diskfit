@@ -36,15 +36,16 @@ from PyQt5.QtWidgets import QProgressBar
 from PyQt5.QtWidgets import QMessageBox
 from PyQt5.QtWidgets import QHeaderView
 from PyQt5.QtWidgets import QMainWindow
+from .util.langcenv import LangCProcessEnvironment
 from .models.outputmodel import OutputModel
 from .models.inputmodel import InputModel
+from .profileedit import ProfileEdit
 from .mainwindow import mainwindow
 from shlex import quote
 from .site import Site
 import time
 import sys
 import re
-from .profileedit import ProfileEdit
 
 
 class MainWindow(QMainWindow):
@@ -67,6 +68,12 @@ class MainWindow(QMainWindow):
     def __init__(self):
 
         super(MainWindow, self).__init__()
+
+        df_env_ = LangCProcessEnvironment().env()
+
+        self.__proc1.setProcessEnvironment(df_env_)
+        self.__proc2.setProcessEnvironment(df_env_)
+        self.__proc3.setProcessEnvironment(df_env_)
 
         self.__ui = mainwindow.Ui_MainWindow()
         self.__ui.setupUi(self)
@@ -204,7 +211,7 @@ class MainWindow(QMainWindow):
     def error(self, err):
         if err == QProcess.FailedToStart:
             QMessageBox.critical(None, self.tr("Error"),
-                                 self.tr("Failed to launch {}".
+                                 self.tr("Failed to launch {}.".
                                          format(self.__diskfit)))
         self.finished(0, QProcess.NormalExit)
 

@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>500</width>
+    <width>600</width>
     <height>392</height>
    </rect>
   </property>
@@ -111,6 +111,13 @@
            </property>
           </spacer>
          </item>
+         <item>
+          <widget class="QPushButton" name="button_detectCapacity">
+           <property name="text">
+            <string>&amp;Detect capacity</string>
+           </property>
+          </widget>
+         </item>
         </layout>
        </widget>
       </item>
@@ -130,6 +137,7 @@
   <tabstop>table_targets</tabstop>
   <tabstop>button_add</tabstop>
   <tabstop>button_remove</tabstop>
+  <tabstop>button_detectCapacity</tabstop>
  </tabstops>
  <resources/>
  <connections>

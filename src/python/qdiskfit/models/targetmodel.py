@@ -93,10 +93,10 @@ class TargetModel(QStandardItemModel):
             self.appendRow((grp_item_, size_item_, bs_item_))
 
     @pyqtSlot()
-    def addTarget(self):
-        self.appendRow((TargetNameItem("", self, False),
-                        SizeItem(0),
-                        SizeItem(2048)))
+    def addTarget(self, name_="", total_=0, bs_=2048):
+        self.appendRow((TargetNameItem(name_, self, False),
+                        SizeItem(total_),
+                        SizeItem(bs_)))
 
         self.row_added.emit()
 

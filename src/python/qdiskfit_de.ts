@@ -4,7 +4,7 @@
 <context>
     <name>@default</name>
     <message>
-        <location filename="qdiskfit/qdiskfit.py" line="224"/>
+        <location filename="qdiskfit/qdiskfit.py" line="231"/>
         <source>Processing result ...</source>
         <translation>Verarbeite Ergebnis ...</translation>
     </message>
@@ -67,27 +67,27 @@
 <context>
     <name>MainWindow</name>
     <message>
-        <location filename="qdiskfit/qdiskfit.py" line="164"/>
+        <location filename="qdiskfit/qdiskfit.py" line="171"/>
         <source>About</source>
         <translation>Über</translation>
     </message>
     <message>
-        <location filename="qdiskfit/qdiskfit.py" line="164"/>
+        <location filename="qdiskfit/qdiskfit.py" line="171"/>
         <source>A simple disk fit calculator (GUI)</source>
         <translation>Optimale Belegung von Dateien ermitteln (GUI)</translation>
     </message>
     <message>
-        <location filename="qdiskfit/qdiskfit.py" line="193"/>
+        <location filename="qdiskfit/qdiskfit.py" line="200"/>
         <source>Calculating for {} files ...</source>
         <translation>Berechne für {} Dateien ...</translation>
     </message>
     <message>
-        <location filename="qdiskfit/qdiskfit.py" line="207"/>
+        <location filename="qdiskfit/qdiskfit.py" line="214"/>
         <source>Error</source>
         <translation>Fehler</translation>
     </message>
     <message>
-        <location filename="qdiskfit/qdiskfit.py" line="258"/>
+        <location filename="qdiskfit/qdiskfit.py" line="265"/>
         <source>Calculation interrupted</source>
         <translation>Berechnung unterbrochen</translation>
     </message>
@@ -299,10 +299,10 @@
     <message>
         <location filename="qdiskfit/qdiskfit.py" line="207"/>
         <source>Failed to launch {}</source>
-        <translation>Konnte {} nicht starten</translation>
+        <translation type="obsolete">Konnte {} nicht starten</translation>
     </message>
     <message>
-        <location filename="qdiskfit/qdiskfit.py" line="249"/>
+        <location filename="qdiskfit/qdiskfit.py" line="256"/>
         <source>Calculation took {}</source>
         <translation>Die Berechnung benötigte {}</translation>
     </message>
@@ -320,6 +320,11 @@
         <location filename="qdiskfit/mainwindow/mainwindow.ui" line="523"/>
         <source>&amp;Profileeditor...</source>
         <translation>&amp;Profil-Editor...</translation>
+    </message>
+    <message>
+        <location filename="qdiskfit/qdiskfit.py" line="214"/>
+        <source>Failed to launch {}.</source>
+        <translation>Konnte {} nicht starten.</translation>
     </message>
 </context>
 <context>
@@ -350,18 +355,13 @@
     </message>
     <message>
         <location filename="qdiskfit/models/outputmodel.py" line="121"/>
-        <source>Save result</source>
-        <translation></translation>
-    </message>
-    <message>
-        <location filename="qdiskfit/models/outputmodel.py" line="121"/>
         <source>Text file (*.txt);;All files (*)</source>
         <translation>Textdatei (*.txt);;Alle Dateien (*)</translation>
     </message>
     <message>
         <location filename="qdiskfit/models/outputmodel.py" line="140"/>
         <source>Error saving result</source>
-        <translation>Fehler beim Speichern des Ergbnisses</translation>
+        <translation>Fehler beim Speichern des Ergbnis</translation>
     </message>
     <message>
         <location filename="qdiskfit/models/outputmodel.py" line="92"/>
@@ -372,6 +372,44 @@
         <location filename="qdiskfit/models/outputmodel.py" line="106"/>
         <source>{} results found</source>
         <translation>{} Ergebnisse gefunden</translation>
+    </message>
+    <message>
+        <location filename="qdiskfit/models/outputmodel.py" line="121"/>
+        <source>Save result</source>
+        <translation>Ergebnis speichern</translation>
+    </message>
+</context>
+<context>
+    <name>ProfileEdit</name>
+    <message>
+        <location filename="qdiskfit/profileedit.py" line="80"/>
+        <source>Detect capacity</source>
+        <translation>Erkenne Kapazität</translation>
+    </message>
+    <message>
+        <location filename="qdiskfit/profileedit.py" line="80"/>
+        <source>Please insert a blank DVD or CD into the drive and wait until it&apos;s loaded.</source>
+        <translation>Legen Sie bitte einen DVD- oder CD-Rohling in das Laufwerk ein und warten Sie bis er geladen ist.</translation>
+    </message>
+    <message>
+        <location filename="qdiskfit/profileedit.py" line="171"/>
+        <source>Error</source>
+        <translation>Fehler</translation>
+    </message>
+    <message>
+        <location filename="qdiskfit/profileedit.py" line="134"/>
+        <source>Failed to launch {}.</source>
+        <translation>Konnte {} nicht starten.</translation>
+    </message>
+    <message>
+        <location filename="qdiskfit/profileedit.py" line="166"/>
+        <source>blankCD</source>
+        <translation>CD-Rohling</translation>
+    </message>
+    <message>
+        <location filename="qdiskfit/profileedit.py" line="171"/>
+        <source>Could not detect capacity.</source>
+        <translation>Konnte die Kapazität nicht erkennen.</translation>
     </message>
 </context>
 <context>
@@ -400,6 +438,11 @@
         <location filename="qdiskfit/dialogs/profile.ui" line="93"/>
         <source>&amp;Remove</source>
         <translation>&amp;Entfernen</translation>
+    </message>
+    <message>
+        <location filename="qdiskfit/dialogs/profile.ui" line="117"/>
+        <source>&amp;Detect capacity</source>
+        <translation>Erkenne &amp;Kapazität</translation>
     </message>
 </context>
 <context>
