@@ -175,6 +175,7 @@ class MainWindow(QMainWindow):
 
     @pyqtSlot()
     def start(self):
+        self.__ui.actionProfileeditor.setEnabled(False)
         self.__ui.action_SelectAll.setEnabled(False)
         self.__ui.action_inputRemoveAll.setEnabled(False)
         self.__ui.action_InputRemove.setEnabled(False)
@@ -268,6 +269,7 @@ class MainWindow(QMainWindow):
 
     @pyqtSlot()
     def resultReady(self):
+        self.__ui.actionProfileeditor.setEnabled(True)
         self.__ui.action_SelectAll. \
             setEnabled(self.__inputModel.rowCount() > 0)
         self.__ui.action_inputRemoveAll. \
