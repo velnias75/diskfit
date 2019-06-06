@@ -45,6 +45,8 @@ class OutputModel(QStandardItemModel):
     __imd = None
     __rex = re.compile("'([^']+)'")
 
+    __result = None
+
     def __init__(self, parent_, summary_, in_model_):
 
         super(OutputModel, self).__init__()
@@ -61,53 +63,82 @@ class OutputModel(QStandardItemModel):
         self.__sum = summary_
         self.__imd = in_model_
 
+    def sortSize(self, fa_, rev_):
+        fa_.sort(key=lambda ma: self.__imd.
+                 item(self.__imd.indexFromItem(self.__imd.
+                                               findItems(ma)[0]).row(),
+                      1).num(), reverse=rev_)
+
+    def sortTitle(self, fa_, rev_):
+        fa_.sort(key=lambda ma: self.__imd.
+                 item(self.__imd.indexFromItem(self.__imd.
+                                               findItems(ma)[0]).row(),
+                      0).name(), reverse=rev_)
+
     def setLastResult(self, result_, progress_):
+        self.__result = result_
+        self.applyResult(progress_)
 
-        self.removeRows(0, self.rowCount())
+    def applyResult(self, progress_=None):
 
-        for pv_, r_ in enumerate(result_):
+        if self.__result is not None:
 
-            fa_ = self.__rex.findall(r_[0])
+            settings_ = QSettings()
 
-            l_ = (MultiFileDragItem(fa_),
-                  EchoTooltipItem(r_[1], True),
-                  EchoTooltipItem(r_[2], True),
-                  EchoTooltipItem(r_[3], True))
+            self.removeRows(0, self.rowCount())
 
-            ts_ = 0
-            for ma_ in fa_:
-                ts_ += self.__imd.item(self.__imd.
-                                       indexFromItem(self.__imd.
-                                                     findItems(ma_)[0]).row(),
-                                       1).num()
+            for pv_, r_ in enumerate(self.__result):
 
-            for i_, ma_ in enumerate(fa_):
+                fa_ = self.__rex.findall(r_[0])
 
-                item_ = self.__imd.item(self.__imd.
-                                        indexFromItem(self.__imd.
-                                                      findItems(ma_)[0]).row(),
-                                        1)
+                l_ = (MultiFileDragItem(fa_),
+                      EchoTooltipItem(r_[1], True),
+                      EchoTooltipItem(r_[2], True),
+                      EchoTooltipItem(r_[3], True))
 
-                rsit_ = EchoTooltipItem(item_.relativeSizePctString(ts_))
-                rsit_.setToolTip(self.tr("{0} of {1}").
-                                 format(rsit_.text(), r_[2]))
+                ts_ = 0
+                for ma_ in fa_:
+                    ts_ += self.__imd.item(self.__imd.
+                                           indexFromItem(self.__imd.
+                                                         findItems(ma_)[0]).
+                                           row(), 1).num()
 
-                l_[0].setChild(i_, 0, IconFileItem(ma_))
-                l_[0].setChild(i_, 1, EchoTooltipItem("1"))
-                l_[0].setChild(i_, 2, EchoTooltipItem(item_.text()))
-                l_[0].setChild(i_, 3, rsit_)
+                if int(settings_.value("resultSort", 0)) == 0:
+                    self.sortTitle(fa_, False)
+                elif int(settings_.value("resultSort", 0)) == 1:
+                    self.sortTitle(fa_, True)
+                elif int(settings_.value("resultSort", 0)) == 2:
+                    self.sortSize(fa_, False)
+                else:
+                    self.sortSize(fa_, True)
 
-            self.appendRow(l_)
+                for i_, ma_ in enumerate(fa_):
 
-            if pv_ % 500 == 0:
-                progress_.setValue(pv_)
+                    item_ = self.__imd.item(self.__imd.
+                                            indexFromItem(self.__imd.
+                                                          findItems(ma_)[0]).
+                                            row(), 1)
 
-        self.__par.scrollToBottom()
-        self.__sum.setText(self.tr("{} results found").
-                           format(str(self.rowCount())))
+                    rsit_ = EchoTooltipItem(item_.relativeSizePctString(ts_))
+                    rsit_.setToolTip(self.tr("{0} of {1}").
+                                     format(rsit_.text(), r_[2]))
 
-        self.modelSaveable.emit(self.rowCount() > 0)
-        self.resultReady.emit()
+                    l_[0].setChild(i_, 0, IconFileItem(ma_))
+                    l_[0].setChild(i_, 1, EchoTooltipItem("1"))
+                    l_[0].setChild(i_, 2, EchoTooltipItem(item_.text()))
+                    l_[0].setChild(i_, 3, rsit_)
+
+                self.appendRow(l_)
+
+                if progress_ is not None and pv_ % 500 == 0:
+                    progress_.setValue(pv_)
+
+            self.__par.scrollToBottom()
+            self.__sum.setText(self.tr("{} results found").
+                               format(str(self.rowCount())))
+
+            self.modelSaveable.emit(self.rowCount() > 0)
+            self.resultReady.emit()
 
     @pyqtSlot()
     def saveModel(self):
@@ -157,8 +188,15 @@ class OutputModel(QStandardItemModel):
 
         for idx in indexes:
             if idx.column() == 0:
-                for file in self.item(idx.row(), 0).files():
-                    urls_.append(QUrl("file://" + file))
+                c_ = 0
+                while True:
+                    ci_ = self.item(idx.row(), 0).child(c_)
+                    c_ += 1
+                    if ci_ is not None:
+                        urls_.append(QUrl("file://" + ci_.path() +
+                                          "/" + ci_.name()))
+                    else:
+                        break
 
         mime_.setUrls(urls_)
 

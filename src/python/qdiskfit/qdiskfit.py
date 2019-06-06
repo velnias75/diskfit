@@ -27,15 +27,19 @@ from PyQt5.QtCore import QProcess
 from PyQt5.QtCore import QLocale
 from PyQt5.QtCore import pyqtSlot
 from PyQt5.QtCore import qDebug
+from PyQt5.QtCore import QPoint
 from PyQt5.QtCore import QTime
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QProgressDialog
 from PyQt5.QtWidgets import QDesktopWidget
 from PyQt5.QtWidgets import QApplication
+from PyQt5.QtWidgets import QActionGroup
 from PyQt5.QtWidgets import QProgressBar
 from PyQt5.QtWidgets import QMessageBox
 from PyQt5.QtWidgets import QHeaderView
 from PyQt5.QtWidgets import QMainWindow
+from PyQt5.QtWidgets import QAction
+from PyQt5.QtWidgets import QMenu
 from .util.langcenv import LangCProcessEnvironment
 from .models.outputmodel import OutputModel
 from .models.inputmodel import InputModel
@@ -104,6 +108,12 @@ class MainWindow(QMainWindow):
                                          self.__inputModel)
 
         self.__ui.table_output.setModel(self.__outputModel)
+
+        self.__ui.table_output.header(). \
+            setContextMenuPolicy(Qt.CustomContextMenu)
+        self.__ui.table_output.header(). \
+            customContextMenuRequested.connect(self.outputOrder)
+
         self.__ui.table_output.header(). \
             setSectionResizeMode(0, QHeaderView.Stretch)
         self.__ui.table_output.header(). \
@@ -164,6 +174,56 @@ class MainWindow(QMainWindow):
         if s_ is not None:
             self.restoreState(s_)
             self.gui_restored |= True
+
+    @pyqtSlot(QPoint)
+    def outputOrder(self, pos):
+
+        settings_ = QSettings()
+
+        globalPos = self.__ui.table_output.header().mapToGlobal(pos)
+
+        menu = QMenu()
+
+        atit_ = QAction(self.tr("Sort by title"))
+        atit_.setSeparator(True)
+        asiz_ = QAction(self.tr("Sort by size"))
+        asiz_.setSeparator(True)
+
+        atas_ = QAction(self.tr("ascending"))
+        atas_.setCheckable(True)
+        atas_.setChecked(int(settings_.value("resultSort", 0)) == 0)
+        atds_ = QAction(self.tr("descending"))
+        atds_.setCheckable(True)
+        atds_.setChecked(int(settings_.value("resultSort", 0)) == 1)
+        asas_ = QAction(self.tr("ascending"))
+        asas_.setCheckable(True)
+        asas_.setChecked(int(settings_.value("resultSort", 0)) == 2)
+        asds_ = QAction(self.tr("descending"))
+        asds_.setCheckable(True)
+        asds_.setChecked(int(settings_.value("resultSort", 0)) == 3)
+
+        agrp_ = QActionGroup(menu)
+        agrp_.addAction(atit_)
+        agrp_.addAction(atas_)
+        agrp_.addAction(atds_)
+        agrp_.addAction(asiz_)
+        agrp_.addAction(asas_)
+        agrp_.addAction(asds_)
+
+        menu.addActions(agrp_.actions())
+
+        selectedItem = menu.exec_(globalPos)
+
+        if selectedItem:
+            if selectedItem is atas_:
+                settings_.setValue("resultSort", 0)
+            elif selectedItem is atds_:
+                settings_.setValue("resultSort", 1)
+            elif selectedItem is asas_:
+                settings_.setValue("resultSort", 2)
+            else:
+                settings_.setValue("resultSort", 3)
+            self.__outputModel.applyResult()
 
     @pyqtSlot()
     def about(self):
