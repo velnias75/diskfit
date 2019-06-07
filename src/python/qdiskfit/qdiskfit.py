@@ -41,6 +41,7 @@ from PyQt5.QtWidgets import QMainWindow
 from PyQt5.QtWidgets import QAction
 from PyQt5.QtWidgets import QMenu
 from .util.langcenv import LangCProcessEnvironment
+from .models.targetmodel import TargetModel
 from .models.outputmodel import OutputModel
 from .models.inputmodel import InputModel
 from .profileedit import ProfileEdit
@@ -68,6 +69,7 @@ class MainWindow(QMainWindow):
     __resultBuf = ""
     __statusBar = None
     __runningTime = None
+    __targetModel = None
 
     def __init__(self):
 
@@ -89,6 +91,8 @@ class MainWindow(QMainWindow):
 
         self.__statusBar = self.statusBar()
         self.__statusBar.addPermanentWidget(self.__diskfitProgress)
+
+        self.__targetModel = TargetModel(self)
 
         self.__inputModel = InputModel(self.__ui.table_input,
                                        self.__ui.label_inputSummary,
@@ -185,7 +189,15 @@ class MainWindow(QMainWindow):
         globalPos = self.__ui.table_input.mapToGlobal(pos)
 
         menu_ = QMenu()
+
+        menu_.addAction(self.__ui.action_InputAdd)
+        menu_.addAction(self.__ui.action_InputRemove)
+        menu_.addAction(self.__ui.action_inputRemoveAll)
+        menu_.addSeparator()
+        menu_.addAction(self.__ui.action_SelectAll)
+        menu_.addSeparator()
         menu_.addAction(self.__ui.action_diffTarget)
+
         menu_.exec_(globalPos)
 
     @pyqtSlot(QPoint)
@@ -455,7 +467,11 @@ class MainWindow(QMainWindow):
     def exclusiveSize(self):
         return int(self.__ui.spin_bytes.value()) - \
             self.__inputModel.getAccuSize(self.__ui.
-                                          table_input.selectedIndexes())
+                                          table_input.selectedIndexes(),
+                                          self.__targetModel.
+                                          getBlocksize(self.__ui.
+                                                       combo_target.
+                                                       currentText()))
 
 
 def main(args=None):

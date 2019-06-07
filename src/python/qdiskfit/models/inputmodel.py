@@ -170,11 +170,20 @@ class InputModel(QStandardItemModel, HRSize):
 
         self.addFileList(fdlg_.selectedFiles())
 
-    def getAccuSize(self, items_):
+    def getAccuSize(self, items_, bs_):
+
         accu_ = 0
+
         for i_ in items_:
             if i_.column() == 1:
-                accu_ += self.itemFromIndex(i_).num()
+                if bs_ > 0:
+                    padded_size_ = self.itemFromIndex(i_).num() + \
+                        (bs_ - (self.itemFromIndex(i_).num() & (bs_ - 1)))
+                else:
+                    padded_size_ = self.itemFromIndex(i_).num()
+
+                accu_ += padded_size_
+
         return accu_
 
     def addFileList(self, files_):

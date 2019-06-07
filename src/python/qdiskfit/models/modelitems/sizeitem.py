@@ -25,12 +25,21 @@ from PyQt5.QtCore import Qt
 
 class SizeItem(ValidatingItem):
 
-    def __init__(self, dbl_):
+    __pot = False
+
+    def __init__(self, dbl_, pot_=False):
         super(SizeItem, self).__init__(dbl_)
         self.setTextAlignment(Qt.AlignRight)
+        self.__pot = pot_
 
     def validate(self, value):
-        return value > 0 and value <= 18446744073709551616
+        if self.__pot:
+            pot_ = ((value & (value - 1)) == 0)
+        else:
+            pot_ = True
+
+        return value > 0 and value <= 18446744073709551616 \
+            and pot_
 
     def displayValue(self, value):
         return HRSize(5).sizeString(self.data(Qt.UserRole+1))

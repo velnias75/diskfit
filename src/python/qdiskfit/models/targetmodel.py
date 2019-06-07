@@ -82,7 +82,7 @@ class TargetModel(QStandardItemModel):
 
             grp_item_ = TargetNameItem(grp_, self)
             size_item_ = SizeItem(0)
-            bs_item_ = SizeItem(2048)
+            bs_item_ = SizeItem(2048, True)
 
             for key_ in self.__rc.get_keys(grp_)[0]:
                 if key_ == "size":
@@ -133,5 +133,11 @@ class TargetModel(QStandardItemModel):
             self.rc_changed.emit()
         except GLib.Error as e:
             QMessageBox.critical(None, self.tr("Error"), e.message)
+
+    def getBlocksize(self, target_):
+        try:
+            return int(self.__rc.get_value(target_, "bs"))
+        except GLib.Error:
+            return 0
 
 # kate: indent-mode: python
