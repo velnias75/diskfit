@@ -170,6 +170,13 @@ class InputModel(QStandardItemModel, HRSize):
 
         self.addFileList(fdlg_.selectedFiles())
 
+    def getAccuSize(self, items_):
+        accu_ = 0
+        for i_ in items_:
+            if i_.column() == 1:
+                accu_ += self.itemFromIndex(i_).num()
+        return accu_
+
     def addFileList(self, files_):
         for file_ in files_:
             ifi_ = IconFileItem(file_)

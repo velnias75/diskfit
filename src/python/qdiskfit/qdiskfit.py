@@ -103,6 +103,9 @@ class MainWindow(QMainWindow):
         self.__ui.table_input.header(). \
             setSectionResizeMode(1, QHeaderView.ResizeToContents)
 
+        self.__ui.table_input. \
+            customContextMenuRequested.connect(self.inputContextRequested)
+
         self.__outputModel = OutputModel(self.__ui.table_output,
                                          self.__ui.label_runSummary,
                                          self.__inputModel)
@@ -138,6 +141,7 @@ class MainWindow(QMainWindow):
         self.__ui.combo_target.currentIndexChanged.connect(self.targetChanged)
         self.__ui.action_Start.triggered.connect(self.start)
         self.__ui.actionAbout.triggered.connect(self.about)
+        self.__ui.action_diffTarget.triggered.connect(self.diffTarget)
 
         self.__outputModel.resultReady.connect(self.resultReady)
 
@@ -174,6 +178,15 @@ class MainWindow(QMainWindow):
         if s_ is not None:
             self.restoreState(s_)
             self.gui_restored |= True
+
+    @pyqtSlot(QPoint)
+    def inputContextRequested(self, pos):
+
+        globalPos = self.__ui.table_input.mapToGlobal(pos)
+
+        menu_ = QMenu()
+        menu_.addAction(self.__ui.action_diffTarget)
+        menu_.exec_(globalPos)
 
     @pyqtSlot(QPoint)
     def outputOrder(self, pos):
@@ -242,12 +255,17 @@ class MainWindow(QMainWindow):
         self.__ui.action_InputAdd.setEnabled(False)
         self.__ui.action_Start.setEnabled(False)
         self.__ui.actionStop.setEnabled(True)
+        self.__ui.action_diffTarget.setEnabled(False)
         self.__ui.group_InputFiles.setEnabled(False)
         self.__ui.group_profile.setEnabled(False)
 
         args_ = list()
 
-        args_.append(self.__ui.combo_target.currentText())
+        if self.__ui.combo_target.currentIndex() is \
+           not self.__ui.combo_target.model().rowCount() - 1:
+            args_.append(self.__ui.combo_target.currentText())
+        else:
+            args_.append(str(int(self.__ui.spin_bytes.value())))
 
         for file_ in self.__inputModel.files():
             args_.append(quote(file_.text()))
@@ -336,6 +354,7 @@ class MainWindow(QMainWindow):
             setEnabled(self.__inputModel.rowCount() > 0)
         self.__ui.action_InputRemove. \
             setEnabled(len(self.__ui.table_input.selectedIndexes()) > 0)
+        self.__ui.action_diffTarget.setEnabled(self.enableExclusive())
         self.__ui.action_InputAdd.setEnabled(True)
         self.__ui.action_Start.setEnabled(True)
         self.__ui.actionStop.setEnabled(False)
@@ -408,6 +427,7 @@ class MainWindow(QMainWindow):
         en_ = self.__ui.table_input.selectionModel().hasSelection()
         self.__ui.button_ListRemove.setEnabled(en_)
         self.__ui.action_InputRemove.setEnabled(en_)
+        self.__ui.action_diffTarget.setEnabled(self.enableExclusive())
 
     @pyqtSlot(int)
     def sortInput(self, idx):
@@ -419,6 +439,24 @@ class MainWindow(QMainWindow):
         if dlg_.exec() == ProfileEdit.Accepted:
             self.getTargets()
 
+    @pyqtSlot()
+    def diffTarget(self):
+        size_ = self.exclusiveSize()
+
+        self.__inputModel.removeFiles()
+        self.__ui.combo_target.setCurrentIndex(self.__ui.combo_target.
+                                               model().rowCount()-1)
+        self.__ui.spin_bytes.setValue(size_)
+
+    def enableExclusive(self):
+        return self.__ui.table_input.selectionModel().hasSelection() and \
+            self.exclusiveSize() >= 0
+
+    def exclusiveSize(self):
+        return int(self.__ui.spin_bytes.value()) - \
+            self.__inputModel.getAccuSize(self.__ui.
+                                          table_input.selectedIndexes())
+
 
 def main(args=None):
 
@@ -427,7 +465,7 @@ def main(args=None):
     translator = QTranslator()
 
     app.setApplicationName("QDiskFit")
-    app.setApplicationVersion("2.0.2.9")
+    app.setApplicationVersion("2.0.2.10")
     app.setApplicationDisplayName(app.applicationName() + " " +
                                   app.applicationVersion())
     app.setOrganizationDomain("rangun.de")
