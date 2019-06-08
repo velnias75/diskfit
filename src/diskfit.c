@@ -388,6 +388,11 @@ int main(int argc, char *argv[]) {
         wordexp_t p;
 
         print_copy();
+        
+        if(!tg) {
+            fprintf(stderr, "invalid target or size given\n");
+            return EXIT_FAILURE;
+        }
 
         memset(&p, 0, sizeof(wordexp_t));
 
