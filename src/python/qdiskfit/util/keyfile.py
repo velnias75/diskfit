@@ -26,63 +26,76 @@ import os
 
 class Keyfile:
 
-    __rc = GLib.KeyFile.new()
+    __instance = None
 
-    def __init__(self):
+    class __Keyfile:
 
-        sd_ = ["./",
-               os.environ["HOME"] + "/",
-               Site().get("sysconfdir", "/etc/"),
-               None
-               ]
+        __rc = GLib.KeyFile.new()
 
-        rc_fp_ = None
+        def __init__(self):
 
-        try:
-            rc_fp_ = self.__rc.load_from_dirs(".diskfitrc", sd_,
-                                              GLib.KeyFileFlags.NONE). \
-                                                  full_path
-        except GLib.Error as e1:
+            sd_ = ["./",
+                   os.environ["HOME"] + "/",
+                   Site().get("sysconfdir", "/etc/"),
+                   None
+                   ]
 
-            qDebug(e1.message.encode())
+            rc_fp_ = None
 
             try:
-                rc_fp_ = self.__rc.load_from_dirs("diskfitrc", sd_,
+                rc_fp_ = self.__rc.load_from_dirs(".diskfitrc", sd_,
                                                   GLib.KeyFileFlags.NONE). \
                                                       full_path
-            except GLib.Error as e2:
-                qDebug(e2.message.encode())
+            except GLib.Error as e1:
 
-        if rc_fp_ is not None:
-            qDebug("Key file loaded from: " + rc_fp_)
-        else:
-            qDebug("No key file found")
+                qDebug(e1.message.encode())
 
-    def getBlocksize(self, target_):
-        try:
-            return int(self.__rc.get_value(target_, "bs"))
-        except GLib.Error:
-            return 0
+                try:
+                    rc_fp_ = self.__rc.load_from_dirs("diskfitrc", sd_,
+                                                      GLib.
+                                                      KeyFileFlags.NONE). \
+                                                          full_path
+                except GLib.Error as e2:
+                    qDebug(e2.message.encode())
 
-    def get_groups(self):
-        return self.__rc.get_groups()
+            if rc_fp_ is not None:
+                qDebug("Key file loaded from: " + rc_fp_)
+            else:
+                qDebug("No key file found")
 
-    def get_keys(self, grp_):
-        return self.__rc.get_keys(grp_)
+        def getBlocksize(self, target_):
+            try:
+                return int(self.__rc.get_value(target_, "bs"))
+            except GLib.Error:
+                return 0
 
-    def get_value(self, grp_, key_):
-        return self.__rc.get_value(grp_, key_)
+        def get_groups(self):
+            return self.__rc.get_groups()
 
-    def remove_group(self, grp_):
-        self.__rc.remove_group(grp_)
+        def get_keys(self, grp_):
+            return self.__rc.get_keys(grp_)
 
-    def set_comment(self, grp_, key_, comment_):
-        self.__rc.set_comment(grp_, key_, comment_)
+        def get_value(self, grp_, key_):
+            return self.__rc.get_value(grp_, key_)
 
-    def set_uint64(self, grp_, key_, value_):
-        self.__rc.set_uint64(grp_, key_, value_)
+        def remove_group(self, grp_):
+            self.__rc.remove_group(grp_)
 
-    def save_to_file(self, filename_):
-        self.__rc.save_to_file(filename_)
+        def set_comment(self, grp_, key_, comment_):
+            self.__rc.set_comment(grp_, key_, comment_)
+
+        def set_uint64(self, grp_, key_, value_):
+            self.__rc.set_uint64(grp_, key_, value_)
+
+        def save_to_file(self, filename_):
+            self.__rc.save_to_file(filename_)
+
+    def __new__(cls):
+        if not Keyfile.__instance:
+            Keyfile.__instance = Keyfile.__Keyfile()
+        return Keyfile.__instance
+
+    def __getattr__(self, atname_):
+        return getattr(self.__instance, atname_)
 
 # kate: indent-mode: python
