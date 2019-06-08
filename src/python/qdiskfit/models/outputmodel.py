@@ -91,25 +91,18 @@ class OutputModel(QStandardItemModel):
             for pv_, r_ in enumerate(self.__result):
 
                 fa_ = self.__rex.findall(r_[0])
-                sz_ = 0
+                ts_ = 0
 
-                for i_, ma_ in enumerate(fa_):
-                    sz_ += self.__imd.item(self.__imd.
+                for ma_ in fa_:
+                    ts_ += self.__imd.item(self.__imd.
                                            indexFromItem(self.__imd.
                                                          findItems(ma_)[0]).
                                            row(), 1).num()
 
                 l_ = (MultiFileDragItem(fa_),
                       EchoTooltipItem(r_[1], True),
-                      OutputSizeItem(sz_, r_[2]),
+                      OutputSizeItem(ts_, r_[2]),
                       EchoTooltipItem(r_[3], True))
-
-                ts_ = 0
-                for ma_ in fa_:
-                    ts_ += self.__imd.item(self.__imd.
-                                           indexFromItem(self.__imd.
-                                                         findItems(ma_)[0]).
-                                           row(), 1).num()
 
                 if int(settings_.value("resultSort", 0)) == 0:
                     self.sortTitle(fa_, False)
