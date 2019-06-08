@@ -231,8 +231,11 @@ class MainWindow(QMainWindow):
                 self.__keyfile.addTarget(self.tr("my_target_{}").
                                          format(date.today().isoformat()),
                                          self.__ui.table_output.model().
-                                         item(currentIndex.row(), 2).
-                                         num(), 2048)
+                                         item(currentIndex.row(), 2).num(),
+                                         self.__keyfile.
+                                         getBlocksize(self.__ui.
+                                                      combo_target.
+                                                      currentText()))
                 self.__ui.actionProfileeditor.trigger()
 
     @pyqtSlot(QPoint)
