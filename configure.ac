@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ([2.69])
-AC_INIT([DiskFit], [2.0.2.11], [heiko@rangun.de])
+AC_INIT([DiskFit], [2.0.2.12], [heiko@rangun.de])
 AC_CONFIG_SRCDIR([src/diskfit.c])
 AC_CONFIG_HEADERS([config.h])
 

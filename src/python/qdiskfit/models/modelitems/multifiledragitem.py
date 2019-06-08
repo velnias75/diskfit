@@ -19,6 +19,7 @@
 #
 
 from .echotooltipitem import EchoTooltipItem
+from PyQt5.QtGui import QIcon
 
 
 class MultiFileDragItem(EchoTooltipItem):
@@ -29,6 +30,7 @@ class MultiFileDragItem(EchoTooltipItem):
         super(MultiFileDragItem, self).__init__(", ".join(sorted(files_)),
                                                 True)
         self.__files = sorted(files_)
+        self.setIcon(QIcon.fromTheme("folder"))
 
     def files(self):
         return self.__files
