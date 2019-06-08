@@ -29,6 +29,7 @@ from PyQt5.QtWidgets import QFileDialog
 from PyQt5.QtWidgets import QMessageBox
 from PyQt5.QtGui import QStandardItemModel
 from .modelitems.iconfileitem import IconFileItem
+from .modelitems.outputsizeitem import OutputSizeItem
 from .modelitems.echotooltipitem import EchoTooltipItem
 from .modelitems.multifiledragitem import MultiFileDragItem
 import re
@@ -52,10 +53,10 @@ class OutputModel(QStandardItemModel):
         super(OutputModel, self).__init__()
 
         self.__hdr = [
-            self.tr("Files", "OutputModel"),
-            self.tr("Count", "OutputModel"),
-            self.tr("Size", "OutputModel"),
-            self.tr("Percentage", "OutputModel")]
+            self.tr("Files"),
+            self.tr("Count"),
+            self.tr("Size"),
+            self.tr("Percentage")]
 
         self.setHorizontalHeaderLabels(self.__hdr)
 
@@ -90,10 +91,17 @@ class OutputModel(QStandardItemModel):
             for pv_, r_ in enumerate(self.__result):
 
                 fa_ = self.__rex.findall(r_[0])
+                sz_ = 0
+
+                for i_, ma_ in enumerate(fa_):
+                    sz_ += self.__imd.item(self.__imd.
+                                           indexFromItem(self.__imd.
+                                                         findItems(ma_)[0]).
+                                           row(), 1).num()
 
                 l_ = (MultiFileDragItem(fa_),
                       EchoTooltipItem(r_[1], True),
-                      EchoTooltipItem(r_[2], True),
+                      OutputSizeItem(sz_, r_[2]),
                       EchoTooltipItem(r_[3], True))
 
                 ts_ = 0

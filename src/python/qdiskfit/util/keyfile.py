@@ -87,6 +87,10 @@ class Keyfile:
         def set_uint64(self, grp_, key_, value_):
             self.__rc.set_uint64(grp_, key_, value_)
 
+        def addTarget(self, name_, size_, bs_):
+            self.__rc.set_uint64(name_, "size", size_)
+            self.__rc.set_uint64(name_, "bs", bs_)
+
         def save_to_file(self, filename_):
             self.__rc.save_to_file(filename_)
 

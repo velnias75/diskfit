@@ -46,6 +46,7 @@ from .models.inputmodel import InputModel
 from .profileedit import ProfileEdit
 from .mainwindow import mainwindow
 from .util.keyfile import Keyfile
+from datetime import date
 from shlex import quote
 from .site import Site
 import time
@@ -122,6 +123,10 @@ class MainWindow(QMainWindow):
             setContextMenuPolicy(Qt.CustomContextMenu)
         self.__ui.table_output.header(). \
             customContextMenuRequested.connect(self.outputOrder)
+
+        self.__ui.table_output.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.__ui.table_output. \
+            customContextMenuRequested.connect(self.outputContextRequested)
 
         self.__ui.table_output.header(). \
             setSectionResizeMode(0, QHeaderView.Stretch)
@@ -206,6 +211,29 @@ class MainWindow(QMainWindow):
         menu_.addAction(self.__ui.action_diffTarget)
 
         menu_.exec_(globalPos)
+
+    @pyqtSlot(QPoint)
+    def outputContextRequested(self, pos):
+
+        globalPos = self.__ui.table_output.mapToGlobal(pos)
+        currentIndex = self.__ui.table_output.currentIndex()
+
+        if currentIndex.isValid():
+
+            atar_ = QAction(self.tr("Add as new target..."))
+
+            menu_ = QMenu()
+            menu_.addAction(atar_)
+
+            selectedItem = menu_.exec_(globalPos)
+
+            if selectedItem and selectedItem is atar_:
+                self.__keyfile.addTarget(self.tr("my_target_{}").
+                                         format(date.today().isoformat()),
+                                         self.__ui.table_output.model().
+                                         item(currentIndex.row(), 2).
+                                         num(), 2048)
+                self.__ui.actionProfileeditor.trigger()
 
     @pyqtSlot(QPoint)
     def outputOrder(self, pos):

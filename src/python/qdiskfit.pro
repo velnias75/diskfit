@@ -12,6 +12,7 @@ SOURCES = qdiskfit/mainwindow/__init__.py \
           qdiskfit/models/modelitems/__init__.py \
           qdiskfit/models/modelitems/multifiledragitem.py \
           qdiskfit/models/modelitems/hrfileitem.py \
+          qdiskfit/models/modelitems/outputsizeitem.py \
           qdiskfit/models/targetmodel.py \
           qdiskfit/models/outputmodel.py \
           qdiskfit/models/__init__.py \

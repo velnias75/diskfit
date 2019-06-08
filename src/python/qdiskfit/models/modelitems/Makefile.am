@@ -3,6 +3,7 @@ EXTRA_DIST = __init__.py \
              hrfileitem.py \
              iconfileitem.py \
              multifiledragitem.py \
+             outputsizeitem.py \
              sizeitem.py \
              targetnameitem.py \
              validatingitem.py
