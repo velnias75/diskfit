@@ -41,11 +41,11 @@ from PyQt5.QtWidgets import QMainWindow
 from PyQt5.QtWidgets import QAction
 from PyQt5.QtWidgets import QMenu
 from .util.langcenv import LangCProcessEnvironment
-from .models.targetmodel import TargetModel
 from .models.outputmodel import OutputModel
 from .models.inputmodel import InputModel
 from .profileedit import ProfileEdit
 from .mainwindow import mainwindow
+from .util.keyfile import Keyfile
 from shlex import quote
 from .site import Site
 import time
@@ -69,13 +69,15 @@ class MainWindow(QMainWindow):
     __resultBuf = ""
     __statusBar = None
     __runningTime = None
-    __targetModel = None
+    __keyfile = None
+    __saveTarget = True
 
     def __init__(self):
 
         super(MainWindow, self).__init__()
 
         df_env_ = LangCProcessEnvironment().env()
+        df_env_.remove("DISKFIT_STRIPDIR")
 
         self.__proc1.setProcessEnvironment(df_env_)
         self.__proc2.setProcessEnvironment(df_env_)
@@ -92,7 +94,7 @@ class MainWindow(QMainWindow):
         self.__statusBar = self.statusBar()
         self.__statusBar.addPermanentWidget(self.__diskfitProgress)
 
-        self.__targetModel = TargetModel(self)
+        self.__keyfile = Keyfile()
 
         self.__inputModel = InputModel(self.__ui.table_input,
                                        self.__ui.label_inputSummary,
@@ -165,11 +167,16 @@ class MainWindow(QMainWindow):
         self.__proc1.waitForStarted(-1)
 
     def closeEvent(self, evt):
+
         settings = QSettings()
-        settings.setValue("bytes", self.__ui.spin_bytes.value())
-        settings.setValue("target", self.__ui.combo_target.currentIndex())
+
+        if self.__saveTarget:
+            settings.setValue("bytes", self.__ui.spin_bytes.value())
+            settings.setValue("target", self.__ui.combo_target.currentIndex())
+
         settings.setValue("geometry", self.saveGeometry())
         settings.setValue("windowState", self.saveState())
+
         super().closeEvent(evt)
 
     def readSettings(self):
@@ -427,7 +434,10 @@ class MainWindow(QMainWindow):
 
     @pyqtSlot(int)
     def targetChanged(self, idx):
+
         d_ = self.__ui.combo_target.itemData(idx)
+        self.__saveTarget = True
+
         if d_ is not None:
             self.__ui.spin_bytes.setValue(d_)
             self.__ui.spin_bytes.setEnabled(False)
@@ -447,7 +457,7 @@ class MainWindow(QMainWindow):
 
     @pyqtSlot()
     def editProfile(self):
-        dlg_ = ProfileEdit()
+        dlg_ = ProfileEdit(self.__keyfile)
         if dlg_.exec() == ProfileEdit.Accepted:
             self.getTargets()
 
@@ -459,6 +469,7 @@ class MainWindow(QMainWindow):
         self.__ui.combo_target.setCurrentIndex(self.__ui.combo_target.
                                                model().rowCount()-1)
         self.__ui.spin_bytes.setValue(size_)
+        self.__saveTarget = False
 
     def enableExclusive(self):
         return self.__ui.table_input.selectionModel().hasSelection() and \
@@ -468,7 +479,7 @@ class MainWindow(QMainWindow):
         return int(self.__ui.spin_bytes.value()) - \
             self.__inputModel.getAccuSize(self.__ui.
                                           table_input.selectedIndexes(),
-                                          self.__targetModel.
+                                          self.__keyfile.
                                           getBlocksize(self.__ui.
                                                        combo_target.
                                                        currentText()))
@@ -481,7 +492,7 @@ def main(args=None):
     translator = QTranslator()
 
     app.setApplicationName("QDiskFit")
-    app.setApplicationVersion("2.0.2.10")
+    app.setApplicationVersion("2.0.2.11")
     app.setApplicationDisplayName(app.applicationName() + " " +
                                   app.applicationVersion())
     app.setOrganizationDomain("rangun.de")

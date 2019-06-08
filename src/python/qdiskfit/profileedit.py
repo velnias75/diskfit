@@ -43,7 +43,7 @@ class ProfileEdit(QDialog):
     __dcrex = re.compile("^ Free Blocks:\s+(\d+)\*(\d).*$")
     __direx = re.compile("^ Media ID:\s+(.*)$")
 
-    def __init__(self):
+    def __init__(self, keyfile_):
 
         super(ProfileEdit, self).__init__()
 
@@ -55,7 +55,7 @@ class ProfileEdit(QDialog):
         self.__ui = Ui_ProfileEditor()
         self.__ui.setupUi(self)
 
-        self.__tm = TargetModel(self.__ui.table_targets)
+        self.__tm = TargetModel(self.__ui.table_targets, keyfile_)
 
         self.__ui.table_targets.setModel(self.__tm)
         self.__ui.table_targets.horizontalHeader(). \

@@ -22,5 +22,6 @@ SOURCES = qdiskfit/mainwindow/__init__.py \
           qdiskfit/profileedit.py \
           qdiskfit/util/__init__.py \
           qdiskfit/util/hrsize.py \
+          qdiskfit/util/keyfile.py \
           qdiskfit/util/langcenv.py \
           qdiskfit/dialogs/__init__.py

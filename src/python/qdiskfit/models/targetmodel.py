@@ -27,7 +27,6 @@ from PyQt5.QtCore import pyqtSignal
 from PyQt5.QtCore import pyqtSlot
 from PyQt5.QtCore import qDebug
 from gi.repository import GLib
-from ..site import Site
 import os
 
 
@@ -36,59 +35,33 @@ class TargetModel(QStandardItemModel):
     rc_changed = pyqtSignal()
     row_added = pyqtSignal()
 
-    __rc = GLib.KeyFile.new()
+    __keyfile = None
     __par = None
 
-    def __init__(self, parent_):
+    def __init__(self, parent_, keyfile_):
 
         super(TargetModel, self).__init__()
 
         self.__par = parent_
-
-        sd_ = ["./",
-               os.environ["HOME"] + "/",
-               Site().get("sysconfdir", "/etc/"),
-               None
-               ]
-
-        rc_fp_ = None
-
-        try:
-            rc_fp_ = self.__rc.load_from_dirs(".diskfitrc", sd_,
-                                              GLib.KeyFileFlags.NONE). \
-                                                  full_path
-        except GLib.Error as e1:
-
-            qDebug(e1.message.encode())
-
-            try:
-                rc_fp_ = self.__rc.load_from_dirs("diskfitrc", sd_,
-                                                  GLib.KeyFileFlags.NONE). \
-                                                      full_path
-            except GLib.Error as e2:
-                qDebug(e2.message.encode())
-
-        if rc_fp_ is not None:
-            qDebug("Key file loaded from: " + rc_fp_)
-        else:
-            qDebug("No key file found")
+        self.__keyfile = keyfile_
 
         self.setHorizontalHeaderLabels([
             self.tr("Target"),
             self.tr("Total size"),
             self.tr("Block size")])
 
-        for grp_ in self.__rc.get_groups()[0]:
+        for grp_ in self.__keyfile.get_groups()[0]:
 
             grp_item_ = TargetNameItem(grp_, self)
             size_item_ = SizeItem(0)
             bs_item_ = SizeItem(2048, True)
 
-            for key_ in self.__rc.get_keys(grp_)[0]:
+            for key_ in self.__keyfile.get_keys(grp_)[0]:
                 if key_ == "size":
-                    size_item_.setData(int(self.__rc.get_value(grp_, key_)))
+                    size_item_.setData(int(self.__keyfile.get_value(grp_,
+                                                                    key_)))
                 if key_ == "bs":
-                    bs_item_.setData(int(self.__rc.get_value(grp_, key_)))
+                    bs_item_.setData(int(self.__keyfile.get_value(grp_, key_)))
 
             self.appendRow((grp_item_, size_item_, bs_item_))
 
@@ -105,7 +78,7 @@ class TargetModel(QStandardItemModel):
         r_ = self.takeRow(self.__par.selectionModel().
                           selectedIndexes()[0].row())
         try:
-            self.__rc.remove_group(r_[0].text())
+            self.__keyfile.remove_group(r_[0].text())
         except GLib.Error:
             pass
 
@@ -113,31 +86,24 @@ class TargetModel(QStandardItemModel):
 
     @pyqtSlot()
     def saveRC(self):
-        self.__rc.set_comment(None, None,
-                              " Created by " +
-                              QCoreApplication.applicationName() + "/" +
-                              QCoreApplication.applicationVersion())
+        self.__keyfile.set_comment(None, None, " Created by " +
+                                   QCoreApplication.applicationName() + "/" +
+                                   QCoreApplication.applicationVersion())
 
         for r_ in range(0, self.rowCount()):
             if self.item(r_, 0).isValid() and \
                self.item(r_, 1).isValid() and \
                self.item(r_, 2).isValid():
                 grp_ = self.item(r_, 0).text()
-                self.__rc.set_uint64(grp_, "size",
-                                     int(self.item(r_, 1).data()))
-                self.__rc.set_uint64(grp_, "bs",
-                                     int(self.item(r_, 2).data()))
+                self.__keyfile.set_uint64(grp_, "size",
+                                          int(self.item(r_, 1).data()))
+                self.__keyfile.set_uint64(grp_, "bs",
+                                          int(self.item(r_, 2).data()))
 
         try:
-            self.__rc.save_to_file(os.environ["HOME"] + "/.diskfitrc")
+            self.__keyfile.save_to_file(os.environ["HOME"] + "/.diskfitrc")
             self.rc_changed.emit()
         except GLib.Error as e:
             QMessageBox.critical(None, self.tr("Error"), e.message)
-
-    def getBlocksize(self, target_):
-        try:
-            return int(self.__rc.get_value(target_, "bs"))
-        except GLib.Error:
-            return 0
 
 # kate: indent-mode: python
