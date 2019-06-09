@@ -140,8 +140,6 @@ class InputModel(QStandardItemModel, HRSize):
 
         settings = QSettings()
 
-        self.__par.header().setSortIndicatorShown(False)
-
         fdlg_ = QFileDialog()
 
         state_ = settings.value("inputFDlgState")
@@ -169,6 +167,8 @@ class InputModel(QStandardItemModel, HRSize):
         settings.setValue("inputDir", fdlg_.directory().absolutePath())
 
         self.addFileList(fdlg_.selectedFiles())
+
+        self.__par.header().setSortIndicatorShown(False)
 
     def getAccuSize(self, items_, bs_):
 

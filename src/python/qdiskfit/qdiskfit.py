@@ -69,7 +69,7 @@ class MainWindow(QMainWindow):
     __lastResult = list()
     __resultBuf = ""
     __statusBar = None
-    __runningTime = None
+    __runningTime = 0.0
     __keyfile = None
     __saveTarget = True
 
@@ -380,11 +380,15 @@ class MainWindow(QMainWindow):
 
             self.__ui.table_output.setEnabled(False)
             self.__outputModel.setLastResult(self.__lastResult, progress_)
-            self.__statusBar. \
-                showMessage(self.tr("Calculation took {}").
-                            format(time.strftime("%H:%M:%S", time.
-                                                 gmtime(int(elapsedTime_)))),
-                            0)
+
+            if elapsedTime_ > 1.0:
+                self.__statusBar. \
+                    showMessage(self.tr("Calculation took {}").
+                                format(time.
+                                       strftime("%H:%M:%S", time.
+                                                gmtime(int(elapsedTime_)))), 0)
+            else:
+                self.__statusBar.clearMessage()
 
             progress_.reset()
             self.__ui.table_output.setEnabled(True)
@@ -488,7 +492,8 @@ class MainWindow(QMainWindow):
 
     @pyqtSlot()
     def editProfile(self):
-        dlg_ = ProfileEdit(self.__keyfile)
+        dlg_ = ProfileEdit(self.__keyfile, self.__ui.combo_target.
+                           currentText())
         if dlg_.exec() == ProfileEdit.Accepted:
             self.getTargets()
 

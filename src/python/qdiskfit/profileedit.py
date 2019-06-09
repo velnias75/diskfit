@@ -43,7 +43,7 @@ class ProfileEdit(QDialog):
     __dcrex = re.compile("^ Free Blocks:\s+(\d+)\*(\d).*$")
     __direx = re.compile("^ Media ID:\s+(.*)$")
 
-    def __init__(self, keyfile_):
+    def __init__(self, keyfile_, cur_):
 
         super(ProfileEdit, self).__init__()
 
@@ -64,6 +64,11 @@ class ProfileEdit(QDialog):
             setSectionResizeMode(1, QHeaderView.ResizeToContents)
         self.__ui.table_targets.horizontalHeader(). \
             setSectionResizeMode(2, QHeaderView.ResizeToContents)
+
+        items_ = self.__tm.findItems(cur_)
+        if len(items_):
+            self.__ui.table_targets.selectRow(self.__tm.
+                                              indexFromItem(items_[0]).row())
 
         self.__ui.button_add.clicked.connect(self.__tm.addTarget)
         self.__ui.button_remove.clicked.connect(self.__tm.removeTarget)

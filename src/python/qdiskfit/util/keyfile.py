@@ -36,8 +36,7 @@ class Keyfile:
 
             sd_ = ["./",
                    os.environ["HOME"] + "/",
-                   Site().get("sysconfdir", "/etc/"),
-                   None
+                   Site().get("sysconfdir", "/etc/")
                    ]
 
             rc_fp_ = None
