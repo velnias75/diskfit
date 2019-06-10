@@ -494,7 +494,7 @@ class MainWindow(QMainWindow):
                 self.__unselInputSum = self.__ui.label_inputSummary.text()
             self.__ui.label_inputSummary. \
                 setText(self.tr("<i>{0} in {1} files</i> of {2}").
-                        format(HRSize().sizeString(self.__inputModel.
+                        format(HRSize.sizeString(self.__inputModel.
                                getAccuSize(self.__ui.
                                            table_input.selectedIndexes(), 0)),
                                len(self.__ui.table_input.selectionModel().

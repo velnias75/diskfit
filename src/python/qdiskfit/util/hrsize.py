@@ -24,21 +24,18 @@ from math import trunc
 
 class HRSize:
 
-    __dec = 2
-
-    def __init__(self, dec_=2):
-        self.__dec = dec_
-
-    def __getFormatted(self, size_):
+    @staticmethod
+    def __getFormatted(size_, dec_):
 
         if trunc(size_) == size_:
             format_ = ".0f"
         else:
-            format_ = "." + str(self.__dec) + "f"
+            format_ = "." + str(dec_) + "f"
 
         return format(size_, format_)
 
-    def sizeString(self, size_):
+    @staticmethod
+    def sizeString(size_, dec_=2):
 
         if size_ > 0:
             d_ = log(size_, 2)
@@ -46,11 +43,11 @@ class HRSize:
             d_ = 0
 
         if d_ >= 30.0:
-            return self.__getFormatted(size_/1073741824.0) + " GByte"
+            return HRSize.__getFormatted(size_/1073741824.0, dec_) + " GByte"
         elif d_ >= 20.0:
-            return self.__getFormatted(size_/1048576.0) + " MByte"
+            return HRSize.__getFormatted(size_/1048576.0, dec_) + " MByte"
         elif d_ >= 10.0:
-            return self.__getFormatted(size_/1024.0) + " KByte"
+            return HRSize.__getFormatted(size_/1024.0, dec_) + " KByte"
 
         return str(size_) + " Byte"
 

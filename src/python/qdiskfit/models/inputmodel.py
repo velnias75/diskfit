@@ -31,7 +31,7 @@ from .modelitems.iconfileitem import IconFileItem
 from ..util.hrsize import HRSize
 
 
-class InputModel(QStandardItemModel, HRSize):
+class InputModel(QStandardItemModel):
 
     __par = None
     __sum = None
@@ -125,7 +125,7 @@ class InputModel(QStandardItemModel, HRSize):
 
         if len_ > 0:
             self.__sum.setText(self.tr("{0} in {1} files").
-                               format(self.sizeString(tot_), str(len_)))
+                               format(HRSize.sizeString(tot_), str(len_)))
         else:
             self.__sum.setText(self.tr("No files"))
 

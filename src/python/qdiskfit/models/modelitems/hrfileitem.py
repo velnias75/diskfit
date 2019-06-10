@@ -24,7 +24,7 @@ from ...util.hrsize import HRSize
 from .echotooltipitem import EchoTooltipItem
 
 
-class HRFileItem(EchoTooltipItem, HRSize):
+class HRFileItem(EchoTooltipItem):
 
     __size = None
     __size_str = None
@@ -36,7 +36,7 @@ class HRFileItem(EchoTooltipItem, HRSize):
         self.setTextAlignment(Qt.AlignRight)
 
         self.__size = QFileInfo(file_).size()
-        self.__size_str = self.sizeString(self.__size)
+        self.__size_str = HRSize.sizeString(self.__size)
 
     def type(self):
         return EchoTooltipItem.UserType
