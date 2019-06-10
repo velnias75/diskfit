@@ -46,6 +46,7 @@ from .models.inputmodel import InputModel
 from .profileedit import ProfileEdit
 from .mainwindow import mainwindow
 from .util.keyfile import Keyfile
+from .util.hrsize import HRSize
 from datetime import date
 from shlex import quote
 from .site import Site
@@ -69,6 +70,7 @@ class MainWindow(QMainWindow):
     __lastResult = list()
     __resultBuf = ""
     __statusBar = None
+    __unselInputSum = None
     __runningTime = 0.0
     __keyfile = None
     __saveTarget = True
@@ -481,10 +483,25 @@ class MainWindow(QMainWindow):
 
     @pyqtSlot()
     def inputSelectionChanged(self):
+
         en_ = self.__ui.table_input.selectionModel().hasSelection()
         self.__ui.button_ListRemove.setEnabled(en_)
         self.__ui.action_InputRemove.setEnabled(en_)
         self.__ui.action_diffTarget.setEnabled(self.enableExclusive())
+
+        if en_:
+            if self.__unselInputSum is None:
+                self.__unselInputSum = self.__ui.label_inputSummary.text()
+            self.__ui.label_inputSummary. \
+                setText(self.tr("<i>{0} in {1} files</i> of {2}").
+                        format(HRSize().sizeString(self.__inputModel.
+                               getAccuSize(self.__ui.
+                                           table_input.selectedIndexes(), 0)),
+                               len(self.__ui.table_input.selectionModel().
+                                   selectedRows()), self.__unselInputSum))
+        else:
+            self.__ui.label_inputSummary.setText(self.__unselInputSum)
+            self.__unselInputSum = None
 
     @pyqtSlot(int)
     def sortInput(self, idx):
