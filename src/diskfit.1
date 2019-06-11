@@ -1,0 +1,44 @@
+.TH DiskFit 1
+.SH NAME
+diskfit \- simple disk fit calculator
+.SH SYNOPSIS
+.B diskfit
+[target_profile|target_size[G|M|K]] [
+.IR file_pattern...
+]
+.SH DESCRIPTION
+.B DiskFit
+calculates an optimal selection of files to make maximum use of a given disk 
+size
+
+Given a set of input files all unique combinations of files are calculated
+which are less or equal in total size to a given target size. The list will
+get outputted in ascending order showing the combination closest to the
+target size at the end of the output.
+.SH OPTIONS
+Omitting the
+.IR file_pattern
+will just print the target size in Bytes.
+.TP
+.BR target_profile
+a named profile.
+.TP
+.BR target_size
+a target size as number optionally suffixed with G (Gbyte), M (Mbyte) or
+K (Kbyte).
+.TP
+.BR file_pattern
+one or more file patterns to select the input files.
+
+.SH ENVIRONMENT
+Set environment variable
+.IR DISKFIT_STRIPDIR
+to any value to strip directories from the output.
+
+.SH FILES
+.TP
+.BR /etc/diskfitrc
+Default location of the target definition file.
+.TP
+.BR .diskfitrc
+User target definition file.
