@@ -2,15 +2,18 @@
 A simple disk fit calculator (GUI)
 
 ----
-This crude tool calculates the optimal file selection to a given target size.
+This GUI provides an easy way to set up a set of input files for DiskFit and
+to perform a calculation of all unique combinations which are less or equal
+in total size to a given target size. The list will get outputted in
+ascending order showing the combination closest to the target size at the
+end of the output.
+
+The output than can get saved or dragged into another program (i.e. a CD/DVD
+burning application). Further it contains tools for an easy setup of targets
+as well as some predefined workflows for the most common input file selection
+tasks.
 
 It has been originally developed to optimize the usage of the capacity of a DVD after transcoding to MP4 movie files.
-
-It offers two presets for a single layer `DVD` (4.38 GByte) and a `CD` (700 Mbyte) as well as the ability 
-to give any target size in either `Bytes`, `KBytes`, `MBytes` and `GBytes`. Additionally a config file is read.
-to offer even more targets
-
-It outputs in ascending order all combinations of files which will fit within the target size.
 
 ## Exclusive calculation
 
