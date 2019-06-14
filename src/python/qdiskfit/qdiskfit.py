@@ -417,6 +417,7 @@ class MainWindow(QMainWindow):
         self.__ui.group_InputFiles.setEnabled(True)
         self.__ui.group_profile.setEnabled(True)
         self.__diskfitProgress.setValue(0)
+        self.__diskfitProgress.setMaximum(100)
 
     @pyqtSlot()
     def progressAvailable(self):
@@ -424,7 +425,13 @@ class MainWindow(QMainWindow):
                       decode("utf-8")).splitlines(False):
             p_match_ = p_rex.search(p_)
             if p_match_:
-                self.__diskfitProgress.setValue(int(p_match_.group(2)))
+                p_ = int(p_match_.group(2))
+                if p_ == 0:
+                    self.__diskfitProgress.setMaximum(0)
+                else:
+                    self.__diskfitProgress.setMaximum(100)
+
+                self.__diskfitProgress.setValue(p_)
 
     @pyqtSlot()
     def resultAvailable(self):
@@ -545,7 +552,7 @@ def main(args=None):
     translator = QTranslator()
 
     app.setApplicationName("QDiskFit")
-    app.setApplicationVersion("2.0.2.13")
+    app.setApplicationVersion("2.0.2.14")
     app.setApplicationDisplayName(app.applicationName() + " " +
                                   app.applicationVersion())
     app.setOrganizationDomain("rangun.de")
