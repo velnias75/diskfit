@@ -4,7 +4,7 @@ diskfit \- simple disk fit calculator
 .SH SYNOPSIS
 .B diskfit
 [target_profile|target_size[G|M|K]] [
-.IR file_pattern...
+.IR file_pattern...|@pattern_file
 ]
 .SH DESCRIPTION
 .B DiskFit
@@ -29,6 +29,11 @@ K (Kbyte).
 .TP
 .BR file_pattern
 one or more file patterns to select the input files.
+.TP
+.BR @pattern_file
+a file containing one
+.IR file_pattern
+per line
 
 .SH ENVIRONMENT
 Set environment variable

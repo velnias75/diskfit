@@ -21,7 +21,9 @@
 #
 
 from PyQt5.QtCore import QT_TR_NOOP
+from PyQt5.QtCore import QTemporaryFile
 from PyQt5.QtCore import QTranslator
+from PyQt5.QtCore import QByteArray
 from PyQt5.QtCore import QSettings
 from PyQt5.QtCore import QProcess
 from PyQt5.QtCore import QLocale
@@ -60,6 +62,7 @@ class MainWindow(QMainWindow):
     gui_restored = False
 
     __ui = None
+    __tmp = None
     __proc1 = QProcess()
     __proc2 = QProcess()
     __proc3 = QProcess()
@@ -322,24 +325,35 @@ class MainWindow(QMainWindow):
         else:
             args_.append(str(int(self.__ui.spin_bytes.value())))
 
-        for file_ in self.__inputModel.files():
-            args_.append(quote(file_.text()))
+        self.__tmp = QTemporaryFile()
 
-        self.__proc3.errorOccurred.connect(self.error)
-        self.__proc3.readyReadStandardError.connect(self.progressAvailable)
-        self.__proc3.readyReadStandardOutput.connect(self.resultAvailable)
-        self.__proc3.finished.connect(self.finished)
+        if self.__tmp.open():
+            for file_ in self.__inputModel.files():
+                self.__tmp.write(bytearray(file_.text(), "utf-8"))
+                self.__tmp.putChar('\n')
+            self.__tmp.close()
+            args_.append("@" + self.__tmp.fileName())
 
-        self.__statusBar.showMessage(self.tr("Calculating for {} files ...").
-                                     format(str(self.__inputModel.rowCount())))
+            self.__proc3.errorOccurred.connect(self.error)
+            self.__proc3.readyReadStandardError.connect(self.progressAvailable)
+            self.__proc3.readyReadStandardOutput.connect(self.resultAvailable)
+            self.__proc3.finished.connect(self.finished)
 
-        self.__proc3.start(self.__diskfit, args_, QProcess.ReadOnly)
-        self.__proc3.waitForStarted()
-        self.__runningTime = time.clock_gettime(time.CLOCK_MONOTONIC_RAW)
+            self.__statusBar. \
+                showMessage(self.tr("Calculating for {} files ...").
+                            format(str(self.__inputModel.rowCount())))
 
-        self.__lastResult.clear()
+            self.__proc3.start(self.__diskfit, args_, QProcess.ReadOnly)
+            self.__proc3.waitForStarted()
+            self.__runningTime = time.clock_gettime(time.CLOCK_MONOTONIC_RAW)
 
-        self.__ui.actionStop.triggered.connect(self.__proc3.terminate)
+            self.__lastResult.clear()
+
+            self.__ui.actionStop.triggered.connect(self.__proc3.terminate)
+        else:
+            QMessageBox.critical(None, self.tr("Error"),
+                                 self.__tmp.errorString())
+            self.finished(0, QProcess.NormalExit)
 
     @pyqtSlot(QProcess.ProcessError)
     def error(self, err):
@@ -402,6 +416,7 @@ class MainWindow(QMainWindow):
             self.__statusBar.showMessage(self.tr("Calculation interrupted"),
                                          5000)
 
+        self.__tmp = None
         self.__resultBuf = ""
         self.__diskfitProgress.setHidden(True)
 

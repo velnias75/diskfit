@@ -290,6 +290,21 @@ static void display_candidates(gpointer key, gpointer data) {
     g_slice_free(FITEMLIST, FITEMLIST_CAST(key));
 }
 
+static void expandFilePattern(wordexp_t *const p, char *pat) {
+
+    const int wr = wordexp(pat, p, WRDE_NOCMD | WRDE_APPEND);
+
+    if (wr) {
+        error(0, wr, "%s@%s:%d", __FUNCTION__, __FILE__, __LINE__);
+    }
+}
+
+static void expandFilePatterns(wordexp_t *const p, int num, char **pats) {
+    for (int i = 0; i < num; ++i) {
+        expandFilePattern(p, pats[i]);
+    }
+}
+
 int main(int argc, char *argv[]) {
 
     GKeyFile *const rc = g_key_file_new();
@@ -323,8 +338,8 @@ int main(int argc, char *argv[]) {
 
         print_copy();
 
-        fprintf(stdout, "\nUsage: %s [target_profile|target_size[G|M|K]] [file_pattern...]\n\n",
-                argv[0]);
+        fprintf(stdout, "\nUsage: %s [target_profile|target_size[G|M|K]] "
+            "[file_pattern...|@pattern_file]\n\n", argv[0]);
         fprintf(stdout, "Omitting the file_pattern will just print the target size in Bytes.\n\n");
         fprintf(stdout, "Set environment variable DISKFIT_STRIPDIR to any value "
                 "to strip directories from the output.\n\nTarget profiles:\n");
@@ -377,7 +392,6 @@ int main(int argc, char *argv[]) {
 
     } else {
 
-        int i;
         size_t nitems = 0u;
         DISKFIT_FITEM *fitems = NULL;
         guint64 tsize = 0u;
@@ -396,13 +410,42 @@ int main(int argc, char *argv[]) {
 
         memset(&p, 0, sizeof(wordexp_t));
 
-        for (i = 0; i < argc - 2; ++i) {
+        if(*(argv[2]) == '@') {
 
-            const int wr = wordexp(argv[i + 2], &p, WRDE_NOCMD | WRDE_APPEND);
+            FILE *f = fopen(&(argv[2][1]), "r");
 
-            if (wr) {
-                error(0, wr, "%s@%s:%d", __FUNCTION__, __FILE__, __LINE__);
+            if(f) {
+
+                char cl[PATH_MAX - 2], *c;
+
+                while(!feof(f)) {
+                    if((c = fgets(cl, (PATH_MAX - 3) * sizeof(char), f))
+                         && *c != '\n' && *c != 0) {
+
+                        size_t len = strlen(cl);
+
+                        if(len > 1) {
+
+                            cl[len - 1] = 0;
+                            char clq[PATH_MAX] = "\'";
+
+                            strncat(clq, cl, PATH_MAX - 1);
+                            strcat(clq, "\'");
+
+                            expandFilePattern(&p, clq);
+                        }
+                    }
+                }
+
+                fclose(f);
+            } else {
+                fprintf(stderr, "Cannot open \'%s\': %s\n", &(argv[2][1]),
+                    strerror(errno));
+                return EXIT_FAILURE;
             }
+
+        } else {
+            expandFilePatterns(&p, argc - 2, &argv[2]);
         }
 
         int isInterrupted = 0;
@@ -534,4 +577,4 @@ int main(int argc, char *argv[]) {
     return EXIT_SUCCESS;
 }
 
-// kate: indent-mode cstyle; indent-width 4; replace-tabs on;
+// kate: indent-mode cstyle; indent-width 4; replace-tabs on; remove-trailing-space on;
