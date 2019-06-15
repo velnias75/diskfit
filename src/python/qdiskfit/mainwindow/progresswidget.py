@@ -32,6 +32,8 @@ class ProgressWidget(QWidget):
         self.__ui = Ui_progressWidget()
         self.__ui.setupUi(self)
 
+        self.__ui.stopButton.setIcon(actStop_.icon())
+        self.__ui.stopButton.setToolTip(actStop_.toolTip())
         self.__ui.stopButton.clicked.connect(actStop_.trigger)
 
     def setMinimum(self, min):

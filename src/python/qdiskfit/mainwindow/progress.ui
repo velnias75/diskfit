@@ -2,6 +2,14 @@
 <ui version="4.0">
  <class>progressWidget</class>
  <widget class="QWidget" name="progressWidget">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>131</width>
+    <height>32</height>
+   </rect>
+  </property>
   <layout class="QHBoxLayout" stretch="0,1">
    <property name="spacing">
     <number>0</number>
@@ -20,12 +28,6 @@
    </property>
    <item>
     <widget class="QPushButton" name="stopButton">
-     <property name="toolTip">
-      <string>Interrupt calculation</string>
-     </property>
-     <property name="icon">
-      <iconset theme="process-stop"/>
-     </property>
      <property name="flat">
       <bool>true</bool>
      </property>

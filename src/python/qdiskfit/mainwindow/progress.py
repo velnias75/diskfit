@@ -12,13 +12,12 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 class Ui_progressWidget(object):
     def setupUi(self, progressWidget):
         progressWidget.setObjectName("progressWidget")
+        progressWidget.resize(131, 32)
         self.hboxlayout = QtWidgets.QHBoxLayout(progressWidget)
         self.hboxlayout.setContentsMargins(0, 0, 0, 0)
         self.hboxlayout.setSpacing(0)
         self.hboxlayout.setObjectName("hboxlayout")
         self.stopButton = QtWidgets.QPushButton(progressWidget)
-        icon = QtGui.QIcon.fromTheme("process-stop")
-        self.stopButton.setIcon(icon)
         self.stopButton.setFlat(True)
         self.stopButton.setObjectName("stopButton")
         self.hboxlayout.addWidget(self.stopButton)
@@ -31,7 +30,6 @@ class Ui_progressWidget(object):
         QtCore.QMetaObject.connectSlotsByName(progressWidget)
 
     def retranslateUi(self, progressWidget):
-        _translate = QtCore.QCoreApplication.translate
-        self.stopButton.setToolTip(_translate("progressWidget", "Interrupt calculation"))
+        pass
 
 
