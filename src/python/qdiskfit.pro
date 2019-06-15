@@ -1,9 +1,11 @@
 TRANSLATIONS = qdiskfit_de.ts
 
 FORMS = qdiskfit/mainwindow/mainwindow.ui \
+        qdiskfit/mainwindow/progress.ui \
         qdiskfit/dialogs/profile.ui
 
 SOURCES = qdiskfit/mainwindow/__init__.py \
+          qdiskfit/mainwindow/progresswidget.py \
           qdiskfit/models/modelitems/sizeitem.py \
           qdiskfit/models/modelitems/iconfileitem.py \
           qdiskfit/models/modelitems/targetnameitem.py \

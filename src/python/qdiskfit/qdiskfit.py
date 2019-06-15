@@ -34,7 +34,6 @@ from PyQt5.QtWidgets import QProgressDialog
 from PyQt5.QtWidgets import QDesktopWidget
 from PyQt5.QtWidgets import QApplication
 from PyQt5.QtWidgets import QActionGroup
-from PyQt5.QtWidgets import QProgressBar
 from PyQt5.QtWidgets import QMessageBox
 from PyQt5.QtWidgets import QHeaderView
 from PyQt5.QtWidgets import QMainWindow
@@ -45,6 +44,7 @@ from .models.outputmodel import OutputModel
 from .models.inputmodel import InputModel
 from .profileedit import ProfileEdit
 from .mainwindow import mainwindow
+from .mainwindow.progresswidget import ProgressWidget
 from .util.keyfile import Keyfile
 from .util.hrsize import HRSize
 from datetime import date
@@ -89,13 +89,14 @@ class MainWindow(QMainWindow):
         self.__ui = mainwindow.Ui_MainWindow()
         self.__ui.setupUi(self)
 
-        self.__diskfitProgress = QProgressBar()
+        self.__diskfitProgress = ProgressWidget(self.__ui.actionStop)
         self.__diskfitProgress.setMinimum(0)
         self.__diskfitProgress.setMaximum(100)
         self.__diskfitProgress.setValue(0)
 
         self.__statusBar = self.statusBar()
         self.__statusBar.addPermanentWidget(self.__diskfitProgress)
+        self.__diskfitProgress.setHidden(True)
 
         self.__keyfile = Keyfile()
 
@@ -311,6 +312,8 @@ class MainWindow(QMainWindow):
         self.__ui.group_InputFiles.setEnabled(False)
         self.__ui.group_profile.setEnabled(False)
 
+        self.__diskfitProgress.setHidden(False)
+
         args_ = list()
 
         if self.__ui.combo_target.currentIndex() is \
@@ -400,6 +403,7 @@ class MainWindow(QMainWindow):
                                          5000)
 
         self.__resultBuf = ""
+        self.__diskfitProgress.setHidden(True)
 
     @pyqtSlot()
     def resultReady(self):
@@ -416,6 +420,7 @@ class MainWindow(QMainWindow):
         self.__ui.actionStop.setEnabled(False)
         self.__ui.group_InputFiles.setEnabled(True)
         self.__ui.group_profile.setEnabled(True)
+        self.__diskfitProgress.setHidden(False)
         self.__diskfitProgress.setValue(0)
         self.__diskfitProgress.setMaximum(100)
 

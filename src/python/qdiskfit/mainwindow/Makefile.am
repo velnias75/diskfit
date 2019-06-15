@@ -1,3 +1,6 @@
 EXTRA_DIST = __init__.py \
              mainwindow.py \
-             mainwindow.ui
+             mainwindow.ui \
+             progress.py \
+             progress.ui \
+             progresswidget.py
