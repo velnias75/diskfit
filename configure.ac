@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ([2.69])
-AC_INIT([DiskFit], [2.0.2.14], [heiko@rangun.de])
+AC_INIT([DiskFit], [2.0.2.15], [heiko@rangun.de])
 AC_CONFIG_SRCDIR([src/diskfit.c])
 AC_CONFIG_HEADERS([config.h])
 
@@ -14,6 +14,8 @@ AC_CONFIG_MACRO_DIR([m4])
 AC_SYS_LARGEFILE
 
 # Checks for programs.
+AC_CHECK_PROGS([PYUIC5], [pyuic5])
+AC_CHECK_PROGS([LRELEASE], [lrelease])
 AC_PROG_CC_C99
 AC_LANG_PUSH([C])
 
@@ -80,7 +82,12 @@ AC_ARG_ENABLE([gui], [AS_HELP_STRING([--enable-gui],
   [enable the build of the PyQt-GUI])],
   [ if test "x$enable_gui" != "xno"; then
       AM_PATH_PYTHON([3], [
-        AM_CONDITIONAL([INSTALL_GUI], [ true ])
+        if test -z "$PYUIC5" -o -z "$LRELEASE"; then
+          AC_MSG_WARN([no pyuic5 or lrelease found, won't build PyQt-GUI])
+          AM_CONDITIONAL([INSTALL_GUI], [ false ])
+        else
+          AM_CONDITIONAL([INSTALL_GUI], [ true ])
+        fi
       ], [
         AC_MSG_WARN([no python3 found, won't build PyQt-GUI])
         AM_CONDITIONAL([INSTALL_GUI], [ false ])

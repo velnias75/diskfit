@@ -46,7 +46,7 @@ from .models.outputmodel import OutputModel
 from .models.inputmodel import InputModel
 from .profileedit import ProfileEdit
 from .mainwindow import mainwindow
-from .mainwindow.progresswidget import ProgressWidget
+from .progresswidget import ProgressWidget
 from .util.keyfile import Keyfile
 from .util.hrsize import HRSize
 from datetime import date
@@ -572,7 +572,7 @@ def main(args=None):
     translator = QTranslator()
 
     app.setApplicationName("QDiskFit")
-    app.setApplicationVersion("2.0.2.14")
+    app.setApplicationVersion("2.0.2.15")
     app.setApplicationDisplayName(app.applicationName() + " " +
                                   app.applicationVersion())
     app.setOrganizationDomain("rangun.de")

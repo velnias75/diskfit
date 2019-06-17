@@ -19,7 +19,7 @@
 #
 
 from PyQt5.QtWidgets import QWidget
-from .progress import Ui_progressWidget
+from .mainwindow.progress import Ui_progressWidget
 
 
 class ProgressWidget(QWidget):

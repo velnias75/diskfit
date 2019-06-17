@@ -36,4 +36,5 @@ src/python/build
 *.qm
 site.json
 src/python/qdiskfit/dialogs/profile.py
+src/python/qdiskfit/mainwindow/progress.py
 src/python/qdiskfit/mainwindow/mainwindow.py

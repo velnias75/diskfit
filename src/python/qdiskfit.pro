@@ -5,7 +5,6 @@ FORMS = qdiskfit/mainwindow/mainwindow.ui \
         qdiskfit/dialogs/profile.ui
 
 SOURCES = qdiskfit/mainwindow/__init__.py \
-          qdiskfit/mainwindow/progresswidget.py \
           qdiskfit/models/modelitems/sizeitem.py \
           qdiskfit/models/modelitems/iconfileitem.py \
           qdiskfit/models/modelitems/targetnameitem.py \
@@ -19,6 +18,7 @@ SOURCES = qdiskfit/mainwindow/__init__.py \
           qdiskfit/models/outputmodel.py \
           qdiskfit/models/__init__.py \
           qdiskfit/models/inputmodel.py \
+          qdiskfit/progresswidget.py \
           qdiskfit/qdiskfit.py \
           qdiskfit/__init__.py \
           qdiskfit/site.py \

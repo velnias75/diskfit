@@ -9,8 +9,13 @@ EXTRA_DIST = LICENSE \
              qdiskfit_de.qm \
              qdiskfit_de.ts
 
+MAINTAINERCLEANFILES = $(top_srcdir)/src/python/qdiskfit_de.qm
+
+%.qm: %.ts
+	$(LRELEASE) -compress $< -qm $@
+
 if INSTALL_GUI
-all-local:
+all-local: $(MAINTAINERCLEANFILES)
 	(cd $(srcdir); $(PYTHON) setup.py build \
 		--build-base $(shell readlink -f $(builddir))/build \
 		--verbose)
@@ -29,4 +34,6 @@ uninstall-local:
 
 clean-local:
 	rm -rf build *.egg-info
+else
+all-local: $(MAINTAINERCLEANFILES)
 endif
