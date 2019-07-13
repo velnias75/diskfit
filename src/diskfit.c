@@ -38,6 +38,9 @@
 #endif
 
 #include <glib.h>
+#include <glib/gprintf.h>
+
+#include <libxml/tree.h>
 
 #define FITEM_CMP(a, b) ((a)->fsize == (b)->fsize ? ((a)->fname == (b)->fname ? 0 : \
                          ((a)->fname < (b)->fname ? -1 : 1)) : ((a)->fsize < (b)->fsize ? -1 : 0))
@@ -55,6 +58,7 @@ typedef struct {
 typedef struct {
     const gboolean stripdir;
     const guint64  tg;
+    xmlNodePtr     root_node;
 } DISP_PARAMS;
 
 typedef struct {
@@ -241,7 +245,7 @@ static uint64_t blocksize(const char *grp, GKeyFile *rc) {
 
 
 static void print_copy() {
-    fprintf(stderr, PACKAGE_STRING " - \u00a9 2016-2019 by Heiko Sch\u00e4fer <heiko@rangun.de>\n");
+    g_fprintf(stderr, PACKAGE_STRING " - \u00a9 2016-2019 by Heiko Sch\u00e4fer <heiko@rangun.de>\n");
 }
 
 static inline gint fitem_ccmp(gconstpointer a, gconstpointer b, gpointer d) {
@@ -263,28 +267,50 @@ static void display_candidates(gpointer key, gpointer data) {
 
     const DISP_PARAMS *const p = (DISP_PARAMS *)data;
 
-    char hrs[1024];
     size_t i;
 
-    fprintf(stdout, "[ ");
+    xmlNodePtr entry_node = NULL;
 
-    g_qsort_with_data(FITEMLIST_CAST(key)->entries, FITEMLIST_CAST(key)->size, sizeof(DISKFIT_FITEM), fitem_ccmp, NULL);
+    g_qsort_with_data(FITEMLIST_CAST(key)->entries,
+                        FITEMLIST_CAST(key)->size, sizeof(DISKFIT_FITEM),
+                        fitem_ccmp, NULL);
+
+    if(!p->root_node) {
+        g_fprintf(stdout, "[ ");
+    } else {
+        entry_node = xmlNewNode(NULL, BAD_CAST "files");
+    }
 
     for (i = 0; i < FITEMLIST_CAST(key)->size; ++i) {
 
-        char *const bc = p->stripdir ? g_path_get_basename(FITEMLIST_CAST(key)->entries[i].fname) :
-                         FITEMLIST_CAST(key)->entries[i].fname;
+        gchar *const bc = p->stripdir ?
+        g_path_get_basename(FITEMLIST_CAST(key)->entries[i].fname) :
+                        FITEMLIST_CAST(key)->entries[i].fname;
 
-        fprintf(stdout, "'%s' ", bc);
+        if(!p->root_node) {
+            g_fprintf(stdout, "'%s' ", bc);
+        } else {
+            xmlNodePtr file_node = xmlNewNode(NULL, BAD_CAST "filename");
+            xmlAddChild(file_node, xmlNewText(BAD_CAST bc));
+            xmlAddChild(entry_node, file_node);
+        }
 
         if (p->stripdir) {
             g_free(bc);
         }
     }
 
-    diskfit_hrsize(FITEMLIST_CAST(key)->total, hrs, 1023);
-    fprintf(stdout, "]:%zu = %s (%.3f%%)\n", FITEMLIST_CAST(key)->size, hrs,
-            (float)(FITEMLIST_CAST(key)->total * 100u) / (float)p->tg);
+    if(!p->root_node) {
+
+        char hrs[1024];
+
+        diskfit_hrsize(FITEMLIST_CAST(key)->total, hrs, 1023);
+        g_fprintf(stdout, "]:%zu = %s (%.3f%%)\n",
+            FITEMLIST_CAST(key)->size, hrs,
+                (float)(FITEMLIST_CAST(key)->total * 100u) / (float)p->tg);
+    } else {
+        xmlAddChild(p->root_node, entry_node);
+    }
 
     g_free(FITEMLIST_CAST(key)->entries);
     g_slice_free(FITEMLIST, FITEMLIST_CAST(key));
@@ -327,9 +353,9 @@ int main(int argc, char *argv[]) {
 #ifndef NDEBUG
 
     if (has_rc) {
-        fprintf(stderr, "[DEBUG] targets read from %s\n", rcfile);
+        g_fprintf(stderr, "[DEBUG] targets read from %s\n", rcfile);
     } else {
-        fprintf(stderr, "[DEBUG] no targets read\n");
+        g_fprintf(stderr, "[DEBUG] no targets read\n");
     }
 
 #endif
@@ -338,11 +364,13 @@ int main(int argc, char *argv[]) {
 
         print_copy();
 
-        fprintf(stdout, "\nUsage: %s [target_profile|target_size[G|M|K]] "
+        g_fprintf(stdout, "\nUsage: %s [target_profile|target_size[G|M|K]] "
             "[file_pattern...|@pattern_file]\n\n", argv[0]);
-        fprintf(stdout, "Omitting the file_pattern will just print the target size in Bytes.\n\n");
-        fprintf(stdout, "Set environment variable DISKFIT_STRIPDIR to any value "
-                "to strip directories from the output.\n\nTarget profiles:\n");
+        g_fprintf(stdout, "Omitting the file_pattern will just print the target size in Bytes.\n\n");
+        g_fprintf(stdout, "Set environment variable DISKFIT_STRIPDIR to any value "
+                "to strip directories from the output.\n");
+        g_fprintf(stdout, "Set environment variable DISKFIT_XMLOUT to any value "
+                "to get a compact XML-output.\n\nTarget profiles:\n");
 
         if (has_rc) {
 
@@ -356,7 +384,7 @@ int main(int argc, char *argv[]) {
                 diskfit_hrsize(diskfit_target_size(profiles[pi], tmap, rc), hr_ptg, 1023);
                 const uint64_t bs = blocksize(profiles[pi], rc);
                 if(bs) snprintf(bsize, 1023, "; block size = %" PRIu64 " byte%s", bs, bs > 1u ? "s" : "");
-                fprintf(stdout, "\t%s = %s%s\n", profiles[pi], hr_ptg, bsize);
+                g_fprintf(stdout, "\t%s = %s%s\n", profiles[pi], hr_ptg, bsize);
             }
 
             g_strfreev(profiles);
@@ -368,7 +396,7 @@ int main(int argc, char *argv[]) {
             diskfit_hrsize(diskfit_target_size("dvd", NULL, NULL), hr_dvd, 1023);
             diskfit_hrsize(diskfit_target_size("cd", NULL, NULL), hr_cd, 1023);
 
-            fprintf(stdout, "\tdvd = %s\n\tcd = %s\n", hr_dvd, hr_cd);
+            g_fprintf(stdout, "\tdvd = %s\n\tcd = %s\n", hr_dvd, hr_cd);
         }
 
         g_strfreev(env);
@@ -380,7 +408,7 @@ int main(int argc, char *argv[]) {
 
     } else if (argc == 2) {
 
-        fprintf(stdout, "%" G_GUINT64_FORMAT "\n", diskfit_target_size(argv[1], tmap,
+        g_fprintf(stdout, "%" G_GUINT64_FORMAT "\n", diskfit_target_size(argv[1], tmap,
                 has_rc ? rc : NULL));
 
         g_strfreev(env);
@@ -402,9 +430,9 @@ int main(int argc, char *argv[]) {
         wordexp_t p;
 
         print_copy();
-        
+
         if(!tg) {
-            fprintf(stderr, "invalid target or size given\n");
+            g_fprintf(stderr, "invalid target or size given\n");
             return EXIT_FAILURE;
         }
 
@@ -439,7 +467,7 @@ int main(int argc, char *argv[]) {
 
                 fclose(f);
             } else {
-                fprintf(stderr, "Cannot open \'%s\': %s\n", &(argv[2][1]),
+                g_fprintf(stderr, "Cannot open \'%s\': %s\n", &(argv[2][1]),
                     strerror(errno));
                 return EXIT_FAILURE;
             }
@@ -461,8 +489,8 @@ int main(int argc, char *argv[]) {
 
                 if (!stat(p.we_wordv[j], &st)) {
 
-                    if (S_ISREG(st.st_mode)) {
-                        
+                    if (S_ISREG(st.st_mode) && st.st_size) {
+
                         const uint64_t padded_size = st.st_size + (bs > 0u ? bs - (st.st_size & (bs - 1u)) : 0u);
 
                         tsize += padded_size;
@@ -518,7 +546,23 @@ int main(int argc, char *argv[]) {
                 mpz_init_set_ui(rev_tot, 2 * nodes);
                 mpz_init_set_ui(rev_cur, nodes);
 
-                DISP_PARAMS dp = { g_environ_getenv(env, "DISKFIT_STRIPDIR") != NULL, tg };
+                xmlDocPtr doc = NULL;
+                xmlNodePtr root_node = NULL;
+                const gboolean xml = g_environ_getenv(env, "DISKFIT_XMLOUT") != NULL;
+
+                if(xml) {
+
+                    doc = xmlNewDoc(BAD_CAST "1.0");
+                    root_node = xmlNewNode(NULL, BAD_CAST "diskfit");
+
+                    xmlDocSetRootElement(doc, root_node);
+                }
+
+                DISP_PARAMS dp = {
+                    g_environ_getenv(env, "DISKFIT_STRIPDIR") != NULL,
+                    tg, root_node
+                };
+
                 REV_PARAMS  rp = { NULL, &cp, rev_cur, rev_tot };
 
                 g_tree_foreach(cp.candidates, create_rev_list, &rp);
@@ -533,7 +577,15 @@ int main(int argc, char *argv[]) {
                 mpz_clear(rev_cur);
                 mpz_clear(rev_tot);
 
+                if(xml) LIBXML_TEST_VERSION;
+
                 g_slist_foreach(rp.rl, display_candidates, &dp);
+
+                if(xml) {
+                    xmlSaveFormatFileEnc("-", doc, "UTF-8", 1);
+                    xmlFreeDoc(doc);
+                    xmlCleanupParser();
+                }
 
                 g_slist_free(rp.rl);
                 g_tree_destroy(cp.candidates);
@@ -557,16 +609,16 @@ int main(int argc, char *argv[]) {
         const gint64 mono_m   = (mono_eta - (mono_h * (gint64)3600)) / (gint64)60;
         const gint64 mono_s   = (mono_eta - (mono_h * (gint64)600) - (mono_m * (gint)60)) % (gint64)60;
 
-        fprintf(stderr,
+        g_fprintf(stderr,
                 "Total size: %s - Target size: %s - Total number of files: %zu - "
                 "Time: %" G_GINT64_MODIFIER "d:%02" G_GINT64_MODIFIER "d:%02" G_GINT64_MODIFIER "d",
                 hr_tot, hr_tg, nitems, mono_h, mono_m, mono_s);
 
         if (isInterrupted || _interrupted) {
-            fprintf(stderr, " (interrupted)");
+            g_fprintf(stderr, " (interrupted)");
         }
 
-        fprintf(stderr, "\n");
+        g_fprintf(stderr, "\n");
     }
 
     g_strfreev(env);

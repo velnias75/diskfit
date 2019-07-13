@@ -21,6 +21,7 @@
 #
 
 from PyQt5.QtCore import QT_TR_NOOP
+from PyQt5.QtCore import QXmlStreamReader
 from PyQt5.QtCore import QTemporaryFile
 from PyQt5.QtCore import QTranslator
 from PyQt5.QtCore import QByteArray
@@ -71,7 +72,7 @@ class MainWindow(QMainWindow):
     __diskfit = Site().get("diskfitPath", "/usr/bin/diskfit")
     __diskfitProgress = None
     __lastResult = list()
-    __resultBuf = ""
+    __resultXml = None
     __statusBar = None
     __unselInputSum = None
     __runningTime = 0.0
@@ -84,6 +85,7 @@ class MainWindow(QMainWindow):
 
         df_env_ = LangCProcessEnvironment().env()
         df_env_.remove("DISKFIT_STRIPDIR")
+        df_env_.insert("DISKFIT_XMLOUT", "1")
 
         self.__proc1.setProcessEnvironment(df_env_)
         self.__proc2.setProcessEnvironment(df_env_)
@@ -343,6 +345,8 @@ class MainWindow(QMainWindow):
                 showMessage(self.tr("Calculating for {} files ...").
                             format(str(self.__inputModel.rowCount())))
 
+            self.__resultXml = QXmlStreamReader()
+
             self.__proc3.start(self.__diskfit, args_, QProcess.ReadOnly)
             self.__proc3.waitForStarted()
             self.__runningTime = time.clock_gettime(time.CLOCK_MONOTONIC_RAW)
@@ -363,6 +367,23 @@ class MainWindow(QMainWindow):
                                          format(self.__diskfit)))
         self.finished(0, QProcess.NormalExit)
 
+    def appendResultFiles(self, files_, bs_):
+
+        ts_ = 0
+
+        for f_ in files_:
+
+            ps_ = self.__outputModel.fileSize(f_)
+            if bs_ > 0:
+                ps_ += bs_ - (ts_ & (bs_ - 1))
+            ts_ += ps_
+
+        self.__lastResult.append((files_, str(len(files_)),
+                                  HRSize.sizeString(ts_),
+                                  format(((float(ts_) * 100.0) /
+                                         self.__ui.spin_bytes.value()),
+                                         ".3f") + "%"))
+
     @pyqtSlot(int, QProcess.ExitStatus)
     def finished(self, ec, es):
 
@@ -374,12 +395,26 @@ class MainWindow(QMainWindow):
             elapsedTime_ = time.clock_gettime(time.CLOCK_MONOTONIC_RAW) - \
                 self.__runningTime
 
-            rbs_ = self.__resultBuf.splitlines(False)
             prm_ = QT_TR_NOOP("Processing result ...")
+            bs_ = self.__keyfile.getBlocksize(self.__ui.
+                                              combo_target.currentText())
+
+            files_ = None
+            while not self.__resultXml.atEnd():
+                if self.__resultXml.readNextStartElement():
+                    if self.__resultXml.name() == "files":
+                        if files_ is not None:
+                            self.appendResultFiles(files_, bs_)
+                        files_ = list()
+                    elif self.__resultXml.name() == "filename":
+                        files_.append((self.__resultXml.readElementText()))
+
+            if files_ is not None and len(files_):
+                self.appendResultFiles(files_, bs_)
 
             progress_ = QProgressDialog(QApplication.
                                         translate("@default", prm_), None, 0,
-                                        len(rbs_) * 2)
+                                        len(self.__lastResult) * 2)
             progress_.setWindowModality(Qt.WindowModal)
             progress_.setMinimumDuration(750)
             progress_.setAutoReset(True)
@@ -387,13 +422,6 @@ class MainWindow(QMainWindow):
 
             self.__statusBar.showMessage(QApplication.translate("@default",
                                                                 prm_))
-            for pv_, r_ in enumerate(rbs_):
-                r_match_ = r_rex.search(r_)
-                if r_match_:
-                    self.__lastResult.append((r_match_.group(1),
-                                              r_match_.group(2),
-                                              r_match_.group(3),
-                                              r_match_.group(4)))
 
             progress_.setMaximum(len(self.__lastResult))
 
@@ -417,7 +445,7 @@ class MainWindow(QMainWindow):
                                          5000)
 
         self.__tmp = None
-        self.__resultBuf = ""
+        self.__resultXml = None
         self.__diskfitProgress.setHidden(True)
 
     @pyqtSlot()
@@ -455,8 +483,8 @@ class MainWindow(QMainWindow):
 
     @pyqtSlot()
     def resultAvailable(self):
-        self.__resultBuf += self.__proc3.readAllStandardOutput().data(). \
-            decode("utf-8")
+        self.__resultXml.addData(self.__proc3.readAllStandardOutput().data().
+                                 decode("utf-8"))
 
     @pyqtSlot()
     def targetsAvailable(self):
@@ -572,7 +600,7 @@ def main(args=None):
     translator = QTranslator()
 
     app.setApplicationName("QDiskFit")
-    app.setApplicationVersion("2.0.2.15")
+    app.setApplicationVersion("2.0.3.0")
     app.setApplicationDisplayName(app.applicationName() + " " +
                                   app.applicationVersion())
     app.setOrganizationDomain("rangun.de")
@@ -596,7 +624,6 @@ def main(args=None):
 
 t_rex = re.compile('\s+([^\s]+).*')
 p_rex = re.compile('(Computing for \d+ files: (\d+)% \.\.\.)+.*')
-r_rex = re.compile('\[([^\]]*)\]:([^ ]+) = ([^\(]+) \(([0-9\.%]*)\)')
 
 if __name__ == "__main__":
     main()

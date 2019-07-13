@@ -32,7 +32,6 @@ from .modelitems.iconfileitem import IconFileItem
 from .modelitems.outputsizeitem import OutputSizeItem
 from .modelitems.echotooltipitem import EchoTooltipItem
 from .modelitems.multifiledragitem import MultiFileDragItem
-import re
 
 
 class OutputModel(QStandardItemModel):
@@ -44,7 +43,6 @@ class OutputModel(QStandardItemModel):
     __sum = None
     __hdr = None
     __imd = None
-    __rex = re.compile("'([^']+)'")
 
     __result = None
 
@@ -80,6 +78,11 @@ class OutputModel(QStandardItemModel):
         self.__result = result_
         self.applyResult(progress_)
 
+    def fileSize(self, ma_):
+        return self.__imd.item(self.__imd.indexFromItem(self.__imd.
+                                                        findItems(ma_)[0]).
+                               row(), 1).num()
+
     def applyResult(self, progress_=None):
 
         if self.__result is not None:
@@ -90,14 +93,11 @@ class OutputModel(QStandardItemModel):
 
             for pv_, r_ in enumerate(self.__result):
 
-                fa_ = self.__rex.findall(r_[0])
+                fa_ = r_[0]
                 ts_ = 0
 
                 for ma_ in fa_:
-                    ts_ += self.__imd.item(self.__imd.
-                                           indexFromItem(self.__imd.
-                                                         findItems(ma_)[0]).
-                                           row(), 1).num()
+                    ts_ += self.fileSize(ma_)
 
                 l_ = (MultiFileDragItem(fa_),
                       EchoTooltipItem(r_[1], True),
