@@ -123,8 +123,12 @@ class InputModel(QStandardItemModel):
         tot_ = 0
         len_ = self.rowCount()
 
+        anyEnabled_ = False
+
         for r in range(0, len_):
             tot_ += self.item(r, 1).num()
+            if self.item(r, 1).isEnabled():
+                anyEnabled_ = True
 
         if len_ > 0:
             self.__sum.setText(self.tr("{0} in {1} files").
@@ -133,7 +137,7 @@ class InputModel(QStandardItemModel):
             self.__sum.setText(self.tr("No files"))
 
         self.__par.header().setSortIndicatorShown(len_ > 0)
-        self.__sta.setEnabled(len_ > 0)
+        self.__sta.setEnabled(anyEnabled_ and len_ > 0)
         self.__asa.setEnabled(len_ > 0)
         self.__aca.setEnabled(len_ > 0)
         self.__bca.setEnabled(len_ > 0)
@@ -142,6 +146,7 @@ class InputModel(QStandardItemModel):
     def setTargetSize(self, target_):
         self.__tar = target_
         self.disableOversizeItems()
+        self.modelChanged()
 
     @pyqtSlot()
     def disableOversizeItems(self):

@@ -543,6 +543,8 @@ class MainWindow(QMainWindow):
                                             combo_target.currentText()))
             self.__ui.spin_bytes.setEnabled(True)
 
+        self.__inputModel.modelChanged()
+
     @pyqtSlot()
     def inputSelectionChanged(self):
 
