@@ -161,6 +161,8 @@ class MainWindow(QMainWindow):
         self.__ui.action_Start.triggered.connect(self.start)
         self.__ui.actionAbout.triggered.connect(self.about)
         self.__ui.action_diffTarget.triggered.connect(self.diffTarget)
+        self.__ui.spin_bytes.valueChanged.connect(self.__inputModel.
+                                                  setTargetSize)
 
         self.__outputModel.resultReady.connect(self.resultReady)
 
@@ -531,9 +533,14 @@ class MainWindow(QMainWindow):
         self.__saveTarget = True
 
         if d_ is not None:
+            self.__inputModel.setTargetSize(d_)
             self.__ui.spin_bytes.setValue(d_)
             self.__ui.spin_bytes.setEnabled(False)
         else:
+            self.__inputModel.\
+                setTargetSize(self.__keyfile.
+                              getTargetsize(self.__ui.
+                                            combo_target.currentText()))
             self.__ui.spin_bytes.setEnabled(True)
 
     @pyqtSlot()
@@ -578,6 +585,7 @@ class MainWindow(QMainWindow):
                                                model().rowCount()-1)
         self.__ui.spin_bytes.setValue(size_)
         self.__saveTarget = False
+        self.__inputModel.setTargetSize(size_)
 
     def enableExclusive(self):
         return self.__ui.table_input.selectionModel().hasSelection() and \
@@ -600,7 +608,7 @@ def main(args=None):
     translator = QTranslator()
 
     app.setApplicationName("QDiskFit")
-    app.setApplicationVersion("2.0.3.0")
+    app.setApplicationVersion("2.0.3.1")
     app.setApplicationDisplayName(app.applicationName() + " " +
                                   app.applicationVersion())
     app.setOrganizationDomain("rangun.de")

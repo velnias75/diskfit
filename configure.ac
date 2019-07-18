@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ([2.69])
-AC_INIT([DiskFit], [2.0.3.0], [heiko@rangun.de])
+AC_INIT([DiskFit], [2.0.3.1], [heiko@rangun.de])
 AC_CONFIG_SRCDIR([src/diskfit.c])
 AC_CONFIG_HEADERS([config.h])
 
@@ -42,9 +42,9 @@ AC_CHECK_FUNCS([strcasecmp])
 AC_FUNC_ERROR_AT_LINE
 AC_FUNC_MALLOC
 
-PKG_CHECK_MODULES([GLIB2], [glib-2.0 >= 2.6])
+PKG_CHECK_MODULES([GLIB2], [glib-2.0 >= 2.31.8])
 PKG_CHECK_MODULES([GSL], [gsl >= 1.9])
-PKG_CHECK_MODULES([LIBXML], [libxml-2.0 >= 2.9.4])
+PKG_CHECK_MODULES([LIBXML], [libxml-2.0 >= 2.7.4])
 
 # backwards compat with older pkg-config
 # - pull in AC_DEFUN from pkg.m4

@@ -62,6 +62,12 @@ class Keyfile:
             else:
                 qDebug("No key file found")
 
+        def getTargetsize(self, target_):
+            try:
+                return int(self.__rc.get_value(target_, "size"))
+            except GLib.Error:
+                return None
+
         def getBlocksize(self, target_):
             try:
                 return int(self.__rc.get_value(target_, "bs"))

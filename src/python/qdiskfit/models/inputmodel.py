@@ -39,6 +39,7 @@ class InputModel(QStandardItemModel):
     __asa = None
     __aca = None
     __bca = None
+    __tar = None
 
     def __init__(self, parent_, summary_, start_, selAllAct_, clearAllAct_,
                  clearAllBut_):
@@ -56,6 +57,7 @@ class InputModel(QStandardItemModel):
         self.__aca = clearAllAct_
         self.__bca = clearAllBut_
 
+        self.rowsInserted.connect(self.disableOversizeItems)
         self.rowsInserted.connect(self.modelChanged)
         self.rowsRemoved.connect(self.modelChanged)
 
@@ -88,7 +90,8 @@ class InputModel(QStandardItemModel):
         files_ = list()
 
         for i in range(0, self.rowCount()):
-            files_.append(self.item(i))
+            if self.item(i).isEnabled():
+                files_.append(self.item(i))
 
         return files_
 
@@ -134,6 +137,19 @@ class InputModel(QStandardItemModel):
         self.__asa.setEnabled(len_ > 0)
         self.__aca.setEnabled(len_ > 0)
         self.__bca.setEnabled(len_ > 0)
+
+    @pyqtSlot(float)
+    def setTargetSize(self, target_):
+        self.__tar = target_
+        self.disableOversizeItems()
+
+    @pyqtSlot()
+    def disableOversizeItems(self):
+        if self.__tar is not None:
+            for r in range(0, self.rowCount()):
+                oversized_ = self.item(r, 1).num() > self.__tar
+                self.item(r, 0).setEnabled(not oversized_)
+                self.item(r, 1).setEnabled(not oversized_)
 
     @pyqtSlot()
     def addFiles(self):
@@ -182,7 +198,8 @@ class InputModel(QStandardItemModel):
                 else:
                     padded_size_ = self.itemFromIndex(i_).num()
 
-                accu_ += padded_size_
+                if self.itemFromIndex(i_).isEnabled():
+                    accu_ += padded_size_
 
         return accu_
 
