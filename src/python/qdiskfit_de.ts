@@ -3,7 +3,7 @@
 <context>
     <name>@default</name>
     <message>
-        <location filename="qdiskfit/qdiskfit.py" line="378"/>
+        <location filename="qdiskfit/qdiskfit.py" line="384"/>
         <source>Processing result ...</source>
         <translation>Verarbeite Ergebnis ...</translation>
     </message>
@@ -11,32 +11,32 @@
 <context>
     <name>InputModel</name>
     <message>
-        <location filename="qdiskfit/models/inputmodel.py" line="155"/>
+        <location filename="qdiskfit/models/inputmodel.py" line="174"/>
         <source>Any files (*)</source>
         <translation>Alle Dateien (*)</translation>
     </message>
     <message>
-        <location filename="qdiskfit/models/inputmodel.py" line="155"/>
+        <location filename="qdiskfit/models/inputmodel.py" line="174"/>
         <source>Video files (*.mp4 *.mpg *.m3u8 *.ts *.avi *.wmv *.flv *.webm *.ogv *.vob *.mpeg)</source>
         <translation>Videodateien (*.mp4 *.mpg *.m3u8 *.ts *.avi *.wmv *.flv *.webm *.ogv *.vob *.mpeg)</translation>
     </message>
     <message>
-        <location filename="qdiskfit/models/inputmodel.py" line="155"/>
+        <location filename="qdiskfit/models/inputmodel.py" line="174"/>
         <source>Audio files (*.mp3 *.wav *.ogg *.wma *.au)</source>
         <translation>Audiodateien (*.mp3 *.wav *.ogg *.wma *.au)</translation>
     </message>
     <message>
-        <location filename="qdiskfit/models/inputmodel.py" line="155"/>
+        <location filename="qdiskfit/models/inputmodel.py" line="174"/>
         <source>Image files (*.png *.xpm *.jpg *.gif *.svg *.svgz)</source>
         <translation>Bilddateien (*.png *.xpm *.jpg *.gif *.svg *.svgz)</translation>
     </message>
     <message>
-        <location filename="qdiskfit/models/inputmodel.py" line="127"/>
+        <location filename="qdiskfit/models/inputmodel.py" line="132"/>
         <source>{0} in {1} files</source>
         <translation>{0} in {1} Dateien</translation>
     </message>
     <message>
-        <location filename="qdiskfit/models/inputmodel.py" line="130"/>
+        <location filename="qdiskfit/models/inputmodel.py" line="135"/>
         <source>No files</source>
         <translation>Keine Dateien</translation>
     </message>
@@ -54,27 +54,27 @@
 <context>
     <name>MainWindow</name>
     <message>
-        <location filename="qdiskfit/qdiskfit.py" line="299"/>
+        <location filename="qdiskfit/qdiskfit.py" line="287"/>
         <source>About</source>
         <translation>Über</translation>
     </message>
     <message>
-        <location filename="qdiskfit/qdiskfit.py" line="299"/>
+        <location filename="qdiskfit/qdiskfit.py" line="287"/>
         <source>A simple disk fit calculator (GUI)</source>
         <translation>Optimale Belegung von Dateien ermitteln (GUI)</translation>
     </message>
     <message>
-        <location filename="qdiskfit/qdiskfit.py" line="343"/>
+        <location filename="qdiskfit/qdiskfit.py" line="331"/>
         <source>Calculating for {} files ...</source>
         <translation>Berechne für {} Dateien ...</translation>
     </message>
     <message>
-        <location filename="qdiskfit/qdiskfit.py" line="361"/>
+        <location filename="qdiskfit/qdiskfit.py" line="351"/>
         <source>Error</source>
         <translation>Fehler</translation>
     </message>
     <message>
-        <location filename="qdiskfit/qdiskfit.py" line="416"/>
+        <location filename="qdiskfit/qdiskfit.py" line="430"/>
         <source>Calculation interrupted</source>
         <translation>Berechnung unterbrochen</translation>
     </message>
@@ -116,170 +116,170 @@
     <message>
         <location filename="qdiskfit/mainwindow/mainwindow.ui" line="146"/>
         <source>Files used for calculation</source>
-        <translation>Dateien, die zur Berechnung herangezogen werden</translation>
+        <translation type="obsolete">Dateien, die zur Berechnung herangezogen werden</translation>
     </message>
     <message>
         <location filename="qdiskfit/mainwindow/mainwindow.ui" line="186"/>
         <source>No files</source>
-        <translation>Keine Dateien</translation>
+        <translation type="obsolete">Keine Dateien</translation>
     </message>
     <message>
-        <location filename="qdiskfit/mainwindow/mainwindow.ui" line="212"/>
+        <location filename="qdiskfit/mainwindow/mainwindow.ui" line="157"/>
         <source>Add file(s) for calculation</source>
         <translation>Füge Datei(en) zur Berechnung hinzu</translation>
     </message>
     <message>
-        <location filename="qdiskfit/mainwindow/mainwindow.ui" line="215"/>
+        <location filename="qdiskfit/mainwindow/mainwindow.ui" line="160"/>
         <source>&amp;Add</source>
         <translation>&amp;Hinzufügen</translation>
     </message>
     <message>
-        <location filename="qdiskfit/mainwindow/mainwindow.ui" line="229"/>
+        <location filename="qdiskfit/mainwindow/mainwindow.ui" line="174"/>
         <source>Remove file(s)</source>
         <translation>Entferne Datei(en)</translation>
     </message>
     <message>
-        <location filename="qdiskfit/mainwindow/mainwindow.ui" line="232"/>
+        <location filename="qdiskfit/mainwindow/mainwindow.ui" line="177"/>
         <source>&amp;Remove</source>
         <translation>&amp;Entfernen</translation>
     </message>
     <message>
-        <location filename="qdiskfit/mainwindow/mainwindow.ui" line="259"/>
+        <location filename="qdiskfit/mainwindow/mainwindow.ui" line="204"/>
         <source>Clear all input files</source>
         <translation>Entferne alle Eingabedateien</translation>
     </message>
     <message>
-        <location filename="qdiskfit/mainwindow/mainwindow.ui" line="262"/>
+        <location filename="qdiskfit/mainwindow/mainwindow.ui" line="207"/>
         <source>&amp;Clear</source>
         <translation>Ent&amp;ferne alle</translation>
     </message>
     <message>
-        <location filename="qdiskfit/mainwindow/mainwindow.ui" line="287"/>
+        <location filename="qdiskfit/mainwindow/mainwindow.ui" line="232"/>
         <source>Output</source>
         <translation>Ergebnis</translation>
     </message>
     <message>
-        <location filename="qdiskfit/mainwindow/mainwindow.ui" line="295"/>
+        <location filename="qdiskfit/mainwindow/mainwindow.ui" line="240"/>
         <source>Result of the calculation</source>
         <translation>Ergebnis der Berechnung</translation>
     </message>
     <message>
-        <location filename="qdiskfit/mainwindow/mainwindow.ui" line="323"/>
+        <location filename="qdiskfit/mainwindow/mainwindow.ui" line="268"/>
         <source>No result</source>
         <translation>Kein Ergebnis</translation>
     </message>
     <message>
-        <location filename="qdiskfit/mainwindow/mainwindow.ui" line="351"/>
+        <location filename="qdiskfit/mainwindow/mainwindow.ui" line="296"/>
         <source>Fi&amp;le</source>
         <translation>&amp;Datei</translation>
     </message>
     <message>
-        <location filename="qdiskfit/mainwindow/mainwindow.ui" line="362"/>
+        <location filename="qdiskfit/mainwindow/mainwindow.ui" line="307"/>
         <source>Hel&amp;p</source>
         <translation>&amp;Hilfe</translation>
     </message>
     <message>
-        <location filename="qdiskfit/mainwindow/mainwindow.ui" line="368"/>
+        <location filename="qdiskfit/mainwindow/mainwindow.ui" line="313"/>
         <source>&amp;Edit</source>
         <translation>&amp;Bearbeiten</translation>
     </message>
     <message>
-        <location filename="qdiskfit/mainwindow/mainwindow.ui" line="387"/>
+        <location filename="qdiskfit/mainwindow/mainwindow.ui" line="332"/>
         <source>Toolbar</source>
         <translation>Werkzeugleiste</translation>
     </message>
     <message>
-        <location filename="qdiskfit/mainwindow/mainwindow.ui" line="408"/>
+        <location filename="qdiskfit/mainwindow/mainwindow.ui" line="353"/>
         <source>&amp;Quit</source>
         <translation>&amp;Beenden</translation>
     </message>
     <message>
-        <location filename="qdiskfit/mainwindow/mainwindow.ui" line="411"/>
+        <location filename="qdiskfit/mainwindow/mainwindow.ui" line="356"/>
         <source>Ctrl+Q</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="qdiskfit/mainwindow/mainwindow.ui" line="426"/>
+        <location filename="qdiskfit/mainwindow/mainwindow.ui" line="371"/>
         <source>St&amp;op</source>
         <translation>St&amp;op</translation>
     </message>
     <message>
-        <location filename="qdiskfit/mainwindow/mainwindow.ui" line="429"/>
+        <location filename="qdiskfit/mainwindow/mainwindow.ui" line="374"/>
         <source>Interrupt calculation</source>
         <translation>Unterbreche Berechnung</translation>
     </message>
     <message>
-        <location filename="qdiskfit/mainwindow/mainwindow.ui" line="432"/>
+        <location filename="qdiskfit/mainwindow/mainwindow.ui" line="377"/>
         <source>Esc</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="qdiskfit/mainwindow/mainwindow.ui" line="444"/>
+        <location filename="qdiskfit/mainwindow/mainwindow.ui" line="389"/>
         <source>&amp;Start</source>
         <translation>&amp;Start</translation>
     </message>
     <message>
-        <location filename="qdiskfit/mainwindow/mainwindow.ui" line="447"/>
+        <location filename="qdiskfit/mainwindow/mainwindow.ui" line="392"/>
         <source>Start calculation</source>
         <translation>Beginne die Berechnung</translation>
     </message>
     <message>
-        <location filename="qdiskfit/mainwindow/mainwindow.ui" line="450"/>
+        <location filename="qdiskfit/mainwindow/mainwindow.ui" line="395"/>
         <source>Ctrl+R</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="qdiskfit/mainwindow/mainwindow.ui" line="459"/>
+        <location filename="qdiskfit/mainwindow/mainwindow.ui" line="404"/>
         <source>&amp;Add input files...</source>
         <translation>&amp;Füge Eingabedateien hinzu...</translation>
     </message>
     <message>
-        <location filename="qdiskfit/mainwindow/mainwindow.ui" line="462"/>
+        <location filename="qdiskfit/mainwindow/mainwindow.ui" line="407"/>
         <source>Ctrl++</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="qdiskfit/mainwindow/mainwindow.ui" line="471"/>
+        <location filename="qdiskfit/mainwindow/mainwindow.ui" line="416"/>
         <source>&amp;About</source>
         <translation>Ü&amp;ber</translation>
     </message>
     <message>
-        <location filename="qdiskfit/mainwindow/mainwindow.ui" line="483"/>
+        <location filename="qdiskfit/mainwindow/mainwindow.ui" line="428"/>
         <source>&amp;Remove input files</source>
         <translation>&amp;Entferne Eingabedateien</translation>
     </message>
     <message>
-        <location filename="qdiskfit/mainwindow/mainwindow.ui" line="486"/>
+        <location filename="qdiskfit/mainwindow/mainwindow.ui" line="431"/>
         <source>Del</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="qdiskfit/mainwindow/mainwindow.ui" line="498"/>
+        <location filename="qdiskfit/mainwindow/mainwindow.ui" line="443"/>
         <source>&amp;Select all input files</source>
         <translation>&amp;Wähle alle Eingabedateien aus</translation>
     </message>
     <message>
-        <location filename="qdiskfit/mainwindow/mainwindow.ui" line="501"/>
+        <location filename="qdiskfit/mainwindow/mainwindow.ui" line="446"/>
         <source>Ctrl+A</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="qdiskfit/mainwindow/mainwindow.ui" line="513"/>
+        <location filename="qdiskfit/mainwindow/mainwindow.ui" line="458"/>
         <source>Remove all &amp;input files</source>
         <translation>Entferne alle &amp;Eingabedateien</translation>
     </message>
     <message>
-        <location filename="qdiskfit/mainwindow/mainwindow.ui" line="516"/>
+        <location filename="qdiskfit/mainwindow/mainwindow.ui" line="461"/>
         <source>Shift+Del</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="qdiskfit/mainwindow/mainwindow.ui" line="531"/>
+        <location filename="qdiskfit/mainwindow/mainwindow.ui" line="476"/>
         <source>Ctrl+S</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="qdiskfit/qdiskfit.py" line="405"/>
+        <location filename="qdiskfit/qdiskfit.py" line="419"/>
         <source>Calculation took {}</source>
         <translation>Die Berechnung benötigte {}</translation>
     </message>
@@ -289,62 +289,62 @@
         <translation>&amp;Profile bearbeiten...</translation>
     </message>
     <message>
-        <location filename="qdiskfit/mainwindow/mainwindow.ui" line="528"/>
+        <location filename="qdiskfit/mainwindow/mainwindow.ui" line="473"/>
         <source>S&amp;ave...</source>
         <translation>&amp;Sichern...</translation>
     </message>
     <message>
-        <location filename="qdiskfit/mainwindow/mainwindow.ui" line="536"/>
+        <location filename="qdiskfit/mainwindow/mainwindow.ui" line="481"/>
         <source>&amp;Profileeditor...</source>
         <translation>&amp;Profil-Editor...</translation>
     </message>
     <message>
-        <location filename="qdiskfit/qdiskfit.py" line="361"/>
+        <location filename="qdiskfit/qdiskfit.py" line="351"/>
         <source>Failed to launch {}.</source>
         <translation>Konnte {} nicht starten.</translation>
     </message>
     <message>
-        <location filename="qdiskfit/qdiskfit.py" line="256"/>
+        <location filename="qdiskfit/qdiskfit.py" line="244"/>
         <source>Sort by title</source>
         <translation>Nach Titel sortieren</translation>
     </message>
     <message>
-        <location filename="qdiskfit/qdiskfit.py" line="258"/>
+        <location filename="qdiskfit/qdiskfit.py" line="246"/>
         <source>Sort by size</source>
         <translation>Nach Größe sortieren</translation>
     </message>
     <message>
-        <location filename="qdiskfit/qdiskfit.py" line="267"/>
+        <location filename="qdiskfit/qdiskfit.py" line="255"/>
         <source>ascending</source>
         <translation>aufsteigend</translation>
     </message>
     <message>
-        <location filename="qdiskfit/qdiskfit.py" line="270"/>
+        <location filename="qdiskfit/qdiskfit.py" line="258"/>
         <source>descending</source>
         <translation>absteigend</translation>
     </message>
     <message>
-        <location filename="qdiskfit/mainwindow/mainwindow.ui" line="544"/>
+        <location filename="qdiskfit/mainwindow/mainwindow.ui" line="489"/>
         <source>Set up for exclusive calculation</source>
         <translation>Richte exklusive Berechnung ein</translation>
     </message>
     <message>
-        <location filename="qdiskfit/mainwindow/mainwindow.ui" line="547"/>
+        <location filename="qdiskfit/mainwindow/mainwindow.ui" line="492"/>
         <source>Ctrl+X</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="qdiskfit/qdiskfit.py" line="229"/>
+        <location filename="qdiskfit/qdiskfit.py" line="217"/>
         <source>Add as new target...</source>
         <translation>Als neues Ziel hinzufügen...</translation>
     </message>
     <message>
-        <location filename="qdiskfit/qdiskfit.py" line="237"/>
+        <location filename="qdiskfit/qdiskfit.py" line="225"/>
         <source>my_target_{}</source>
         <translation>mein_ziel_{}</translation>
     </message>
     <message>
-        <location filename="qdiskfit/qdiskfit.py" line="523"/>
+        <location filename="qdiskfit/qdiskfit.py" line="544"/>
         <source>&lt;i&gt;{0} in {1} files&lt;/i&gt; of {2}</source>
         <translation>&lt;i&gt;{0} in {1} Dateien&lt;/i&gt; aus {2}</translation>
     </message>
@@ -377,22 +377,22 @@
         <translation>Ergebnis speichern</translation>
     </message>
     <message>
-        <location filename="qdiskfit/models/outputmodel.py" line="56"/>
+        <location filename="qdiskfit/models/outputmodel.py" line="54"/>
         <source>Files</source>
         <translation>Dateien</translation>
     </message>
     <message>
-        <location filename="qdiskfit/models/outputmodel.py" line="57"/>
+        <location filename="qdiskfit/models/outputmodel.py" line="55"/>
         <source>Count</source>
         <translation>Anzahl</translation>
     </message>
     <message>
-        <location filename="qdiskfit/models/outputmodel.py" line="58"/>
+        <location filename="qdiskfit/models/outputmodel.py" line="56"/>
         <source>Size</source>
         <translation>Größe</translation>
     </message>
     <message>
-        <location filename="qdiskfit/models/outputmodel.py" line="59"/>
+        <location filename="qdiskfit/models/outputmodel.py" line="57"/>
         <source>Percentage</source>
         <translation>Anteil in %</translation>
     </message>
@@ -484,6 +484,24 @@
         <location filename="qdiskfit/models/targetmodel.py" line="48"/>
         <source>Target</source>
         <translation>Ziel</translation>
+    </message>
+</context>
+<context>
+    <name>inputWidget</name>
+    <message>
+        <location filename="qdiskfit/mainwindow/inputwidget.ui" line="14"/>
+        <source>Form</source>
+        <translation></translation>
+    </message>
+    <message>
+        <location filename="qdiskfit/mainwindow/inputwidget.ui" line="26"/>
+        <source>Files used for calculation</source>
+        <translation>Dateien, die zur Berechnung herangezogen werden</translation>
+    </message>
+    <message>
+        <location filename="qdiskfit/mainwindow/inputwidget.ui" line="66"/>
+        <source>No files</source>
+        <translation>Keine Dateien</translation>
     </message>
 </context>
 </TS>

@@ -106,20 +106,21 @@ class MainWindow(QMainWindow):
         self.__keyfile = Keyfile()
 
         self.__inputModel = InputModel(self.__ui.table_input,
-                                       self.__ui.label_inputSummary,
                                        self.__ui.action_Start,
                                        self.__ui.action_SelectAll,
                                        self.__ui.action_inputRemoveAll,
                                        self.__ui.button_clearInput)
 
         self.__ui.table_input.setModel(self.__inputModel)
-        self.__ui.table_input.header(). \
-            setSectionResizeMode(0, QHeaderView.Stretch)
-        self.__ui.table_input.header(). \
-            setSectionResizeMode(1, QHeaderView.ResizeToContents)
 
-        self.__ui.table_input. \
-            customContextMenuRequested.connect(self.inputContextRequested)
+        self.__ui.table_input.\
+            setContextMenuActions((self.__ui.action_InputAdd,
+                                   self.__ui.action_InputRemove,
+                                   self.__ui.action_inputRemoveAll,
+                                   None,
+                                   self.__ui.action_SelectAll,
+                                   None,
+                                   self.__ui.action_diffTarget))
 
         self.__outputModel = OutputModel(self.__ui.table_output,
                                          self.__ui.label_runSummary,
@@ -204,23 +205,6 @@ class MainWindow(QMainWindow):
         if s_ is not None:
             self.restoreState(s_)
             self.gui_restored |= True
-
-    @pyqtSlot(QPoint)
-    def inputContextRequested(self, pos):
-
-        globalPos = self.__ui.table_input.mapToGlobal(pos)
-
-        menu_ = QMenu()
-
-        menu_.addAction(self.__ui.action_InputAdd)
-        menu_.addAction(self.__ui.action_InputRemove)
-        menu_.addAction(self.__ui.action_inputRemoveAll)
-        menu_.addSeparator()
-        menu_.addAction(self.__ui.action_SelectAll)
-        menu_.addSeparator()
-        menu_.addAction(self.__ui.action_diffTarget)
-
-        menu_.exec_(globalPos)
 
     @pyqtSlot(QPoint)
     def outputContextRequested(self, pos):
@@ -555,8 +539,8 @@ class MainWindow(QMainWindow):
 
         if en_:
             if self.__unselInputSum is None:
-                self.__unselInputSum = self.__ui.label_inputSummary.text()
-            self.__ui.label_inputSummary. \
+                self.__unselInputSum = self.__ui.table_input.summary().text()
+            self.__ui.table_input.summary(). \
                 setText(self.tr("<i>{0} in {1} files</i> of {2}").
                         format(HRSize.sizeString(self.__inputModel.
                                getAccuSize(self.__ui.
@@ -564,7 +548,7 @@ class MainWindow(QMainWindow):
                                len(self.__ui.table_input.selectionModel().
                                    selectedRows()), self.__unselInputSum))
         else:
-            self.__ui.label_inputSummary.setText(self.__unselInputSum)
+            self.__ui.table_input.summary().setText(self.__unselInputSum)
             self.__unselInputSum = None
 
     @pyqtSlot(int)

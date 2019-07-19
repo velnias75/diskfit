@@ -135,64 +135,9 @@
               </property>
               <layout class="QVBoxLayout" name="verticalLayout_7">
                <item>
-                <widget class="QTreeView" name="table_input">
-                 <property name="contextMenuPolicy">
-                  <enum>Qt::CustomContextMenu</enum>
-                 </property>
-                 <property name="acceptDrops">
-                  <bool>true</bool>
-                 </property>
-                 <property name="toolTip">
-                  <string>Files used for calculation</string>
-                 </property>
-                 <property name="editTriggers">
-                  <set>QAbstractItemView::NoEditTriggers</set>
-                 </property>
-                 <property name="showDropIndicator" stdset="0">
-                  <bool>true</bool>
-                 </property>
-                 <property name="dragEnabled">
-                  <bool>false</bool>
-                 </property>
-                 <property name="dragDropMode">
-                  <enum>QAbstractItemView::DropOnly</enum>
-                 </property>
-                 <property name="alternatingRowColors">
-                  <bool>true</bool>
-                 </property>
-                 <property name="selectionMode">
-                  <enum>QAbstractItemView::MultiSelection</enum>
-                 </property>
-                 <property name="rootIsDecorated">
-                  <bool>false</bool>
-                 </property>
-                 <property name="itemsExpandable">
-                  <bool>false</bool>
-                 </property>
-                 <property name="sortingEnabled">
-                  <bool>true</bool>
-                 </property>
-                 <attribute name="headerShowSortIndicator" stdset="0">
-                  <bool>false</bool>
-                 </attribute>
-                 <attribute name="headerStretchLastSection">
-                  <bool>false</bool>
-                 </attribute>
-                </widget>
-               </item>
-               <item>
-                <widget class="QLabel" name="label_inputSummary">
-                 <property name="text">
-                  <string>No files</string>
-                 </property>
-                 <property name="alignment">
-                  <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-                 </property>
-                </widget>
+                <widget class="InputWidget" name="table_input" native="true"/>
                </item>
               </layout>
-              <zorder>label_inputSummary</zorder>
-              <zorder>table_input</zorder>
              </widget>
             </item>
             <item>
@@ -548,10 +493,17 @@
    </property>
   </action>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>InputWidget</class>
+   <extends>QWidget</extends>
+   <header>..inputwidget</header>
+   <container>1</container>
+  </customwidget>
+ </customwidgets>
  <tabstops>
   <tabstop>combo_target</tabstop>
   <tabstop>spin_bytes</tabstop>
-  <tabstop>table_input</tabstop>
   <tabstop>button_InputAdd</tabstop>
   <tabstop>button_ListRemove</tabstop>
   <tabstop>button_clearInput</tabstop>
@@ -604,22 +556,6 @@
     <hint type="destinationlabel">
      <x>405</x>
      <y>226</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>action_SelectAll</sender>
-   <signal>triggered()</signal>
-   <receiver>table_input</receiver>
-   <slot>selectAll()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>-1</x>
-     <y>-1</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>180</x>
-     <y>260</y>
     </hint>
    </hints>
   </connection>

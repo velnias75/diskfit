@@ -34,14 +34,13 @@ from ..util.hrsize import HRSize
 class InputModel(QStandardItemModel):
 
     __par = None
-    __sum = None
     __sta = None
     __asa = None
     __aca = None
     __bca = None
     __tar = None
 
-    def __init__(self, parent_, summary_, start_, selAllAct_, clearAllAct_,
+    def __init__(self, parent_, start_, selAllAct_, clearAllAct_,
                  clearAllBut_):
 
         super(InputModel, self).__init__()
@@ -50,7 +49,6 @@ class InputModel(QStandardItemModel):
             self.tr("File"),
             self.tr("Size")])
 
-        self.__sum = summary_
         self.__sta = start_
         self.__par = parent_
         self.__asa = selAllAct_
@@ -131,10 +129,10 @@ class InputModel(QStandardItemModel):
                 anyEnabled_ = True
 
         if len_ > 0:
-            self.__sum.setText(self.tr("{0} in {1} files").
-                               format(HRSize.sizeString(tot_), str(len_)))
+            self.__par.setSummary(self.tr("{0} in {1} files").
+                                  format(HRSize.sizeString(tot_), str(len_)))
         else:
-            self.__sum.setText(self.tr("No files"))
+            self.__par.setSummary(self.tr("No files"))
 
         self.__par.header().setSortIndicatorShown(len_ > 0)
         self.__sta.setEnabled(anyEnabled_ and len_ > 0)
