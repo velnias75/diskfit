@@ -491,14 +491,24 @@ int main(int argc, char *argv[]) {
 
                     if (S_ISREG(st.st_mode) && st.st_size) {
 
-                        const uint64_t padded_size = st.st_size + (bs > 0u ? bs - (st.st_size & (bs - 1u)) : 0u);
+                        const uint64_t padded_size = st.st_size + (bs >
+                            0u ? bs - (st.st_size & (bs - 1u)) : 0u);
 
-                        tsize += padded_size;
+                        if(padded_size <= tg) {
 
-                        fitems[nitems].fname = p.we_wordv[j];
-                        fitems[nitems].fsize = padded_size;
+                            tsize += padded_size;
 
-                        ++nitems;
+                            fitems[nitems].fname = p.we_wordv[j];
+                            fitems[nitems].fsize = padded_size;
+
+                            ++nitems;
+
+                        } else {
+                            diskfit_hrsize(padded_size, hr_tot, 1023);
+                            g_fprintf(stderr, "[WARNING] File \'%s\' (%s) "
+                            "is larger than target size - omitting\n",
+                            p.we_wordv[j], hr_tot);
+                        }
                     }
 
                 } else {
