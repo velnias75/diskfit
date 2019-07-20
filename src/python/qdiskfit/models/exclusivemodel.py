@@ -18,13 +18,31 @@
 # along with DiskFit.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+from PyQt5.QtCore import QUrl
+from PyQt5.QtCore import QMimeData
 from .inputmodel import InputModel
 
 
 class ExclusiveModel(InputModel):
 
     def __init__(self, parent_):
-
         super(ExclusiveModel, self).__init__(parent_, None, None, None, None)
+
+    def mimeTypes(self):
+        return list("text/uri-list")
+
+    def mimeData(self, indexes):
+
+        urls_ = list()
+        mime_ = QMimeData()
+
+        for idx in indexes:
+            if idx.column() == 0:
+                urls_.append(QUrl("file://" + self.item(idx.row(), 0).text()))
+
+        mime_.setUrls(urls_)
+
+        return mime_
+
 
 # kate: indent-mode: python

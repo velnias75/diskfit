@@ -30,17 +30,17 @@ class HRFileItem(EchoTooltipItem):
     __size = None
     __size_str = None
 
-    def __init__(self, file_):
+    def __init__(self, file_, drag_=False):
 
-        super(HRFileItem, self).__init__(file_)
+        super(HRFileItem, self).__init__(file_, drag_)
 
         self.setTextAlignment(Qt.AlignRight)
 
         self.__size = QFileInfo(file_).size()
         self.__size_str = HRSize.sizeString(self.__size)
 
-    def copy(self):
-        return HRFileItem(super(HRFileItem, self).data(Qt.DisplayRole))
+    def copy(self, drag_=False):
+        return HRFileItem(super(HRFileItem, self).data(Qt.DisplayRole), drag_)
 
     def type(self):
         return EchoTooltipItem.UserType

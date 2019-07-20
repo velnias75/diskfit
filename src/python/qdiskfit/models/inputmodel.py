@@ -130,10 +130,12 @@ class InputModel(QStandardItemModel):
                 anyEnabled_ = True
 
         if len_ > 0:
-            self.__par.setSummary(self.tr("{0} in {1} files").
+            self.__par.setSummary(QCoreApplication.
+                                  translate("InputModel", "{0} in {1} files").
                                   format(HRSize.sizeString(tot_), str(len_)))
         else:
-            self.__par.setSummary(self.tr("No files"))
+            self.__par.setSummary(QCoreApplication.
+                                  translate("InputModel", "No files"))
 
         self.__par.header().setSortIndicatorShown(len_ > 0)
 

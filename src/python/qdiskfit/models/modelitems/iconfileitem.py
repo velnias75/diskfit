@@ -28,7 +28,7 @@ class IconFileItem(EchoTooltipItem):
     __name = None
     __path = None
 
-    def __init__(self, file_):
+    def __init__(self, file_, drag_=False):
 
         fi_ = QFileInfo(file_)
 
@@ -41,12 +41,12 @@ class IconFileItem(EchoTooltipItem):
             fp_ = file_
             self.__path = fi_.absoluteDir().absolutePath()
 
-        super(IconFileItem, self).__init__(fp_)
+        super(IconFileItem, self).__init__(fp_, drag_)
 
         self.setIcon(QFileIconProvider().icon(fi_))
 
-    def copy(self):
-        return IconFileItem(self.text())
+    def copy(self, drag_=False):
+        return IconFileItem(self.text(), drag_)
 
     def name(self):
         return self.__name

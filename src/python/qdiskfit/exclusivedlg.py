@@ -45,10 +45,12 @@ class ExclusiveDlg(QDialog):
             if idx_.row() not in d_:
                 d_[idx_.row()] = list()
                 d_[idx_.row()].append(input_.model().
-                                      item(idx_.row(), idx_.column()).copy())
+                                      item(idx_.row(),
+                                           idx_.column()).copy(True))
             else:
                 d_[idx_.row()].append(input_.model().
-                                      item(idx_.row(), idx_.column()).copy())
+                                      item(idx_.row(),
+                                           idx_.column()).copy(True))
                 self.__em.appendRow(d_[idx_.row()])
 
 # kate: indent-mode: python

@@ -38,6 +38,7 @@ class InputWidget(QWidget):
         self.__ui.setupUi(self)
 
         self.__ui.table_input.setAcceptDrops(drop_)
+        self.__ui.table_input.setDragEnabled(not drop_)
 
         self.__ui.table_input. \
             customContextMenuRequested.connect(self.inputContextRequested)
