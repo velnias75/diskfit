@@ -539,16 +539,22 @@ class MainWindow(QMainWindow):
 
         if en_:
             if self.__unselInputSum is None:
-                self.__unselInputSum = self.__ui.table_input.summary().text()
-            self.__ui.table_input.summary(). \
-                setText(self.tr("<i>{0} in {1} files</i> of {2}").
-                        format(HRSize.sizeString(self.__inputModel.
-                               getAccuSize(self.__ui.
-                                           table_input.selectedIndexes(), 0)),
-                               len(self.__ui.table_input.selectionModel().
-                                   selectedRows()), self.__unselInputSum))
+                self.__unselInputSum = self.__ui.table_input.summary()
+            self.__ui. \
+                table_input. \
+                setSummary(self.tr("<i>{0} in {1} files</i> of {2}").
+                           format(HRSize.
+                                  sizeString(self.
+                                             __inputModel.
+                                             getAccuSize(self.__ui.
+                                                         table_input.
+                                                         selectedIndexes(),
+                                                         0)),
+                                  len(self.__ui.table_input.
+                                      selectionModel().selectedRows()),
+                                  self.__unselInputSum))
         else:
-            self.__ui.table_input.summary().setText(self.__unselInputSum)
+            self.__ui.table_input.setSummary(self.__unselInputSum)
             self.__unselInputSum = None
 
     @pyqtSlot(int)
