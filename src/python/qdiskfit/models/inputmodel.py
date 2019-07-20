@@ -19,6 +19,7 @@
 #
 
 from PyQt5.QtCore import QItemSelectionModel
+from PyQt5.QtCore import QCoreApplication
 from PyQt5.QtCore import QModelIndex
 from PyQt5.QtCore import QSettings
 from PyQt5.QtCore import pyqtSlot
@@ -46,8 +47,8 @@ class InputModel(QStandardItemModel):
         super(InputModel, self).__init__()
 
         self.setHorizontalHeaderLabels([
-            self.tr("File"),
-            self.tr("Size")])
+            QCoreApplication.translate("InputModel", "File"),
+            QCoreApplication.translate("InputModel", "Size")])
 
         self.__sta = start_
         self.__par = parent_
@@ -135,10 +136,18 @@ class InputModel(QStandardItemModel):
             self.__par.setSummary(self.tr("No files"))
 
         self.__par.header().setSortIndicatorShown(len_ > 0)
-        self.__sta.setEnabled(anyEnabled_ and len_ > 0)
-        self.__asa.setEnabled(len_ > 0)
-        self.__aca.setEnabled(len_ > 0)
-        self.__bca.setEnabled(len_ > 0)
+
+        if self.__sta is not None:
+            self.__sta.setEnabled(anyEnabled_ and len_ > 0)
+
+        if self.__asa is not None:
+            self.__asa.setEnabled(len_ > 0)
+
+        if self.__aca is not None:
+            self.__aca.setEnabled(len_ > 0)
+
+        if self.__bca is not None:
+            self.__bca.setEnabled(len_ > 0)
 
     @pyqtSlot(float)
     def setTargetSize(self, target_):

@@ -31,14 +31,19 @@ class InputWidget(QWidget):
     __ui = None
     __ctxMenuActions = None
 
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, drop_=True):
         super(InputWidget, self).__init__(parent)
 
         self.__ui = Ui_inputWidget()
         self.__ui.setupUi(self)
 
+        self.__ui.table_input.setAcceptDrops(drop_)
+
         self.__ui.table_input. \
             customContextMenuRequested.connect(self.inputContextRequested)
+
+    def setTableToolTip(self, tt_):
+        self.__ui.table_input.setToolTip(tt_)
 
     def summary(self):
         return self.__ui.label_inputSummary.text()

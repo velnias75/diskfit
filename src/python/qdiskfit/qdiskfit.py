@@ -47,6 +47,7 @@ from .models.outputmodel import OutputModel
 from .models.inputmodel import InputModel
 from .profileedit import ProfileEdit
 from .mainwindow import mainwindow
+from .exclusivedlg import ExclusiveDlg
 from .progresswidget import ProgressWidget
 from .util.keyfile import Keyfile
 from .util.hrsize import HRSize
@@ -86,6 +87,7 @@ class MainWindow(QMainWindow):
         df_env_ = LangCProcessEnvironment().env()
         df_env_.remove("DISKFIT_STRIPDIR")
         df_env_.insert("DISKFIT_XMLOUT", "1")
+        df_env_.insert("LANG", "C")
 
         self.__proc1.setProcessEnvironment(df_env_)
         self.__proc2.setProcessEnvironment(df_env_)

@@ -3,50 +3,66 @@
 <context>
     <name>@default</name>
     <message>
-        <location filename="qdiskfit/qdiskfit.py" line="384"/>
+        <location filename="qdiskfit/qdiskfit.py" line="387"/>
         <source>Processing result ...</source>
         <translation>Verarbeite Ergebnis ...</translation>
     </message>
 </context>
 <context>
+    <name>ExclusiveDlg</name>
+    <message>
+        <location filename="qdiskfit/dialogs/exclusive.ui" line="14"/>
+        <source>Exclusive Files</source>
+        <translation>Exklusive Dateien</translation>
+    </message>
+</context>
+<context>
+    <name>ExclusiveWidget</name>
+    <message>
+        <location filename="qdiskfit/dialogs/exclusivewidget.py" line="32"/>
+        <source>Exclusive files to manually add to the result</source>
+        <translation>Exklusive Dateien, die manuell zum Ergebnis hinzugefügt werden sollen</translation>
+    </message>
+</context>
+<context>
     <name>InputModel</name>
     <message>
-        <location filename="qdiskfit/models/inputmodel.py" line="174"/>
+        <location filename="qdiskfit/models/inputmodel.py" line="183"/>
         <source>Any files (*)</source>
         <translation>Alle Dateien (*)</translation>
     </message>
     <message>
-        <location filename="qdiskfit/models/inputmodel.py" line="174"/>
+        <location filename="qdiskfit/models/inputmodel.py" line="183"/>
         <source>Video files (*.mp4 *.mpg *.m3u8 *.ts *.avi *.wmv *.flv *.webm *.ogv *.vob *.mpeg)</source>
         <translation>Videodateien (*.mp4 *.mpg *.m3u8 *.ts *.avi *.wmv *.flv *.webm *.ogv *.vob *.mpeg)</translation>
     </message>
     <message>
-        <location filename="qdiskfit/models/inputmodel.py" line="174"/>
+        <location filename="qdiskfit/models/inputmodel.py" line="183"/>
         <source>Audio files (*.mp3 *.wav *.ogg *.wma *.au)</source>
         <translation>Audiodateien (*.mp3 *.wav *.ogg *.wma *.au)</translation>
     </message>
     <message>
-        <location filename="qdiskfit/models/inputmodel.py" line="174"/>
+        <location filename="qdiskfit/models/inputmodel.py" line="183"/>
         <source>Image files (*.png *.xpm *.jpg *.gif *.svg *.svgz)</source>
         <translation>Bilddateien (*.png *.xpm *.jpg *.gif *.svg *.svgz)</translation>
     </message>
     <message>
-        <location filename="qdiskfit/models/inputmodel.py" line="132"/>
+        <location filename="qdiskfit/models/inputmodel.py" line="133"/>
         <source>{0} in {1} files</source>
         <translation>{0} in {1} Dateien</translation>
     </message>
     <message>
-        <location filename="qdiskfit/models/inputmodel.py" line="135"/>
+        <location filename="qdiskfit/models/inputmodel.py" line="136"/>
         <source>No files</source>
         <translation>Keine Dateien</translation>
     </message>
     <message>
-        <location filename="qdiskfit/models/inputmodel.py" line="48"/>
+        <location filename="qdiskfit/models/inputmodel.py" line="49"/>
         <source>File</source>
         <translation>Datei</translation>
     </message>
     <message>
-        <location filename="qdiskfit/models/inputmodel.py" line="48"/>
+        <location filename="qdiskfit/models/inputmodel.py" line="49"/>
         <source>Size</source>
         <translation>Größe</translation>
     </message>
@@ -56,25 +72,25 @@
     <message>
         <location filename="qdiskfit/qdiskfit.py" line="287"/>
         <source>About</source>
-        <translation>Über</translation>
+        <translation type="obsolete">Über</translation>
     </message>
     <message>
         <location filename="qdiskfit/qdiskfit.py" line="287"/>
         <source>A simple disk fit calculator (GUI)</source>
-        <translation>Optimale Belegung von Dateien ermitteln (GUI)</translation>
+        <translation type="obsolete">Optimale Belegung von Dateien ermitteln (GUI)</translation>
     </message>
     <message>
-        <location filename="qdiskfit/qdiskfit.py" line="331"/>
+        <location filename="qdiskfit/qdiskfit.py" line="334"/>
         <source>Calculating for {} files ...</source>
         <translation>Berechne für {} Dateien ...</translation>
     </message>
     <message>
-        <location filename="qdiskfit/qdiskfit.py" line="351"/>
+        <location filename="qdiskfit/qdiskfit.py" line="354"/>
         <source>Error</source>
         <translation>Fehler</translation>
     </message>
     <message>
-        <location filename="qdiskfit/qdiskfit.py" line="430"/>
+        <location filename="qdiskfit/qdiskfit.py" line="433"/>
         <source>Calculation interrupted</source>
         <translation>Berechnung unterbrochen</translation>
     </message>
@@ -279,7 +295,7 @@
         <translation></translation>
     </message>
     <message>
-        <location filename="qdiskfit/qdiskfit.py" line="419"/>
+        <location filename="qdiskfit/qdiskfit.py" line="422"/>
         <source>Calculation took {}</source>
         <translation>Die Berechnung benötigte {}</translation>
     </message>
@@ -299,27 +315,27 @@
         <translation>&amp;Profil-Editor...</translation>
     </message>
     <message>
-        <location filename="qdiskfit/qdiskfit.py" line="351"/>
+        <location filename="qdiskfit/qdiskfit.py" line="354"/>
         <source>Failed to launch {}.</source>
         <translation>Konnte {} nicht starten.</translation>
     </message>
     <message>
-        <location filename="qdiskfit/qdiskfit.py" line="244"/>
+        <location filename="qdiskfit/qdiskfit.py" line="246"/>
         <source>Sort by title</source>
         <translation>Nach Titel sortieren</translation>
     </message>
     <message>
-        <location filename="qdiskfit/qdiskfit.py" line="246"/>
+        <location filename="qdiskfit/qdiskfit.py" line="248"/>
         <source>Sort by size</source>
         <translation>Nach Größe sortieren</translation>
     </message>
     <message>
-        <location filename="qdiskfit/qdiskfit.py" line="255"/>
+        <location filename="qdiskfit/qdiskfit.py" line="257"/>
         <source>ascending</source>
         <translation>aufsteigend</translation>
     </message>
     <message>
-        <location filename="qdiskfit/qdiskfit.py" line="258"/>
+        <location filename="qdiskfit/qdiskfit.py" line="260"/>
         <source>descending</source>
         <translation>absteigend</translation>
     </message>
@@ -334,17 +350,17 @@
         <translation></translation>
     </message>
     <message>
-        <location filename="qdiskfit/qdiskfit.py" line="217"/>
+        <location filename="qdiskfit/qdiskfit.py" line="219"/>
         <source>Add as new target...</source>
         <translation>Als neues Ziel hinzufügen...</translation>
     </message>
     <message>
-        <location filename="qdiskfit/qdiskfit.py" line="225"/>
+        <location filename="qdiskfit/qdiskfit.py" line="227"/>
         <source>my_target_{}</source>
         <translation>mein_ziel_{}</translation>
     </message>
     <message>
-        <location filename="qdiskfit/qdiskfit.py" line="544"/>
+        <location filename="qdiskfit/qdiskfit.py" line="548"/>
         <source>&lt;i&gt;{0} in {1} files&lt;/i&gt; of {2}</source>
         <translation>&lt;i&gt;{0} in {1} Dateien&lt;/i&gt; aus {2}</translation>
     </message>

@@ -3,6 +3,7 @@ TRANSLATIONS = qdiskfit_de.ts
 FORMS = qdiskfit/mainwindow/inputwidget.ui \
         qdiskfit/mainwindow/mainwindow.ui \
         qdiskfit/mainwindow/progress.ui \
+        qdiskfit/dialogs/exclusive.ui \
         qdiskfit/dialogs/profile.ui
 
 SOURCES = qdiskfit/mainwindow/__init__.py \
@@ -15,6 +16,7 @@ SOURCES = qdiskfit/mainwindow/__init__.py \
           qdiskfit/models/modelitems/multifiledragitem.py \
           qdiskfit/models/modelitems/hrfileitem.py \
           qdiskfit/models/modelitems/outputsizeitem.py \
+          qdiskfit/models/exclusivemodel.py \
           qdiskfit/models/targetmodel.py \
           qdiskfit/models/outputmodel.py \
           qdiskfit/models/__init__.py \
@@ -29,4 +31,5 @@ SOURCES = qdiskfit/mainwindow/__init__.py \
           qdiskfit/util/hrsize.py \
           qdiskfit/util/keyfile.py \
           qdiskfit/util/langcenv.py \
-          qdiskfit/dialogs/__init__.py
+          qdiskfit/dialogs/__init__.py \
+          qdiskfit/dialogs/exclusivewidget.py
