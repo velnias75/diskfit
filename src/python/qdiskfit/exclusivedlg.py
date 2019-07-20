@@ -34,12 +34,21 @@ class ExclusiveDlg(QDialog):
 
         self.__ui = Ui_ExclusiveDlg()
         self.__ui.setupUi(self)
-
         self.__em = ExclusiveModel(self.__ui.table_input)
-
         self.__ui.table_input.setModel(self.__em)
 
-    def model(self):
-        return self.__em
+    def diffFiles(self, input_):
+
+        d_ = dict()
+
+        for idx_ in input_.selectionModel().selectedIndexes():
+            if idx_.row() not in d_:
+                d_[idx_.row()] = list()
+                d_[idx_.row()].append(input_.model().
+                                      item(idx_.row(), idx_.column()).copy())
+            else:
+                d_[idx_.row()].append(input_.model().
+                                      item(idx_.row(), idx_.column()).copy())
+                self.__em.appendRow(d_[idx_.row()])
 
 # kate: indent-mode: python

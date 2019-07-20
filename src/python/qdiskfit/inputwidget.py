@@ -60,6 +60,9 @@ class InputWidget(QWidget):
     def selectedIndexes(self):
         return self.__ui.table_input.selectedIndexes()
 
+    def model(self):
+        return self.__ui.table_input.model()
+
     def setModel(self, model_):
         self.__ui.table_input.setModel(model_)
         self.__ui.table_input.header(). \

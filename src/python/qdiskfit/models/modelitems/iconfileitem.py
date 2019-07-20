@@ -45,6 +45,9 @@ class IconFileItem(EchoTooltipItem):
 
         self.setIcon(QFileIconProvider().icon(fi_))
 
+    def copy(self):
+        return IconFileItem(self.text())
+
     def name(self):
         return self.__name
 

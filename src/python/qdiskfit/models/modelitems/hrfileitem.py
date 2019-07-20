@@ -19,6 +19,7 @@
 #
 
 from PyQt5.QtCore import Qt
+from PyQt5.QtCore import qDebug
 from PyQt5.QtCore import QFileInfo
 from ...util.hrsize import HRSize
 from .echotooltipitem import EchoTooltipItem
@@ -37,6 +38,9 @@ class HRFileItem(EchoTooltipItem):
 
         self.__size = QFileInfo(file_).size()
         self.__size_str = HRSize.sizeString(self.__size)
+
+    def copy(self):
+        return HRFileItem(super(HRFileItem, self).data(Qt.DisplayRole))
 
     def type(self):
         return EchoTooltipItem.UserType

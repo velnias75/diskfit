@@ -79,6 +79,7 @@ class MainWindow(QMainWindow):
     __runningTime = 0.0
     __keyfile = None
     __saveTarget = True
+    __exclusiveDlg = None
 
     def __init__(self):
 
@@ -170,6 +171,8 @@ class MainWindow(QMainWindow):
         self.__outputModel.resultReady.connect(self.resultReady)
 
         self.__ui.actionProfileeditor.triggered.connect(self.editProfile)
+
+        self.__exclusiveDlg = ExclusiveDlg()
 
         self.readSettings()
         self.getTargets()
@@ -572,7 +575,10 @@ class MainWindow(QMainWindow):
 
     @pyqtSlot()
     def diffTarget(self):
+
         size_ = self.exclusiveSize()
+
+        self.__exclusiveDlg.diffFiles(self.__ui.table_input)
 
         self.__inputModel.removeFiles()
         self.__ui.combo_target.setCurrentIndex(self.__ui.combo_target.
