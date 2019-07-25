@@ -32,9 +32,7 @@ class HRFileItem(EchoTooltipItem):
 
     def __init__(self, file_, drag_=False):
 
-        super(HRFileItem, self).__init__(file_, drag_)
-
-        self.setTextAlignment(Qt.AlignRight)
+        super(HRFileItem, self).__init__(file_, drag_, Qt.AlignRight)
 
         self.__size = QFileInfo(file_).size()
         self.__size_str = HRSize.sizeString(self.__size)

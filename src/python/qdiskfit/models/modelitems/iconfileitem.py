@@ -41,7 +41,7 @@ class IconFileItem(EchoTooltipItem):
             fp_ = file_
             self.__path = fi_.absoluteDir().absolutePath()
 
-        super(IconFileItem, self).__init__(fp_, drag_)
+        super(IconFileItem, self).__init__(fp_, drag_, )
 
         self.setIcon(QFileIconProvider().icon(fi_))
 

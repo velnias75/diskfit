@@ -18,6 +18,7 @@
 # along with DiskFit.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+from PyQt5.QtCore import Qt
 from PyQt5.QtCore import QUrl
 from PyQt5.QtCore import qDebug
 from PyQt5.QtCore import QFileInfo
@@ -100,9 +101,9 @@ class OutputModel(QStandardItemModel):
                     ts_ += self.fileSize(ma_)
 
                 l_ = (MultiFileDragItem(fa_),
-                      EchoTooltipItem(r_[1], True),
+                      EchoTooltipItem(r_[1], True, Qt.AlignHCenter),
                       OutputSizeItem(ts_, r_[2]),
-                      EchoTooltipItem(r_[3], True))
+                      EchoTooltipItem(r_[3], True, Qt.AlignRight))
 
                 if int(settings_.value("resultSort", 0)) == 0:
                     self.sortTitle(fa_, False)
@@ -120,13 +121,16 @@ class OutputModel(QStandardItemModel):
                                                           findItems(ma_)[0]).
                                             row(), 1)
 
-                    rsit_ = EchoTooltipItem(item_.relativeSizePctString(ts_))
+                    rsit_ = EchoTooltipItem(item_.relativeSizePctString(ts_),
+                                            False, Qt.AlignRight)
                     rsit_.setToolTip(self.tr("{0} of {1}").
                                      format(rsit_.text(), r_[2]))
 
                     l_[0].setChild(i_, 0, IconFileItem(ma_))
-                    l_[0].setChild(i_, 1, EchoTooltipItem("1"))
-                    l_[0].setChild(i_, 2, EchoTooltipItem(item_.text()))
+                    l_[0].setChild(i_, 1, EchoTooltipItem("1", False,
+                                                          Qt.AlignHCenter))
+                    l_[0].setChild(i_, 2, EchoTooltipItem(item_.text(), False,
+                                                          Qt.AlignRight))
                     l_[0].setChild(i_, 3, rsit_)
 
                 self.appendRow(l_)

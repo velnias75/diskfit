@@ -19,13 +19,15 @@
 #
 
 from PyQt5.QtGui import QStandardItem
+from PyQt5.QtCore import Qt
 
 
 class EchoTooltipItem(QStandardItem):
 
-    def __init__(self, txt_, drag_=False):
+    def __init__(self, txt_, drag_=False, align_=Qt.AlignLeft):
         super(EchoTooltipItem, self).__init__(txt_)
         self.setToolTip(txt_)
         self.setDragEnabled(drag_)
+        self.setTextAlignment(Qt.AlignVCenter | align_)
 
 # kate: indent-mode: python

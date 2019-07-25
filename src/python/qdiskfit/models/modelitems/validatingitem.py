@@ -28,6 +28,7 @@ class ValidatingItem(QStandardItem):
     def __init__(self, data_):
         super(ValidatingItem, self).__init__()
         self.setData(self.convertValue(data_), Qt.UserRole+1)
+        self.setTextAlignment(Qt.AlignVCenter)
 
     def isValid(self):
         return self.validate(self.convertValue(super(ValidatingItem, self).

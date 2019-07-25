@@ -29,7 +29,7 @@ class SizeItem(ValidatingItem):
 
     def __init__(self, dbl_, pot_=False):
         super(SizeItem, self).__init__(dbl_)
-        self.setTextAlignment(Qt.AlignRight)
+        self.setTextAlignment(self.textAlignment() | Qt.AlignRight)
         self.__pot = pot_
 
     def validate(self, value):

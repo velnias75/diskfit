@@ -18,6 +18,7 @@
 # along with DiskFit.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+from PyQt5.QtCore import Qt
 from .echotooltipitem import EchoTooltipItem
 
 
@@ -26,7 +27,7 @@ class OutputSizeItem(EchoTooltipItem):
     __size = None
 
     def __init__(self, size_, txt_):
-        super(OutputSizeItem, self).__init__(txt_, True)
+        super(OutputSizeItem, self).__init__(txt_, True, Qt.AlignRight)
 
         self.__size = size_
 
