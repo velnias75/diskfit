@@ -174,6 +174,9 @@ class MainWindow(QMainWindow):
 
         self.__exclusiveDlg = ExclusiveDlg()
 
+        self.__ui.actionShow_exclusive_files.triggered. \
+            connect(self.showExclusiveFiles)
+
         self.readSettings()
         self.getTargets()
 
@@ -294,6 +297,10 @@ class MainWindow(QMainWindow):
                           QApplication.applicationVersion() + "\n" +
                           self.tr("A simple disk fit calculator (GUI)") +
                           "\n\n(c) 2019 by Heiko Schäfer <heiko@rangun.de>")
+
+    @pyqtSlot()
+    def showExclusiveFiles(self):
+        self.__exclusiveDlg.exec()
 
     @pyqtSlot()
     def start(self):

@@ -319,6 +319,7 @@
     <addaction name="action_SelectAll"/>
     <addaction name="separator"/>
     <addaction name="action_diffTarget"/>
+    <addaction name="actionShow_exclusive_files"/>
     <addaction name="separator"/>
     <addaction name="actionProfileeditor"/>
    </widget>
@@ -490,6 +491,14 @@
    </property>
    <property name="shortcut">
     <string>Ctrl+X</string>
+   </property>
+  </action>
+  <action name="actionShow_exclusive_files">
+   <property name="text">
+    <string>Show exclusive files...</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+I</string>
    </property>
   </action>
  </widget>
