@@ -37,6 +37,11 @@ class HRFileItem(EchoTooltipItem):
         self.__size = QFileInfo(file_).size()
         self.__size_str = HRSize.sizeString(self.__size)
 
+        if self.__size >= 2147483648:
+            font_ = self.font()
+            font_.setItalic(True)
+            self.setFont(font_)
+
     def copy(self, drag_=False):
         return HRFileItem(super(HRFileItem, self).data(Qt.DisplayRole), drag_)
 

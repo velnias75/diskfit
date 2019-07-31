@@ -18,19 +18,19 @@
 # along with DiskFit.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+from .dialogs.nowhatsthisdlg import NoWhatsThisDialog
 from .util.langcenv import LangCProcessEnvironment
 from .models.targetmodel import TargetModel
 from .dialogs.profile import Ui_ProfileEditor
 from PyQt5.QtWidgets import QMessageBox
 from PyQt5.QtWidgets import QHeaderView
-from PyQt5.QtWidgets import QDialog
 from PyQt5.QtCore import QProcess
 from PyQt5.QtCore import pyqtSlot
 from .site import Site
 import re
 
 
-class ProfileEdit(QDialog):
+class ProfileEdit(NoWhatsThisDialog):
 
     __ui = None
     __tm = None
