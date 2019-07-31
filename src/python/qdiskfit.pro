@@ -32,4 +32,5 @@ SOURCES = qdiskfit/mainwindow/__init__.py \
           qdiskfit/util/keyfile.py \
           qdiskfit/util/langcenv.py \
           qdiskfit/dialogs/__init__.py \
-          qdiskfit/dialogs/exclusivewidget.py
+          qdiskfit/dialogs/exclusivewidget.py \
+          qdiskfit/dialogs/nowhatsthisdlg.py

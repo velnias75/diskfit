@@ -2,6 +2,7 @@ EXTRA_DIST = __init__.py \
              exclusive.py \
              exclusive.ui \
              exclusivewidget.py \
+             nowhatsthisdlg.py \
              profile.ui \
              profile.py
 
