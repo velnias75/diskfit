@@ -398,7 +398,8 @@ class MainWindow(QMainWindow):
                                               combo_target.currentText())
 
             files_ = None
-            while not self.__resultXml.atEnd():
+            while (self.__resultXml is not None and
+                   not self.__resultXml.atEnd()):
                 if self.__resultXml.readNextStartElement():
                     if self.__resultXml.name() == "files":
                         if files_ is not None:
@@ -615,7 +616,7 @@ def main(args=None):
     translator = QTranslator()
 
     app.setApplicationName("QDiskFit")
-    app.setApplicationVersion("2.0.3.2")
+    app.setApplicationVersion("2.0.3.3")
     app.setApplicationDisplayName(app.applicationName() + " " +
                                   app.applicationVersion())
     app.setOrganizationDomain("rangun.de")
