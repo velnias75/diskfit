@@ -195,11 +195,9 @@ static inline gint include_cmp(gconstpointer a, gconstpointer b) {
                                      FALSE) ? 0 : cand_cmp(a, b);
 }
 
-static inline double scaleProgress(mpz_ptr it_cur, mpz_srcptr const it_tot, void *user_data) {
+static inline double scaleProgress(mpz_ptr aux, mpz_srcptr const it_tot) {
 
-    mpz_mul_ui(CAND_PARAMS_CAST(user_data)->aux, it_cur, 100UL);
-
-    mpq_set_z(_scale.aux_q, CAND_PARAMS_CAST(user_data)->aux);
+    mpq_set_z(_scale.aux_q, aux);
     mpq_set_z(_scale.it_tot_q, it_tot);
 
     mpq_div(_scale.fc_q, _scale.aux_q, _scale.it_tot_q);
@@ -217,13 +215,19 @@ static inline double scaleProgress(mpz_ptr it_cur, mpz_srcptr const it_tot, void
 
 static void printProgress(mpz_ptr it_cur, mpz_srcptr const it_tot, void *user_data) {
 
-    mpz_set_d(CAND_PARAMS_CAST(user_data)->fc, scaleProgress(it_cur, it_tot, user_data));
+    const gboolean initial = !mpz_cmp_ui(it_cur, 1UL);
+    const unsigned long div = (mpz_cmp_ui(CAND_PARAMS_CAST(user_data)->fak_last, 90UL) < 0) ? 10000UL : 10UL;
 
-    if (mpz_cmp(CAND_PARAMS_CAST(user_data)->fc, CAND_PARAMS_CAST(user_data)->fak_last) || !mpz_cmp_ui(it_cur, 1UL)) {
+    if (mpz_divisible_ui_p(it_cur, div) || initial) {
 
-        mpz_set(CAND_PARAMS_CAST(user_data)->fak_last, CAND_PARAMS_CAST(user_data)->fc);
-        gmp_fprintf(stderr, "\033[sComputing for %zu files: %Zd%% ...\033[u",
-                    CAND_PARAMS_CAST(user_data)->nitems, CAND_PARAMS_CAST(user_data)->fak_last);
+        mpz_mul_ui(CAND_PARAMS_CAST(user_data)->aux, it_cur, 100UL);
+        mpz_set_d(CAND_PARAMS_CAST(user_data)->fc, scaleProgress(CAND_PARAMS_CAST(user_data)->aux, it_tot));
+
+        if (mpz_cmp(CAND_PARAMS_CAST(user_data)->fc, CAND_PARAMS_CAST(user_data)->fak_last) || initial) {
+            mpz_set(CAND_PARAMS_CAST(user_data)->fak_last, CAND_PARAMS_CAST(user_data)->fc);
+            gmp_fprintf(stderr, "\033[sComputing for %zu files: %Zd%% ...\033[u",
+                        CAND_PARAMS_CAST(user_data)->nitems, CAND_PARAMS_CAST(user_data)->fak_last);
+        }
     }
 }
 
