@@ -56,8 +56,10 @@ from datetime import datetime
 from datetime import date
 from shlex import quote
 from .site import Site
+import signal
 import time
 import sys
+import os
 import re
 
 
@@ -310,12 +312,28 @@ class MainWindow(QMainWindow):
         str_ = self.tr("Calculating for {} files ..."). \
             format(str(self.__inputModel.rowCount()))
 
-        if self.__initialEta >= 60.0 and p_ > 0 and p_ <= 90:
-            str_ += " - ETA: " + \
-                format((datetime.now() +
-                        timedelta(milliseconds=(eta_ * 1000.0))).
-                       time().strftime("%H:%M:%S"))
+        if self.__initialEta >= 30.0 and p_ > 0 and p_ <= 90:
 
+            if p_ == 1:
+                eta_ *= 2.0
+
+            left_ = timedelta(milliseconds=(eta_ * 1000.0))
+            leta_ = datetime.now() + left_
+
+            millis_ = int(eta_ * 1000.0)
+            seconds_ = (millis_/1000) % 60
+            seconds_ = int(seconds_)
+            minutes_ = (millis_/(1000*60)) % 60
+            minutes_ = int(minutes_)
+            hours_ = (millis_/(1000*60*60)) % 24
+            hours_ = int(hours_)
+
+            str_ += " — ETA: " + format(leta_.time().strftime("%H:%M:%S") +
+                                        " [~" + "{0}:{1}:{2}".
+                                        format(("00" + str(hours_))[-2:],
+                                               ("00" + str(minutes_))[-2:],
+                                               ("00" + str(seconds_))[-2:] +
+                                               "]"))
         self.__statusBar.showMessage(str_)
 
     @pyqtSlot()
@@ -366,11 +384,28 @@ class MainWindow(QMainWindow):
 
             self.__lastResult.clear()
 
-            self.__ui.actionStop.triggered.connect(self.__proc3.terminate)
+            self.__ui.actionStop.triggered.connect(self.stop)
         else:
             QMessageBox.critical(None, self.tr("Error"),
                                  self.__tmp.errorString())
             self.finished(0, QProcess.NormalExit)
+
+    @pyqtSlot()
+    def stop(self):
+        if self.__initialEta > 150.0:
+            self.__ui.actionStop.triggered.disconnect(self.stop)
+            os.kill(self.__proc3.pid(), signal.SIGSTOP)
+            if ((QMessageBox.question(None,
+                                      self.tr("Stop"),
+                                      self.tr("Really cancel calculation?")) ==
+                 QMessageBox.Yes)):
+                os.kill(self.__proc3.pid(), signal.SIGCONT)
+                self.__proc3.terminate()
+
+            os.kill(self.__proc3.pid(), signal.SIGCONT)
+            self.__ui.actionStop.triggered.connect(self.stop)
+        else:
+            self.__proc3.terminate()
 
     @pyqtSlot(QProcess.ProcessError)
     def error(self, err):

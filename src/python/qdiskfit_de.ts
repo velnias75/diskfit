@@ -4,7 +4,7 @@
 <context>
     <name>@default</name>
     <message>
-        <location filename="qdiskfit/qdiskfit.py" line="396"/>
+        <location filename="qdiskfit/qdiskfit.py" line="446"/>
         <source>Processing result ...</source>
         <translation>Verarbeite Ergebnis ...</translation>
     </message>
@@ -71,27 +71,27 @@
 <context>
     <name>MainWindow</name>
     <message>
-        <location filename="qdiskfit/qdiskfit.py" line="295"/>
+        <location filename="qdiskfit/qdiskfit.py" line="301"/>
         <source>About</source>
         <translation>Über</translation>
     </message>
     <message>
-        <location filename="qdiskfit/qdiskfit.py" line="295"/>
+        <location filename="qdiskfit/qdiskfit.py" line="301"/>
         <source>A simple disk fit calculator (GUI)</source>
         <translation>Optimale Belegung von Dateien ermitteln (GUI)</translation>
     </message>
     <message>
-        <location filename="qdiskfit/qdiskfit.py" line="343"/>
+        <location filename="qdiskfit/qdiskfit.py" line="312"/>
         <source>Calculating for {} files ...</source>
         <translation>Berechne für {} Dateien ...</translation>
     </message>
     <message>
-        <location filename="qdiskfit/qdiskfit.py" line="363"/>
+        <location filename="qdiskfit/qdiskfit.py" line="413"/>
         <source>Error</source>
         <translation>Fehler</translation>
     </message>
     <message>
-        <location filename="qdiskfit/qdiskfit.py" line="442"/>
+        <location filename="qdiskfit/qdiskfit.py" line="493"/>
         <source>Calculation interrupted</source>
         <translation>Berechnung unterbrochen</translation>
     </message>
@@ -128,17 +128,7 @@
     <message>
         <location filename="qdiskfit/mainwindow/mainwindow.ui" line="123"/>
         <source>Input files</source>
-        <translation>Eingabedateien</translation>
-    </message>
-    <message>
-        <location filename="qdiskfit/mainwindow/mainwindow.ui" line="146"/>
-        <source>Files used for calculation</source>
-        <translation type="obsolete">Dateien, die zur Berechnung herangezogen werden</translation>
-    </message>
-    <message>
-        <location filename="qdiskfit/mainwindow/mainwindow.ui" line="186"/>
-        <source>No files</source>
-        <translation type="obsolete">Keine Dateien</translation>
+        <translation>Keine Dateien</translation>
     </message>
     <message>
         <location filename="qdiskfit/mainwindow/mainwindow.ui" line="157"/>
@@ -296,7 +286,7 @@
         <translation></translation>
     </message>
     <message>
-        <location filename="qdiskfit/qdiskfit.py" line="431"/>
+        <location filename="qdiskfit/qdiskfit.py" line="482"/>
         <source>Calculation took {}</source>
         <translation>Die Berechnung benötigte {}</translation>
     </message>
@@ -316,27 +306,27 @@
         <translation>&amp;Profil-Editor...</translation>
     </message>
     <message>
-        <location filename="qdiskfit/qdiskfit.py" line="363"/>
+        <location filename="qdiskfit/qdiskfit.py" line="413"/>
         <source>Failed to launch {}.</source>
         <translation>Konnte {} nicht starten.</translation>
     </message>
     <message>
-        <location filename="qdiskfit/qdiskfit.py" line="252"/>
+        <location filename="qdiskfit/qdiskfit.py" line="258"/>
         <source>Sort by title</source>
         <translation>Nach Titel sortieren</translation>
     </message>
     <message>
-        <location filename="qdiskfit/qdiskfit.py" line="254"/>
+        <location filename="qdiskfit/qdiskfit.py" line="260"/>
         <source>Sort by size</source>
         <translation>Nach Größe sortieren</translation>
     </message>
     <message>
-        <location filename="qdiskfit/qdiskfit.py" line="263"/>
+        <location filename="qdiskfit/qdiskfit.py" line="269"/>
         <source>ascending</source>
         <translation>aufsteigend</translation>
     </message>
     <message>
-        <location filename="qdiskfit/qdiskfit.py" line="266"/>
+        <location filename="qdiskfit/qdiskfit.py" line="272"/>
         <source>descending</source>
         <translation>absteigend</translation>
     </message>
@@ -351,17 +341,17 @@
         <translation></translation>
     </message>
     <message>
-        <location filename="qdiskfit/qdiskfit.py" line="225"/>
+        <location filename="qdiskfit/qdiskfit.py" line="231"/>
         <source>Add as new target...</source>
         <translation>Als neues Ziel hinzufügen...</translation>
     </message>
     <message>
-        <location filename="qdiskfit/qdiskfit.py" line="233"/>
+        <location filename="qdiskfit/qdiskfit.py" line="239"/>
         <source>my_target_{}</source>
         <translation>mein_ziel_{}</translation>
     </message>
     <message>
-        <location filename="qdiskfit/qdiskfit.py" line="557"/>
+        <location filename="qdiskfit/qdiskfit.py" line="615"/>
         <source>&lt;i&gt;{0} in {1} files&lt;/i&gt; of {2}</source>
         <translation>&lt;i&gt;{0} in {1} Dateien&lt;/i&gt; aus {2}</translation>
     </message>
@@ -374,6 +364,16 @@
         <location filename="qdiskfit/mainwindow/mainwindow.ui" line="501"/>
         <source>Ctrl+I</source>
         <translation></translation>
+    </message>
+    <message>
+        <location filename="qdiskfit/qdiskfit.py" line="398"/>
+        <source>Stop</source>
+        <translation>Stop</translation>
+    </message>
+    <message>
+        <location filename="qdiskfit/qdiskfit.py" line="398"/>
+        <source>Really cancel calculation?</source>
+        <translation>Wollen Sie die Berechnung wirklich abbrechen?</translation>
     </message>
 </context>
 <context>
