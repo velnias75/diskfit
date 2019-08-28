@@ -77,7 +77,14 @@ typedef struct {
     const mpz_srcptr rev_tot;
 } REV_PARAMS;
 
+typedef struct {
+    mpq_t aux_q, it_tot_q, fc_q;
+    mpq_t nine, five;
+    mpq_t ninehundred, ten;
+} SCALE;
+
 static volatile int _interrupted = 0;
+static SCALE _scale;
 
 static void term_handler(int sig, siginfo_t *si, void *unused) {
 
@@ -86,6 +93,38 @@ static void term_handler(int sig, siginfo_t *si, void *unused) {
     (void) unused;
 
     _interrupted = 1;
+}
+
+static inline void init_scale() {
+
+    mpq_init(_scale.aux_q);
+    mpq_init(_scale.it_tot_q);
+    mpq_init(_scale.fc_q);
+
+    mpq_init(_scale.nine);
+    mpq_init(_scale.five);
+
+    mpq_set_d(_scale.nine, 9.0);
+    mpq_set_d(_scale.five, 5.0);
+
+    mpq_init(_scale.ninehundred);
+    mpq_init(_scale.ten);
+
+    mpq_set_d(_scale.ninehundred, 900.0);
+    mpq_set_d(_scale.ten, 10.0);
+}
+
+static inline void clear_scale() {
+
+    mpq_clear(_scale.aux_q);
+    mpq_clear(_scale.it_tot_q);
+    mpq_clear(_scale.fc_q);
+
+    mpq_clear(_scale.nine);
+    mpq_clear(_scale.five);
+
+    mpq_clear(_scale.ninehundred);
+    mpq_clear(_scale.ten);
 }
 
 static inline gboolean includes(const DISKFIT_FITEM *first1, const DISKFIT_FITEM *last1,
@@ -156,10 +195,29 @@ static inline gint include_cmp(gconstpointer a, gconstpointer b) {
                                      FALSE) ? 0 : cand_cmp(a, b);
 }
 
-static void printProgress(mpz_ptr it_cur, mpz_srcptr const it_tot, void *user_data) {
+static inline double scaleProgress(mpz_ptr it_cur, mpz_srcptr const it_tot, void *user_data) {
 
     mpz_mul_ui(CAND_PARAMS_CAST(user_data)->aux, it_cur, 100UL);
-    mpz_tdiv_q(CAND_PARAMS_CAST(user_data)->fc, CAND_PARAMS_CAST(user_data)->aux, it_tot);
+
+    mpq_set_z(_scale.aux_q, CAND_PARAMS_CAST(user_data)->aux);
+    mpq_set_z(_scale.it_tot_q, it_tot);
+
+    mpq_div(_scale.fc_q, _scale.aux_q, _scale.it_tot_q);
+
+    if (mpq_cmp_ui(_scale.fc_q, 50UL, 1UL) <= 0) {
+        mpq_mul(_scale.aux_q, _scale.fc_q, _scale.nine);
+        mpq_div(_scale.fc_q, _scale.aux_q, _scale.five);
+    } else {
+        mpq_add(_scale.aux_q, _scale.fc_q, _scale.ninehundred);
+        mpq_div(_scale.fc_q, _scale.aux_q, _scale.ten);
+    }
+
+    return mpq_get_d(_scale.fc_q) + 0.5;
+}
+
+static void printProgress(mpz_ptr it_cur, mpz_srcptr const it_tot, void *user_data) {
+
+    mpz_set_d(CAND_PARAMS_CAST(user_data)->fc, scaleProgress(it_cur, it_tot, user_data));
 
     if (mpz_cmp(CAND_PARAMS_CAST(user_data)->fc, CAND_PARAMS_CAST(user_data)->fak_last) || !mpz_cmp_ui(it_cur, 1UL)) {
 
@@ -548,12 +606,14 @@ int main(int argc, char *argv[]) {
 
                 insertion_sort(fitems, nitems);
 
+                init_scale();
+
                 isInterrupted = diskfit_get_candidates(fitems, nitems, tsize, tg, addCandidate,
                                                        printProgress, &cp, &_interrupted);
                 mpz_t rev_cur, rev_tot;
                 const gint nodes = g_tree_nnodes(cp.candidates);
 
-                mpz_init_set_ui(rev_tot, 2 * nodes);
+                mpz_init_set_ui(rev_tot, 2UL * nodes);
                 mpz_init_set_ui(rev_cur, nodes);
 
                 xmlDocPtr doc = NULL;
@@ -580,6 +640,8 @@ int main(int argc, char *argv[]) {
                 if (sigaction(SIGINT, &sa_old, NULL) == -1) {
                     error(0, errno, "%s@%s:%d", __FUNCTION__, __FILE__, __LINE__);
                 }
+
+                clear_scale();
 
                 mpz_clear(n);
                 mpz_clear(last_fac);
