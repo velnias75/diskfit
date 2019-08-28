@@ -51,6 +51,8 @@ from .exclusivedlg import ExclusiveDlg
 from .progresswidget import ProgressWidget
 from .util.keyfile import Keyfile
 from .util.hrsize import HRSize
+from datetime import timedelta
+from datetime import datetime
 from datetime import date
 from shlex import quote
 from .site import Site
@@ -77,6 +79,8 @@ class MainWindow(QMainWindow):
     __statusBar = None
     __unselInputSum = None
     __runningTime = 0.0
+    __etaProgress = 0.0
+    __initialEta = 0.0
     __keyfile = None
     __saveTarget = True
     __exclusiveDlg = None
@@ -302,6 +306,18 @@ class MainWindow(QMainWindow):
     def showExclusiveFiles(self):
         self.__exclusiveDlg.exec()
 
+    def updateETA(self, eta_, p_=0):
+        str_ = self.tr("Calculating for {} files ..."). \
+            format(str(self.__inputModel.rowCount()))
+
+        if self.__initialEta >= 60.0 and p_ > 0 and p_ <= 90:
+            str_ += " - ETA: " + \
+                format((datetime.now() +
+                        timedelta(milliseconds=(eta_ * 1000.0))).
+                       time().strftime("%H:%M:%S"))
+
+        self.__statusBar.showMessage(str_)
+
     @pyqtSlot()
     def start(self):
         self.__ui.actionProfileeditor.setEnabled(False)
@@ -339,15 +355,14 @@ class MainWindow(QMainWindow):
             self.__proc3.readyReadStandardOutput.connect(self.resultAvailable)
             self.__proc3.finished.connect(self.finished)
 
-            self.__statusBar. \
-                showMessage(self.tr("Calculating for {} files ...").
-                            format(str(self.__inputModel.rowCount())))
+            self.updateETA(0.0)
 
             self.__resultXml = QXmlStreamReader()
 
             self.__proc3.start(self.__diskfit, args_, QProcess.ReadOnly)
             self.__proc3.waitForStarted()
             self.__runningTime = time.clock_gettime(time.CLOCK_MONOTONIC_RAW)
+            self.__etaProgress = self.__runningTime
 
             self.__lastResult.clear()
 
@@ -473,10 +488,17 @@ class MainWindow(QMainWindow):
             p_match_ = p_rex.search(p_)
             if p_match_:
                 p_ = int(p_match_.group(2))
+                eta_ = (time.clock_gettime(time.CLOCK_MONOTONIC_RAW) -
+                        self.__etaProgress) * (90 - p_)
+                self.__etaProgress = time.clock_gettime(time.
+                                                        CLOCK_MONOTONIC_RAW)
                 if p_ == 0:
                     self.__diskfitProgress.setMaximum(0)
                 else:
                     self.__diskfitProgress.setMaximum(100)
+                    if p_ == 1:
+                        self.__initialEta = eta_
+                    self.updateETA(eta_, p_)
 
                 self.__diskfitProgress.setValue(p_)
 
