@@ -109,21 +109,30 @@ int diskfit_get_candidates(DISKFIT_FITEM *array, size_t length, uint64_t total,
 
             mpz_mul_2exp(it_tot, it_tot, 1U);
 
-            if(mpz_cmp_ui(it_tot, 1024UL) > 0) {
-                
-                mpz_tdiv_q_2exp(aux, it_tot, 9UL);
-                
+            if(mpz_cmp_ui(it_tot, 2048UL) > 0) {
+
+                mpz_fdiv_q_2exp(aux, it_tot, 11UL);
+
                 mpz_mul_ui(aux, aux, 19UL);
                 mpz_fdiv_q_ui(aux, aux, 10UL);
+
+                if(mpz_odd_p(aux)) mpz_sub_ui(aux, aux, 1UL);
                 
                 while(!mpz_divisible_2exp_p(aux, 10UL)) {
-                    mpz_add_ui(aux, aux, 1UL);
+                    mpz_add_ui(aux, aux, 2UL);
                 }
-                
-                do {
-                    mpz_div_2exp(aux, aux, 1UL);
-                    ++div_by;
-                } while(mpz_cmp_ui(aux, 1UL));
+
+                if(mpz_divisible_2exp_p(aux, 10UL)) {
+
+                    do {
+                        mpz_div_2exp(aux, aux, 1UL);
+                        ++div_by;
+                    } while(mpz_cmp_ui(aux, 1UL));
+
+                } else {
+                    div_by = 10UL;
+                }
+
             }
 
             mpz_clear(aux);
@@ -232,4 +241,4 @@ void diskfit_set_mem_funcs(DISKFIT_ALLOC a, DISKFIT_FREE f) {
     _diskfit_mem_free  = f ? f : free;
 }
 
-// kate: indent-mode cstyle; indent-width 4; replace-tabs on;
+// kate: indent-mode cstyle; indent-width 4; replace-tabs on; remove-trailing-space on;

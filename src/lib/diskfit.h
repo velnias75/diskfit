@@ -59,4 +59,4 @@ extern "C" {
 
 #endif /* DISKFIT_H */
 
-// kate: indent-mode cstyle; indent-width 4; replace-tabs on;
+// kate: indent-mode cstyle; indent-width 4; replace-tabs on; remove-trailing-space on;
