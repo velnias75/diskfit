@@ -43,6 +43,7 @@ typedef struct {
     DISKFIT_PROGRESS       progress;
     const mpz_ptr          it_cur;
     const mpz_srcptr       it_tot;
+    const mp_bitcnt_t      div_by;
     volatile int          *const interrupted;
     void                  *const user_data;
 } PERMUTE_ARGS;
@@ -65,7 +66,7 @@ static inline void add(const PERMUTE_ARGS *const pa) {
             }
 
             mpz_add_ui(pa->it_cur, pa->it_cur, 1UL);
-            pa->progress(pa->it_cur, pa->it_tot, pa->user_data);
+            pa->progress(pa->it_cur, pa->it_tot, pa->div_by, pa->user_data);
 
             if (cs != 0 && cs <= pa->target && pa->adder) {
 
@@ -83,12 +84,14 @@ static inline void add(const PERMUTE_ARGS *const pa) {
     }
 }
 
-int diskfit_get_candidates(DISKFIT_FITEM *array, size_t length, uint64_t total, uint64_t target,
-                           DISKFIT_INSERTER adder, DISKFIT_PROGRESS progress,
-                           void *user_data, volatile int *interrupted) {
+int diskfit_get_candidates(DISKFIT_FITEM *array, size_t length, uint64_t total, 
+                           uint64_t target, DISKFIT_INSERTER adder, 
+                           DISKFIT_PROGRESS progress, void *user_data, 
+                           volatile int *interrupted) {
     if (array) {
 
         mpz_t it_cur, it_tot, aux;
+        mp_bitcnt_t div_by = 1UL;
 
         if (total > target) {
 
@@ -104,7 +107,24 @@ int diskfit_get_candidates(DISKFIT_FITEM *array, size_t length, uint64_t total, 
                 mpz_add(it_tot, it_tot, aux);
             }
 
-            mpz_mul_ui(it_tot, it_tot, 2U);
+            mpz_mul_2exp(it_tot, it_tot, 1U);
+
+            if(mpz_cmp_ui(it_tot, 1024UL) > 0) {
+                
+                mpz_tdiv_q_2exp(aux, it_tot, 9UL);
+                
+                while(!mpz_divisible_2exp_p(aux, 10UL)) {
+                    mpz_add_ui(aux, aux, 1UL);
+                }
+                
+                div_by = 0UL;
+                
+                do {
+                    mpz_div_2exp(aux, aux, 1UL);
+                    ++div_by;
+                } while(mpz_cmp_ui(aux, 1UL));
+            }
+
             mpz_clear(aux);
 
             for (i = 0; i <= length && !(*interrupted); i++) {
@@ -112,7 +132,7 @@ int diskfit_get_candidates(DISKFIT_FITEM *array, size_t length, uint64_t total, 
                 c = gsl_combination_calloc(length, i);
 
                 const PERMUTE_ARGS pa = { array, c, i, length, total, target, adder, progress,
-                                              it_cur, it_tot, interrupted, user_data };
+                                              it_cur, it_tot, div_by, interrupted, user_data };
                 do {
                     add(&pa);
                 } while (gsl_combination_next(c) == GSL_SUCCESS && !(*interrupted));

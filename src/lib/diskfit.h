@@ -36,7 +36,8 @@ extern "C" {
     typedef void *(*DISKFIT_ALLOC)(size_t size);
     typedef void (*DISKFIT_FREE)(void *ptr);
 
-    typedef void (*DISKFIT_PROGRESS)(mpz_ptr it_cur, mpz_srcptr const it_tot, void *user_data);
+    typedef void (*DISKFIT_PROGRESS)(mpz_srcptr const it_cur, mpz_srcptr const it_tot, 
+                                     mp_bitcnt_t const div_by, void *user_data);
 
     typedef void (*DISKFIT_INSERTER)(DISKFIT_FITEM *fitems, int length, uint64_t total,
                                      void *user_data);

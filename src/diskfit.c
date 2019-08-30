@@ -75,6 +75,7 @@ typedef struct {
     CAND_PARAMS          *cp;
     const mpz_ptr    rev_cur;
     const mpz_srcptr rev_tot;
+    const mp_bitcnt_t div_by;
 } REV_PARAMS;
 
 typedef struct {
@@ -112,6 +113,7 @@ static inline void init_scale() {
 
     mpq_set_d(_scale.ninehundred, 900.0);
     mpq_set_d(_scale.ten, 10.0);
+
 }
 
 static inline void clear_scale() {
@@ -125,6 +127,7 @@ static inline void clear_scale() {
 
     mpq_clear(_scale.ninehundred);
     mpq_clear(_scale.ten);
+
 }
 
 static inline gboolean includes(const DISKFIT_FITEM *first1, const DISKFIT_FITEM *last1,
@@ -210,15 +213,22 @@ static inline double scaleProgress(mpz_ptr aux, mpz_srcptr const it_tot) {
         mpq_div(_scale.fc_q, _scale.aux_q, _scale.ten);
     }
 
-    return mpq_get_d(_scale.fc_q) + 0.5;
+    return (mpq_get_d(_scale.fc_q) + 0.5);
 }
 
-static void printProgress(mpz_ptr it_cur, mpz_srcptr const it_tot, void *user_data) {
+static inline void printProgress(mpz_srcptr const it_cur, mpz_srcptr const it_tot,
+                                 mp_bitcnt_t div_by, void *user_data) {
 
     const gboolean initial = !mpz_cmp_ui(it_cur, 1UL);
-    const unsigned long div = (mpz_cmp_ui(CAND_PARAMS_CAST(user_data)->fak_last, 90UL) < 0) ? 10000UL : 10UL;
 
-    if (mpz_divisible_ui_p(it_cur, div) || initial) {
+#ifndef NDEBUG
+    if(initial && mpz_cmp_ui(it_cur, 0UL)) {
+        gmp_fprintf(stderr, "[DEBUG] printProgress: total iterations: %Zd, every 2^%luth iteration\n",
+            it_tot, div_by);
+    }
+#endif
+
+    if (mpz_divisible_2exp_p(it_cur, div_by) || initial) {
 
         mpz_mul_ui(CAND_PARAMS_CAST(user_data)->aux, it_cur, 100UL);
         mpz_set_d(CAND_PARAMS_CAST(user_data)->fc, scaleProgress(CAND_PARAMS_CAST(user_data)->aux, it_tot));
@@ -237,7 +247,8 @@ static gboolean create_rev_list(gpointer key, gpointer value, gpointer data) {
 
     mpz_add_ui(REV_PARAMS_CAST(data)->rev_cur, REV_PARAMS_CAST(data)->rev_cur, 1U);
 
-    printProgress(REV_PARAMS_CAST(data)->rev_cur, REV_PARAMS_CAST(data)->rev_tot, REV_PARAMS_CAST(data)->cp);
+    printProgress(REV_PARAMS_CAST(data)->rev_cur, REV_PARAMS_CAST(data)->rev_tot,
+                  REV_PARAMS_CAST(data)->div_by, REV_PARAMS_CAST(data)->cp);
 
     if (REV_PARAMS_CAST(data)->rl) {
 
@@ -615,6 +626,7 @@ int main(int argc, char *argv[]) {
                 isInterrupted = diskfit_get_candidates(fitems, nitems, tsize, tg, addCandidate,
                                                        printProgress, &cp, &_interrupted);
                 mpz_t rev_cur, rev_tot;
+                mp_bitcnt_t rev_div_by = 10UL;
                 const gint nodes = g_tree_nnodes(cp.candidates);
 
                 mpz_init_set_ui(rev_tot, 2UL * nodes);
@@ -637,7 +649,7 @@ int main(int argc, char *argv[]) {
                     tg, root_node
                 };
 
-                REV_PARAMS  rp = { NULL, &cp, rev_cur, rev_tot };
+                REV_PARAMS rp = { NULL, &cp, rev_cur, rev_tot, rev_div_by };
 
                 g_tree_foreach(cp.candidates, create_rev_list, &rp);
 
