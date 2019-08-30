@@ -41,6 +41,7 @@ from PyQt5.QtWidgets import QMessageBox
 from PyQt5.QtWidgets import QHeaderView
 from PyQt5.QtWidgets import QMainWindow
 from PyQt5.QtWidgets import QAction
+from PyQt5.QtWidgets import QLabel
 from PyQt5.QtWidgets import QMenu
 from .util.langcenv import LangCProcessEnvironment
 from .models.outputmodel import OutputModel
@@ -82,6 +83,7 @@ class MainWindow(QMainWindow):
     __unselInputSum = None
     __runningTime = 0.0
     __etaProgress = 0.0
+    __etaProgressLabel = None
     __initialEta = 0.0
     __keyfile = None
     __saveTarget = True
@@ -103,14 +105,18 @@ class MainWindow(QMainWindow):
         self.__ui = mainwindow.Ui_MainWindow()
         self.__ui.setupUi(self)
 
+        self.__etaProgressLabel = QLabel()
+
         self.__diskfitProgress = ProgressWidget(self.__ui.actionStop)
         self.__diskfitProgress.setMinimum(0)
         self.__diskfitProgress.setMaximum(100)
         self.__diskfitProgress.setValue(0)
 
         self.__statusBar = self.statusBar()
-        self.__statusBar.addPermanentWidget(self.__diskfitProgress)
+        self.__statusBar.insertPermanentWidget(0, self.__etaProgressLabel, 2)
+        self.__statusBar.insertPermanentWidget(1, self.__diskfitProgress, 1)
         self.__diskfitProgress.setHidden(True)
+        self.__etaProgressLabel.setHidden(True)
 
         self.__keyfile = Keyfile()
 
@@ -330,11 +336,15 @@ class MainWindow(QMainWindow):
 
             str_ += " — ETA: " + format(leta_.time().strftime("%H:%M:%S") +
                                         " [~" + "{0}:{1}:{2}".
-                                        format(("00" + str(hours_))[-2:],
+                                        format(("00" + str(hours_))[-2:]
+                                               if hours_ < 10 else str(hours_),
                                                ("00" + str(minutes_))[-2:],
                                                ("00" + str(seconds_))[-2:] +
                                                "]"))
-        self.__statusBar.showMessage(str_)
+
+#        self.__statusBar.removeWidget(self.__etaProgressLabel)
+        self.__etaProgressLabel.setText(str_)
+#        self.__statusBar.addWidget(self.__etaProgressLabel)
 
     @pyqtSlot()
     def start(self):
@@ -373,6 +383,7 @@ class MainWindow(QMainWindow):
             self.__proc3.readyReadStandardOutput.connect(self.resultAvailable)
             self.__proc3.finished.connect(self.finished)
 
+            self.__etaProgressLabel.setHidden(False)
             self.updateETA(0.0)
 
             self.__resultXml = QXmlStreamReader()
@@ -495,6 +506,7 @@ class MainWindow(QMainWindow):
 
         self.__tmp = None
         self.__resultXml = None
+        self.__etaProgressLabel.setHidden(True)
         self.__diskfitProgress.setHidden(True)
 
     @pyqtSlot()
@@ -673,7 +685,7 @@ def main(args=None):
     translator = QTranslator()
 
     app.setApplicationName("QDiskFit")
-    app.setApplicationVersion("2.0.4.0")
+    app.setApplicationVersion("2.0.4.1")
     app.setApplicationDisplayName(app.applicationName() + " " +
                                   app.applicationVersion())
     app.setOrganizationDomain("rangun.de")
