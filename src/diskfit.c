@@ -626,7 +626,7 @@ int main(int argc, char *argv[]) {
                 isInterrupted = diskfit_get_candidates(fitems, nitems, tsize, tg, addCandidate,
                                                        printProgress, &cp, &_interrupted);
                 mpz_t rev_cur, rev_tot;
-                mp_bitcnt_t rev_div_by = 10UL;
+                mp_bitcnt_t rev_div_by = 6UL;
                 const gint nodes = g_tree_nnodes(cp.candidates);
 
                 mpz_init_set_ui(rev_tot, 2UL * nodes);

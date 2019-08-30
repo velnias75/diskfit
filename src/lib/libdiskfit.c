@@ -91,7 +91,7 @@ int diskfit_get_candidates(DISKFIT_FITEM *array, size_t length, uint64_t total,
     if (array) {
 
         mpz_t it_cur, it_tot, aux;
-        mp_bitcnt_t div_by = 1UL;
+        mp_bitcnt_t div_by = 0UL;
 
         if (total > target) {
 
@@ -113,11 +113,12 @@ int diskfit_get_candidates(DISKFIT_FITEM *array, size_t length, uint64_t total,
                 
                 mpz_tdiv_q_2exp(aux, it_tot, 9UL);
                 
+                mpz_mul_ui(aux, aux, 19UL);
+                mpz_fdiv_q_ui(aux, aux, 10UL);
+                
                 while(!mpz_divisible_2exp_p(aux, 10UL)) {
                     mpz_add_ui(aux, aux, 1UL);
                 }
-                
-                div_by = 0UL;
                 
                 do {
                     mpz_div_2exp(aux, aux, 1UL);
