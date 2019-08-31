@@ -407,7 +407,7 @@ class MainWindow(QMainWindow):
             self.__ui.actionStop.triggered.disconnect(self.stop)
             os.kill(self.__proc3.pid(), signal.SIGSTOP)
             if ((QMessageBox.question(None,
-                                      self.tr("Stop"),
+                                      self.tr("Paused"),
                                       self.tr("Really cancel calculation?")) ==
                  QMessageBox.Yes)):
                 os.kill(self.__proc3.pid(), signal.SIGCONT)
@@ -685,7 +685,7 @@ def main(args=None):
     translator = QTranslator()
 
     app.setApplicationName("QDiskFit")
-    app.setApplicationVersion("2.0.4.1")
+    app.setApplicationVersion("2.0.4.2")
     app.setApplicationDisplayName(app.applicationName() + " " +
                                   app.applicationVersion())
     app.setOrganizationDomain("rangun.de")
