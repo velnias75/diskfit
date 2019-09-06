@@ -18,6 +18,7 @@
 # along with DiskFit.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+from PyQt5.QtCore import Qt
 from PyQt5.QtCore import pyqtSlot
 from PyQt5.QtWidgets import QDialogButtonBox
 from .dialogs.exclusive import Ui_ExclusiveDlg
@@ -46,16 +47,18 @@ class ExclusiveDlg(NoWhatsThisDialog):
         d_ = dict()
 
         for idx_ in input_.selectionModel().selectedIndexes():
-            if idx_.row() not in d_:
-                d_[idx_.row()] = list()
-                d_[idx_.row()].append(input_.model().
-                                      item(idx_.row(),
-                                           idx_.column()).copy(True))
-            else:
-                d_[idx_.row()].append(input_.model().
-                                      item(idx_.row(),
-                                           idx_.column()).copy(True))
-                self.__em.appendRow(d_[idx_.row()])
+            if len(self.__em.findItems(input_.model().item(idx_.row(), 0).
+                                       data(Qt.DisplayRole))) == 0:
+                if idx_.row() not in d_:
+                    d_[idx_.row()] = list()
+                    d_[idx_.row()].append(input_.model().
+                                          item(idx_.row(),
+                                               idx_.column()).copy(True))
+                else:
+                    d_[idx_.row()].append(input_.model().
+                                          item(idx_.row(),
+                                               idx_.column()).copy(True))
+                    self.__em.appendRow(d_[idx_.row()])
 
     @pyqtSlot()
     def resetted(self):

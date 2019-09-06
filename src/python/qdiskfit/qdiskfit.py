@@ -139,7 +139,8 @@ class MainWindow(QMainWindow):
 
         self.__outputModel = OutputModel(self.__ui.table_output,
                                          self.__ui.label_runSummary,
-                                         self.__inputModel)
+                                         self.__inputModel,
+                                         self.__ui.combo_target)
 
         self.__ui.table_output.setModel(self.__outputModel)
 

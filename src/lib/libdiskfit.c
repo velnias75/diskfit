@@ -102,7 +102,7 @@ int diskfit_get_candidates(DISKFIT_FITEM *array, size_t length, uint64_t total,
             gsl_combination *c;
             register size_t i;
 
-            for (i = 0; i < length; i++) {
+            for (i = 1UL; i <= length; ++i) {
                 mpz_bin_uiui(aux, length, i);
                 mpz_add(it_tot, it_tot, aux);
             }

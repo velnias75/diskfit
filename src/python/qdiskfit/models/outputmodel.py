@@ -32,6 +32,7 @@ from PyQt5.QtGui import QStandardItemModel
 from .modelitems.iconfileitem import IconFileItem
 from .modelitems.outputsizeitem import OutputSizeItem
 from .modelitems.echotooltipitem import EchoTooltipItem
+from .modelitems.leftoveritem import LeftOverItem
 from .modelitems.multifiledragitem import MultiFileDragItem
 
 
@@ -44,10 +45,11 @@ class OutputModel(QStandardItemModel):
     __sum = None
     __hdr = None
     __imd = None
+    __tcb = None
 
     __result = None
 
-    def __init__(self, parent_, summary_, in_model_):
+    def __init__(self, parent_, summary_, in_model_, target_combo_):
 
         super(OutputModel, self).__init__()
 
@@ -62,6 +64,7 @@ class OutputModel(QStandardItemModel):
         self.__par = parent_
         self.__sum = summary_
         self.__imd = in_model_
+        self.__tcb = target_combo_
 
     def sortSize(self, fa_, rev_):
         fa_.sort(key=lambda ma: self.__imd.
@@ -103,7 +106,8 @@ class OutputModel(QStandardItemModel):
                 l_ = (MultiFileDragItem(fa_),
                       EchoTooltipItem(r_[1], True, Qt.AlignHCenter),
                       OutputSizeItem(ts_, r_[2]),
-                      EchoTooltipItem(r_[3], True, Qt.AlignRight))
+                      LeftOverItem(r_[3], self.__tcb.currentData() - ts_,
+                                   True, Qt.AlignRight))
 
                 if int(settings_.value("resultSort", 0)) == 0:
                     self.sortTitle(fa_, False)
