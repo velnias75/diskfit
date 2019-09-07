@@ -25,21 +25,20 @@ from PyQt5.QtCore import QSettings
 from PyQt5.QtCore import pyqtSlot
 from PyQt5.QtCore import qDebug
 from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QStandardItemModel
 from PyQt5.QtWidgets import QFileDialog
 from .modelitems.hrfileitem import HRFileItem
 from .modelitems.iconfileitem import IconFileItem
 from ..util.hrsize import HRSize
+from .targetsizemodel import TargetSizeModel
 
 
-class InputModel(QStandardItemModel):
+class InputModel(TargetSizeModel):
 
     __par = None
     __sta = None
     __asa = None
     __aca = None
     __bca = None
-    __tar = None
 
     def __init__(self, parent_, start_, selAllAct_, clearAllAct_,
                  clearAllBut_):
@@ -153,15 +152,17 @@ class InputModel(QStandardItemModel):
 
     @pyqtSlot(float)
     def setTargetSize(self, target_):
-        self.__tar = target_
+
+        super(InputModel, self).setTargetSize(target_)
+
         self.disableOversizeItems()
         self.modelChanged()
 
     @pyqtSlot()
     def disableOversizeItems(self):
-        if self.__tar is not None:
+        if self.targetSize() is not None:
             for r in range(0, self.rowCount()):
-                oversized_ = self.item(r, 1).num() > self.__tar
+                oversized_ = self.item(r, 1).num() > self.targetSize()
                 self.item(r, 0).setEnabled(not oversized_)
                 self.item(r, 1).setEnabled(not oversized_)
 

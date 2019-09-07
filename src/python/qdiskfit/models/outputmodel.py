@@ -34,9 +34,10 @@ from .modelitems.outputsizeitem import OutputSizeItem
 from .modelitems.echotooltipitem import EchoTooltipItem
 from .modelitems.leftoveritem import LeftOverItem
 from .modelitems.multifiledragitem import MultiFileDragItem
+from .targetsizemodel import TargetSizeModel
 
 
-class OutputModel(QStandardItemModel):
+class OutputModel(TargetSizeModel):
 
     modelSaveable = pyqtSignal(bool)
     resultReady = pyqtSignal()
@@ -45,11 +46,10 @@ class OutputModel(QStandardItemModel):
     __sum = None
     __hdr = None
     __imd = None
-    __tcb = None
 
     __result = None
 
-    def __init__(self, parent_, summary_, in_model_, target_combo_):
+    def __init__(self, parent_, summary_, in_model_):
 
         super(OutputModel, self).__init__()
 
@@ -64,7 +64,6 @@ class OutputModel(QStandardItemModel):
         self.__par = parent_
         self.__sum = summary_
         self.__imd = in_model_
-        self.__tcb = target_combo_
 
     def sortSize(self, fa_, rev_):
         fa_.sort(key=lambda ma: self.__imd.
@@ -93,6 +92,11 @@ class OutputModel(QStandardItemModel):
 
             settings_ = QSettings()
 
+            try:
+                self.targetSizeChanged.disconnect()
+            except TypeError:
+                pass
+
             self.removeRows(0, self.rowCount())
 
             for pv_, r_ in enumerate(self.__result):
@@ -103,11 +107,15 @@ class OutputModel(QStandardItemModel):
                 for ma_ in fa_:
                     ts_ += self.fileSize(ma_)
 
+                loi_ = LeftOverItem(r_[3], self.targetSize(), ts_, True,
+                                    Qt.AlignRight)
+
+                self.targetSizeChanged.connect(loi_.updateToolTip)
+
                 l_ = (MultiFileDragItem(fa_),
                       EchoTooltipItem(r_[1], True, Qt.AlignHCenter),
                       OutputSizeItem(ts_, r_[2]),
-                      LeftOverItem(r_[3], self.__tcb.currentData() - ts_,
-                                   True, Qt.AlignRight))
+                      loi_)
 
                 if int(settings_.value("resultSort", 0)) == 0:
                     self.sortTitle(fa_, False)

@@ -19,6 +19,8 @@
 #
 
 from PyQt5.QtCore import Qt
+from PyQt5.QtCore import QObject
+from PyQt5.QtCore import pyqtSlot
 from PyQt5.QtCore import QCoreApplication
 from .echotooltipitem import EchoTooltipItem
 from ...util.hrsize import HRSize
@@ -26,11 +28,41 @@ from ...util.hrsize import HRSize
 
 class LeftOverItem(EchoTooltipItem):
 
-    def __init__(self, txt_, leftover_, drag_=False, align_=Qt.AlignLeft):
+    __upd = None
+
+    class __updater(QObject):
+
+        __loi = None
+        __stt = None
+        __csz = 0.0
+
+        def __init__(self, loi_, stt_, csz_):
+            QObject.__init__(self)
+            self.__loi = loi_
+            self.__stt = stt_
+            self.__csz = csz_
+
+        @pyqtSlot(float)
+        def updateToolTip(self, tts_):
+
+            leftover_ = tts_ - self.__csz
+
+            self.__loi.setToolTip(self.__stt + " / " +
+                                  QCoreApplication.translate("LeftOverItem",
+                                                             "{0} left").
+                                  format(HRSize.sizeString(leftover_ if
+                                                           leftover_ > 0.0
+                                                           else 0.0, 0)))
+
+    def __init__(self, txt_, tts_, cumsize_, drag_=False, align_=Qt.AlignLeft):
+
         super(LeftOverItem, self).__init__(txt_)
-        tt_ = super(LeftOverItem, self).toolTip() + " / " + \
-            QCoreApplication.translate("LeftOverItem", "{0} left"). \
-            format(HRSize.sizeString(leftover_, 0))
-        self.setToolTip(tt_)
+
+        self.__upd = LeftOverItem.__updater(self, super(LeftOverItem, self).
+                                            toolTip(), cumsize_)
+        self.__upd.updateToolTip(tts_)
+
+    def __getattr__(self, atname_):
+        return getattr(self.__upd, atname_)
 
 # kate: indent-mode: python

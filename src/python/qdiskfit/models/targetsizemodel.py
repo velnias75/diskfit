@@ -18,37 +18,26 @@
 # along with DiskFit.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-from math import log
-from math import trunc
+from PyQt5.QtGui import QStandardItemModel
+from PyQt5.QtCore import pyqtSignal
+from PyQt5.QtCore import pyqtSlot
 
 
-class HRSize:
+class TargetSizeModel(QStandardItemModel):
 
-    @staticmethod
-    def __getFormatted(size_, dec_):
+    targetSizeChanged = pyqtSignal(float)
 
-        if trunc(size_) == size_:
-            format_ = ".0f"
-        else:
-            format_ = "." + str(dec_) + "f"
+    __tsz = 0.0
 
-        return format(size_, format_)
+    def __init__(self):
+        super(TargetSizeModel, self).__init__()
 
-    @staticmethod
-    def sizeString(size_, dec_=2):
+    @pyqtSlot(float)
+    def setTargetSize(self, target_):
+        self.__tsz = target_
+        self.targetSizeChanged.emit(self.__tsz)
 
-        if size_ > 0:
-            d_ = log(size_, 2)
-        else:
-            d_ = 0
-
-        if d_ >= 30.0:
-            return HRSize.__getFormatted(size_/1073741824.0, dec_) + " GByte"
-        elif d_ >= 20.0:
-            return HRSize.__getFormatted(size_/1048576.0, dec_) + " MByte"
-        elif d_ >= 10.0:
-            return HRSize.__getFormatted(size_/1024.0, dec_) + " KByte"
-
-        return HRSize.__getFormatted(size_, 0) + " Byte"
+    def targetSize(self):
+        return self.__tsz
 
 # kate: indent-mode: python

@@ -139,8 +139,7 @@ class MainWindow(QMainWindow):
 
         self.__outputModel = OutputModel(self.__ui.table_output,
                                          self.__ui.label_runSummary,
-                                         self.__inputModel,
-                                         self.__ui.combo_target)
+                                         self.__inputModel)
 
         self.__ui.table_output.setModel(self.__outputModel)
 
@@ -179,6 +178,8 @@ class MainWindow(QMainWindow):
         self.__ui.actionAbout.triggered.connect(self.about)
         self.__ui.action_diffTarget.triggered.connect(self.diffTarget)
         self.__ui.spin_bytes.valueChanged.connect(self.__inputModel.
+                                                  setTargetSize)
+        self.__ui.spin_bytes.valueChanged.connect(self.__outputModel.
                                                   setTargetSize)
 
         self.__outputModel.resultReady.connect(self.resultReady)
@@ -604,10 +605,11 @@ class MainWindow(QMainWindow):
             self.__ui.spin_bytes.setValue(d_)
             self.__ui.spin_bytes.setEnabled(False)
         else:
-            self.__inputModel.\
-                setTargetSize(self.__keyfile.
-                              getTargetsize(self.__ui.
-                                            combo_target.currentText()))
+            tsc_ = self.__keyfile.getTargetsize(self.__ui.combo_target.
+                                                currentText())
+            self.__inputModel.setTargetSize(float(tsc_ if tsc_ is not None
+                                                  else self.__ui.spin_bytes.
+                                                  value()))
             self.__ui.spin_bytes.setEnabled(True)
 
         self.__inputModel.modelChanged()
