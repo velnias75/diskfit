@@ -59,6 +59,8 @@ class InputModel(TargetSizeModel):
         self.rowsInserted.connect(self.modelChanged)
         self.rowsRemoved.connect(self.modelChanged)
 
+        self.modelChanged()
+
     def sort(self, col, order):
 
         l_ = list()
