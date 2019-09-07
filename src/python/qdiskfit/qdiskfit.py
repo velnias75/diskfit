@@ -393,7 +393,7 @@ class MainWindow(QMainWindow):
             self.__runningTime = time.clock_gettime(time.CLOCK_MONOTONIC_RAW)
             self.__etaProgress = self.__runningTime
 
-            self.__lastResult.clear()
+            self.__lastResult *= 0
 
             self.__ui.actionStop.triggered.connect(self.stop)
         else:
@@ -524,6 +524,7 @@ class MainWindow(QMainWindow):
         self.__diskfitProgress.setHidden(False)
         self.__diskfitProgress.setValue(0)
         self.__diskfitProgress.setMaximum(100)
+        self.__lastResult *= 0
 
     @pyqtSlot()
     def progressAvailable(self):
