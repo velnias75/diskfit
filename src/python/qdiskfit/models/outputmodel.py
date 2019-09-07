@@ -60,6 +60,7 @@ class OutputModel(TargetSizeModel):
             self.tr("Percentage")]
 
         self.setHorizontalHeaderLabels(self.__hdr)
+        self.rowsInserted.connect(self.disableOversizeItems)
 
         self.__par = parent_
         self.__sum = summary_
@@ -194,6 +195,9 @@ class OutputModel(TargetSizeModel):
                     f_.close()
             except OSError:
                 pass
+
+    def columns(self):
+        return(2, 0, 1, 2, 3)
 
     def mimeTypes(self):
         return list("text/uri-list")

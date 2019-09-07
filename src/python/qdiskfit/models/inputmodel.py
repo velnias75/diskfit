@@ -150,21 +150,13 @@ class InputModel(TargetSizeModel):
         if self.__bca is not None:
             self.__bca.setEnabled(len_ > 0)
 
+    def columns(self):
+        return (1, 0, 1)
+
     @pyqtSlot(float)
     def setTargetSize(self, target_):
-
         super(InputModel, self).setTargetSize(target_)
-
-        self.disableOversizeItems()
         self.modelChanged()
-
-    @pyqtSlot()
-    def disableOversizeItems(self):
-        if self.targetSize() is not None:
-            for r in range(0, self.rowCount()):
-                oversized_ = self.item(r, 1).num() > self.targetSize()
-                self.item(r, 0).setEnabled(not oversized_)
-                self.item(r, 1).setEnabled(not oversized_)
 
     @pyqtSlot()
     def addFiles(self):
