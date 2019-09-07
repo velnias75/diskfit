@@ -33,33 +33,32 @@ class LeftOverItem(EchoTooltipItem):
     class __updater(QObject):
 
         __loi = None
-        __stt = None
         __csz = 0.0
+        __ts = 0.0
 
-        def __init__(self, loi_, stt_, csz_):
+        def __init__(self, loi_, csz_, ts_):
             QObject.__init__(self)
             self.__loi = loi_
-            self.__stt = stt_
             self.__csz = csz_
+            self.__ts = ts_
 
         @pyqtSlot(float)
         def updateToolTip(self, tts_):
 
             leftover_ = tts_ - self.__csz
 
-            self.__loi.setToolTip(self.__stt + " / " +
+            self.__loi.setText(format(((float(self.__ts) * 100.0) / tts_),
+                                      ".3f") + "%")
+            self.__loi.setToolTip(self.__loi.text() + " / " +
                                   QCoreApplication.translate("LeftOverItem",
                                                              "{0} left").
                                   format(HRSize.sizeString(leftover_ if
                                                            leftover_ > 0.0
                                                            else 0.0, 0)))
 
-    def __init__(self, txt_, tts_, cumsize_, drag_=False, align_=Qt.AlignLeft):
-
-        super(LeftOverItem, self).__init__(txt_)
-
-        self.__upd = LeftOverItem.__updater(self, super(LeftOverItem, self).
-                                            toolTip(), cumsize_)
+    def __init__(self, ts_, tts_, cumsize_, drag_=False, align_=Qt.AlignLeft):
+        super(LeftOverItem, self).__init__("")
+        self.__upd = LeftOverItem.__updater(self, cumsize_, ts_)
         self.__upd.updateToolTip(tts_)
 
     def __getattr__(self, atname_):

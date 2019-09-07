@@ -440,10 +440,7 @@ class MainWindow(QMainWindow):
             ts_ += ps_
 
         self.__lastResult.append((files_, str(len(files_)),
-                                  HRSize.sizeString(ts_),
-                                  format(((float(ts_) * 100.0) /
-                                         self.__ui.spin_bytes.value()),
-                                         ".3f") + "%"))
+                                  HRSize.sizeString(ts_)))
 
     @pyqtSlot(int, QProcess.ExitStatus)
     def finished(self, ec, es):

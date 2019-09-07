@@ -108,7 +108,7 @@ class OutputModel(TargetSizeModel):
                 for ma_ in fa_:
                     ts_ += self.fileSize(ma_)
 
-                loi_ = LeftOverItem(r_[3], self.targetSize(), ts_, True,
+                loi_ = LeftOverItem(ts_, self.targetSize(), ts_, True,
                                     Qt.AlignRight)
 
                 self.targetSizeChanged.connect(loi_.updateToolTip)

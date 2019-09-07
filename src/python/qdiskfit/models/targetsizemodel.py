@@ -42,7 +42,7 @@ class TargetSizeModel(QStandardItemModel):
         return self.__tsz
 
     def columns(self):
-        raise NotImplementedError("column() not implemented yet")
+        raise NotImplementedError("columns() not implemented yet")
 
     @pyqtSlot()
     def disableOversizeItems(self):
@@ -50,11 +50,7 @@ class TargetSizeModel(QStandardItemModel):
             for r in range(0, self.rowCount()):
                 oversized_ = (self.item(r, self.columns()[0]).num() >
                               self.targetSize())
-                self.item(r, self.columns()[1]).setEnabled(not oversized_)
-                self.item(r, self.columns()[2]).setEnabled(not oversized_)
-
-                if len(self.columns()) > 3:
-                    self.item(r, self.columns()[3]).setEnabled(not oversized_)
-                    self.item(r, self.columns()[4]).setEnabled(not oversized_)
+                for i_, v_ in enumerate(self.columns(), start=1):
+                    self.item(r, v_).setEnabled(not oversized_)
 
 # kate: indent-mode: python
