@@ -28,9 +28,11 @@ class TargetSizeModel(QStandardItemModel):
     targetSizeChanged = pyqtSignal(float)
 
     __tsz = 0.0
+    __osc = True
 
-    def __init__(self):
+    def __init__(self, oversizeCheck=True):
         super(TargetSizeModel, self).__init__()
+        self.__osc = oversizeCheck
 
     @pyqtSlot(float)
     def setTargetSize(self, target_):
@@ -41,12 +43,22 @@ class TargetSizeModel(QStandardItemModel):
     def targetSize(self):
         return self.__tsz
 
+    def enabledItems(self):
+
+        ei_ = 0 if self.__osc else self.rowCount()
+
+        for r_ in range(0, self.rowCount()):
+            if self.item(r_, 0).isEnabled():
+                ei_ += 1
+
+        return ei_
+
     def columns(self):
         raise NotImplementedError("columns() not implemented yet")
 
     @pyqtSlot()
     def disableOversizeItems(self):
-        if self.targetSize() is not None:
+        if self.__osc and self.targetSize() is not None:
             for r in range(0, self.rowCount()):
                 oversized_ = (self.item(r, self.columns()[0]).num() >
                               self.targetSize())

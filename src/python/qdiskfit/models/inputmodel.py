@@ -41,9 +41,9 @@ class InputModel(TargetSizeModel):
     __bca = None
 
     def __init__(self, parent_, start_, selAllAct_, clearAllAct_,
-                 clearAllBut_):
+                 clearAllBut_, oversizeCheck=True):
 
-        super(InputModel, self).__init__()
+        super(InputModel, self).__init__(oversizeCheck)
 
         self.setHorizontalHeaderLabels([
             QCoreApplication.translate("InputModel", "File"),

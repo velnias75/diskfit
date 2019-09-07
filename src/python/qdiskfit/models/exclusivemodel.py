@@ -26,7 +26,8 @@ from .inputmodel import InputModel
 class ExclusiveModel(InputModel):
 
     def __init__(self, parent_):
-        super(ExclusiveModel, self).__init__(parent_, None, None, None, None)
+        super(ExclusiveModel, self).__init__(parent_, None, None, None, None,
+                                             False)
 
     def mimeTypes(self):
         return list("text/uri-list")

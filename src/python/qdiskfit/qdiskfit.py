@@ -27,8 +27,8 @@ from PyQt5.QtCore import QTranslator
 from PyQt5.QtCore import QByteArray
 from PyQt5.QtCore import QSettings
 from PyQt5.QtCore import QProcess
-from PyQt5.QtCore import QLocale
 from PyQt5.QtCore import pyqtSlot
+from PyQt5.QtCore import QLocale
 from PyQt5.QtCore import qDebug
 from PyQt5.QtCore import QPoint
 from PyQt5.QtCore import QTime
@@ -318,7 +318,7 @@ class MainWindow(QMainWindow):
 
     def updateETA(self, eta_, p_=0):
         str_ = self.tr("Calculating for {} files ..."). \
-            format(str(self.__inputModel.rowCount()))
+            format(str(self.__inputModel.enabledItems()))
 
         if self.__initialEta >= 30.0 and p_ > 0 and p_ <= 90:
 
@@ -344,9 +344,7 @@ class MainWindow(QMainWindow):
                                                ("00" + str(seconds_))[-2:] +
                                                "]"))
 
-#        self.__statusBar.removeWidget(self.__etaProgressLabel)
         self.__etaProgressLabel.setText(str_)
-#        self.__statusBar.addWidget(self.__etaProgressLabel)
 
     @pyqtSlot()
     def start(self):
