@@ -36,8 +36,17 @@ class LeftOverItem(EchoTooltipItem):
         __csz = 0.0
         __ts = 0.0
 
+        __exceedng_txt = None
+        __leftover_txt = None
+
         def __init__(self, loi_, csz_, ts_):
             QObject.__init__(self)
+
+            self.__exceedng_txt = QCoreApplication. \
+                translate("LeftOverItem", "exceeds target")
+
+            self.__leftover_txt = QCoreApplication.translate("LeftOverItem",
+                                                             "{0} left")
             self.__loi = loi_
             self.__csz = csz_
             self.__ts = ts_
@@ -47,14 +56,12 @@ class LeftOverItem(EchoTooltipItem):
 
             leftover_ = tts_ - self.__csz
 
-            self.__loi.setText(format(((float(self.__ts) * 100.0) / tts_),
-                                      ".3f") + "%")
-            self.__loi.setToolTip(self.__loi.text() + " / " +
-                                  QCoreApplication.translate("LeftOverItem",
-                                                             "{0} left").
-                                  format(HRSize.sizeString(leftover_ if
-                                                           leftover_ > 0.0
-                                                           else 0.0, 0)))
+            self.__loi.setText("%.3f %%" % ((float(self.__ts) * 100.0) / tts_))
+            self.__loi.setToolTip("".join((self.__loi.text(), " / ",
+                                  (self.__leftover_txt.
+                                   format(HRSize.sizeString(leftover_, 0)))
+                                  if leftover_ >= 0.0
+                                  else self.__exceedng_txt)))
 
     def __init__(self, ts_, tts_, cumsize_, drag_=False, align_=Qt.AlignLeft):
         super(LeftOverItem, self).__init__("", drag_, align_)

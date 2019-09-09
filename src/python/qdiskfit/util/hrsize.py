@@ -18,8 +18,7 @@
 # along with DiskFit.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-from math import log
-from math import trunc
+from math import log2
 
 
 class HRSize:
@@ -27,28 +26,31 @@ class HRSize:
     @staticmethod
     def __getFormatted(size_, dec_):
 
-        if trunc(size_) == size_:
-            format_ = ".0f"
+        if not size_.is_integer():
+            format_ = "".join(("%." + str(dec_), "f"))
         else:
-            format_ = "." + str(dec_) + "f"
+            format_ = "%.0f"
 
-        return format(size_, format_)
+        return format_ % (size_)
 
     @staticmethod
     def sizeString(size_, dec_=2):
 
         if size_ > 0:
-            d_ = log(size_, 2)
+            d_ = log2(size_)
         else:
-            d_ = 0
+            d_ = 0.0
 
         if d_ >= 30.0:
-            return HRSize.__getFormatted(size_/1073741824.0, dec_) + " GByte"
+            return "".join((HRSize.__getFormatted(size_/1073741824.0, dec_),
+                            " GByte"))
         elif d_ >= 20.0:
-            return HRSize.__getFormatted(size_/1048576.0, dec_) + " MByte"
+            return "".join((HRSize.__getFormatted(size_/1048576.0, dec_),
+                            " MByte"))
         elif d_ >= 10.0:
-            return HRSize.__getFormatted(size_/1024.0, dec_) + " KByte"
+            return "".join((HRSize.__getFormatted(size_/1024.0, dec_),
+                            " KByte"))
 
-        return HRSize.__getFormatted(size_, 0) + " Byte"
+        return "".join((HRSize.__getFormatted(size_, 0), " Byte"))
 
 # kate: indent-mode: python

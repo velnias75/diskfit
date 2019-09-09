@@ -19,8 +19,11 @@
 #
 
 from PyQt5.QtGui import QStandardItemModel
+from PyQt5.QtGui import QStandardItem
+from PyQt5.QtCore import QModelIndex
 from PyQt5.QtCore import pyqtSignal
 from PyQt5.QtCore import pyqtSlot
+from PyQt5.QtCore import qDebug
 
 
 class TargetSizeModel(QStandardItemModel):
@@ -28,17 +31,22 @@ class TargetSizeModel(QStandardItemModel):
     targetSizeChanged = pyqtSignal(float)
 
     __tsz = 0.0
+    __otg = 0.0
     __osc = True
 
     def __init__(self, oversizeCheck=True):
         super(TargetSizeModel, self).__init__()
         self.__osc = oversizeCheck
+        self.itemChanged.connect(self.disableOversizeItem)
 
     @pyqtSlot(float)
     def setTargetSize(self, target_):
-        self.__tsz = target_
-        self.targetSizeChanged.emit(self.__tsz)
-        self.disableOversizeItems()
+        #if self.__otg != target_:
+            self.__otg = self.__tsz
+            self.__tsz = target_
+            #qDebug("do an coward attempt to update target")
+            #self.targetSizeChanged.emit(self.__tsz)
+            self.updateTarget(self.__tsz)
 
     def targetSize(self):
         return self.__tsz
@@ -56,13 +64,39 @@ class TargetSizeModel(QStandardItemModel):
     def columns(self):
         raise NotImplementedError("columns() not implemented yet")
 
-    @pyqtSlot()
-    def disableOversizeItems(self):
-        if self.__osc and self.targetSize() is not None:
-            for r in range(0, self.rowCount()):
-                oversized_ = (self.item(r, self.columns()[0]).num() >
-                              self.targetSize())
-                for i_, v_ in enumerate(self.columns(), start=1):
-                    self.item(r, v_).setEnabled(not oversized_)
+    @pyqtSlot("QStandardItem*")
+    def disableOversizeItem(self, item_):
+
+        #if item_.isEnabled():
+
+            idx_ = self.indexFromItem(item_)
+
+            if idx_.isValid():
+                row_ = idx_.row()
+                self.disableOversizeItems(idx_, row_, row_)
+
+    @pyqtSlot(QModelIndex, int, int)
+    def disableOversizeItems(self, idx_=QModelIndex(), first_=-1, last_=-1):
+
+        if self.__osc and self.__tsz is not None:
+
+            cls_ = self.columns()
+            rit_ = []
+
+            for r in range(first_ if first_ != -1 else 0,
+                           last_ + 1 if last_ != -1 else self.rowCount()):
+
+                for i_ in cls_:
+                    rit_.append(self.item(r, i_))
+
+                ena_ = rit_[0].num() <= self.__tsz
+
+                for i_ in range(1, len(rit_)):
+                    rit_[i_].setEnabled(ena_)
+
+                rit_ *= 0
+                
+    def updateTarget(self, tts_):
+        pass
 
 # kate: indent-mode: python

@@ -60,7 +60,8 @@ class OutputModel(TargetSizeModel):
             self.tr("Percentage")]
 
         self.setHorizontalHeaderLabels(self.__hdr)
-        self.rowsInserted.connect(self.disableOversizeItems)
+        #self.rowsInserted.connect(self.disableOversizeItems)
+        self.targetSizeChanged.connect(self.updateTarget)
 
         self.__par = parent_
         self.__sum = summary_
@@ -93,10 +94,10 @@ class OutputModel(TargetSizeModel):
 
             settings_ = QSettings()
 
-            try:
-                self.targetSizeChanged.disconnect()
-            except TypeError:
-                pass
+            #try:
+            #    self.targetSizeChanged.disconnect()
+            #except TypeError:
+            #    pass
 
             self.removeRows(0, self.rowCount())
 
@@ -111,7 +112,7 @@ class OutputModel(TargetSizeModel):
                 loi_ = LeftOverItem(ts_, self.targetSize(), ts_, True,
                                     Qt.AlignRight)
 
-                self.targetSizeChanged.connect(loi_.updateToolTip)
+                #self.targetSizeChanged.connect(loi_.updateToolTip)
 
                 l_ = (MultiFileDragItem(fa_),
                       EchoTooltipItem(r_[1], True, Qt.AlignHCenter),
@@ -157,6 +158,15 @@ class OutputModel(TargetSizeModel):
 
             self.modelSaveable.emit(self.rowCount() > 0)
             self.resultReady.emit()
+
+    @pyqtSlot(float)
+    def updateTarget(self, tts_):
+        self.blockSignals(True)
+        for r_ in range(0, self.rowCount()):
+            item_ = self.item(r_, 3)
+            item_.updateToolTip(tts_)
+            self.disableOversizeItem(item_)
+        self.blockSignals(False)
 
     @pyqtSlot()
     def saveModel(self):
