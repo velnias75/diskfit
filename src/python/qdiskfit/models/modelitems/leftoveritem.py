@@ -29,46 +29,34 @@ from ...util.hrsize import HRSize
 class LeftOverItem(EchoTooltipItem):
 
     __upd = None
+    __csz = 0.0
+    __ts = 0.0
 
-    class __updater(QObject):
-
-        __loi = None
-        __csz = 0.0
-        __ts = 0.0
-
-        __exceedng_txt = None
-        __leftover_txt = None
-
-        def __init__(self, loi_, csz_, ts_):
-            QObject.__init__(self)
-
-            self.__exceedng_txt = QCoreApplication. \
-                translate("LeftOverItem", "exceeds target")
-
-            self.__leftover_txt = QCoreApplication.translate("LeftOverItem",
-                                                             "{0} left")
-            self.__loi = loi_
-            self.__csz = csz_
-            self.__ts = ts_
-
-        @pyqtSlot(float)
-        def updateToolTip(self, tts_):
-
-            leftover_ = tts_ - self.__csz
-
-            self.__loi.setText("%.3f %%" % ((float(self.__ts) * 100.0) / tts_))
-            self.__loi.setToolTip("".join((self.__loi.text(), " / ",
-                                  (self.__leftover_txt.
-                                   format(HRSize.sizeString(leftover_, 0)))
-                                  if leftover_ >= 0.0
-                                  else self.__exceedng_txt)))
+    __exceedng_txt = None
+    __leftover_txt = None
 
     def __init__(self, ts_, tts_, cumsize_, drag_=False, align_=Qt.AlignLeft):
         super(LeftOverItem, self).__init__("", drag_, align_)
-        self.__upd = LeftOverItem.__updater(self, cumsize_, ts_)
-        self.__upd.updateToolTip(tts_)
 
-    def __getattr__(self, atname_):
-        return getattr(self.__upd, atname_)
+        self.__exceedng_txt = QCoreApplication. \
+            translate("LeftOverItem", "exceeds target")
+
+        self.__leftover_txt = QCoreApplication.translate("LeftOverItem",
+                                                         "{0} left")
+
+        self.__ts = ts_
+        self.__csz = cumsize_
+        self.updateToolTip(tts_)
+
+    def updateToolTip(self, tts_):
+
+        leftover_ = tts_ - self.__csz
+
+        self.setText("%.3f %%" % ((float(self.__ts) * 100.0) / tts_))
+        self.setToolTip("".join((self.text(), " / ",
+                                 (self.__leftover_txt.
+                                  format(HRSize.sizeString(leftover_, 0)))
+                                 if leftover_ >= 0.0
+                                 else self.__exceedng_txt)))
 
 # kate: indent-mode: python

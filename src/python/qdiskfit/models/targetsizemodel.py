@@ -23,29 +23,20 @@ from PyQt5.QtGui import QStandardItem
 from PyQt5.QtCore import QModelIndex
 from PyQt5.QtCore import pyqtSignal
 from PyQt5.QtCore import pyqtSlot
-from PyQt5.QtCore import qDebug
 
 
 class TargetSizeModel(QStandardItemModel):
 
-    targetSizeChanged = pyqtSignal(float)
-
     __tsz = 0.0
-    __otg = 0.0
     __osc = True
 
     def __init__(self, oversizeCheck=True):
         super(TargetSizeModel, self).__init__()
         self.__osc = oversizeCheck
-        self.itemChanged.connect(self.disableOversizeItem)
 
     @pyqtSlot(float)
     def setTargetSize(self, target_):
-        #if self.__otg != target_:
-            self.__otg = self.__tsz
             self.__tsz = target_
-            #qDebug("do an coward attempt to update target")
-            #self.targetSizeChanged.emit(self.__tsz)
             self.updateTarget(self.__tsz)
 
     def targetSize(self):
@@ -67,13 +58,11 @@ class TargetSizeModel(QStandardItemModel):
     @pyqtSlot("QStandardItem*")
     def disableOversizeItem(self, item_):
 
-        #if item_.isEnabled():
+        idx_ = self.indexFromItem(item_)
 
-            idx_ = self.indexFromItem(item_)
-
-            if idx_.isValid():
-                row_ = idx_.row()
-                self.disableOversizeItems(idx_, row_, row_)
+        if idx_.isValid():
+            row_ = idx_.row()
+            self.disableOversizeItems(idx_, row_, row_)
 
     @pyqtSlot(QModelIndex, int, int)
     def disableOversizeItems(self, idx_=QModelIndex(), first_=-1, last_=-1):
@@ -93,9 +82,13 @@ class TargetSizeModel(QStandardItemModel):
 
                 for i_ in range(1, len(rit_)):
                     rit_[i_].setEnabled(ena_)
+                    if rit_[i_].hasChildren():
+                        for cr_ in range(rit_[i_].rowCount()):
+                            for cc_ in range(rit_[i_].columnCount()):
+                                rit_[i_].child(cr_, cc_).setEnabled(ena_)
 
                 rit_ *= 0
-                
+
     def updateTarget(self, tts_):
         pass
 

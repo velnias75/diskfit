@@ -302,6 +302,7 @@ class MainWindow(QMainWindow):
                 settings_.setValue("resultSort", 2)
             else:
                 settings_.setValue("resultSort", 3)
+
             self.__outputModel.applyResult()
 
     @pyqtSlot()
@@ -525,7 +526,6 @@ class MainWindow(QMainWindow):
         self.__diskfitProgress.setHidden(False)
         self.__diskfitProgress.setValue(0)
         self.__diskfitProgress.setMaximum(100)
-        self.__lastResult *= 0
 
     @pyqtSlot()
     def progressAvailable(self):
@@ -685,7 +685,7 @@ def main(args=None):
     translator = QTranslator()
 
     app.setApplicationName("QDiskFit")
-    app.setApplicationVersion("2.0.4.2")
+    app.setApplicationVersion("2.0.4.3")
     app.setApplicationDisplayName(app.applicationName() + " " +
                                   app.applicationVersion())
     app.setOrganizationDomain("rangun.de")

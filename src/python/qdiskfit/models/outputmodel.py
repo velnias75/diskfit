@@ -24,6 +24,7 @@ from PyQt5.QtCore import qDebug
 from PyQt5.QtCore import QFileInfo
 from PyQt5.QtCore import QSettings
 from PyQt5.QtCore import QMimeData
+from PyQt5.QtCore import QModelIndex
 from PyQt5.QtCore import pyqtSlot
 from PyQt5.QtCore import pyqtSignal
 from PyQt5.QtWidgets import QFileDialog
@@ -60,8 +61,6 @@ class OutputModel(TargetSizeModel):
             self.tr("Percentage")]
 
         self.setHorizontalHeaderLabels(self.__hdr)
-        #self.rowsInserted.connect(self.disableOversizeItems)
-        self.targetSizeChanged.connect(self.updateTarget)
 
         self.__par = parent_
         self.__sum = summary_
@@ -94,11 +93,6 @@ class OutputModel(TargetSizeModel):
 
             settings_ = QSettings()
 
-            #try:
-            #    self.targetSizeChanged.disconnect()
-            #except TypeError:
-            #    pass
-
             self.removeRows(0, self.rowCount())
 
             for pv_, r_ in enumerate(self.__result):
@@ -111,8 +105,6 @@ class OutputModel(TargetSizeModel):
 
                 loi_ = LeftOverItem(ts_, self.targetSize(), ts_, True,
                                     Qt.AlignRight)
-
-                #self.targetSizeChanged.connect(loi_.updateToolTip)
 
                 l_ = (MultiFileDragItem(fa_),
                       EchoTooltipItem(r_[1], True, Qt.AlignHCenter),
@@ -156,17 +148,21 @@ class OutputModel(TargetSizeModel):
             self.__sum.setText(self.tr("{} results found").
                                format(str(self.rowCount())))
 
-            self.modelSaveable.emit(self.rowCount() > 0)
-            self.resultReady.emit()
+            if progress_ is not None:
+                self.modelSaveable.emit(self.rowCount() > 0)
+                self.resultReady.emit()
 
     @pyqtSlot(float)
     def updateTarget(self, tts_):
+
         self.blockSignals(True)
         for r_ in range(0, self.rowCount()):
             item_ = self.item(r_, 3)
             item_.updateToolTip(tts_)
             self.disableOversizeItem(item_)
         self.blockSignals(False)
+
+        self.dataChanged.emit(QModelIndex(), QModelIndex(), ())
 
     @pyqtSlot()
     def saveModel(self):
