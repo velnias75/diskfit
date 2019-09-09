@@ -19,9 +19,7 @@
 #
 
 from PyQt5.QtGui import QStandardItemModel
-from PyQt5.QtGui import QStandardItem
 from PyQt5.QtCore import QModelIndex
-from PyQt5.QtCore import pyqtSignal
 from PyQt5.QtCore import pyqtSlot
 
 

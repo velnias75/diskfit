@@ -24,14 +24,12 @@ from PyQt5.QtCore import QT_TR_NOOP
 from PyQt5.QtCore import QXmlStreamReader
 from PyQt5.QtCore import QTemporaryFile
 from PyQt5.QtCore import QTranslator
-from PyQt5.QtCore import QByteArray
 from PyQt5.QtCore import QSettings
 from PyQt5.QtCore import QProcess
 from PyQt5.QtCore import pyqtSlot
 from PyQt5.QtCore import QLocale
 from PyQt5.QtCore import qDebug
 from PyQt5.QtCore import QPoint
-from PyQt5.QtCore import QTime
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QProgressDialog
 from PyQt5.QtWidgets import QDesktopWidget
@@ -55,7 +53,6 @@ from .util.hrsize import HRSize
 from datetime import timedelta
 from datetime import datetime
 from datetime import date
-from shlex import quote
 from .site import Site
 import signal
 import time
@@ -330,11 +327,11 @@ class MainWindow(QMainWindow):
             leta_ = datetime.now() + left_
 
             millis_ = int(eta_ * 1000.0)
-            seconds_ = (millis_/1000) % 60
+            seconds_ = (millis_ / 1000) % 60
             seconds_ = int(seconds_)
-            minutes_ = (millis_/(1000*60)) % 60
+            minutes_ = (millis_ / (1000 * 60)) % 60
             minutes_ = int(minutes_)
-            hours_ = (millis_/(1000*60*60)) % 24
+            hours_ = (millis_ / (1000 * 60 * 60)) % 24
             hours_ = int(hours_)
 
             str_ += " — ETA: " + format(leta_.time().strftime("%H:%M:%S") +
@@ -659,7 +656,7 @@ class MainWindow(QMainWindow):
 
         self.__inputModel.removeFiles()
         self.__ui.combo_target.setCurrentIndex(self.__ui.combo_target.
-                                               model().rowCount()-1)
+                                               model().rowCount() - 1)
         self.__ui.spin_bytes.setValue(size_)
         self.__saveTarget = False
         self.__inputModel.setTargetSize(size_)

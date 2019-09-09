@@ -194,7 +194,7 @@ class ProfileEdit(NoWhatsThisDialog):
                 if i_match_:
                     mid_ = i_match_.group(1)
                 elif c_match_:
-                    mbs_ = int(c_match_.group(2))*1024
+                    mbs_ = int(c_match_.group(2)) * 1024
                     mct_ = int(c_match_.group(1)) * mbs_
 
             self.__tm.addTarget(mid_, mct_, mbs_)

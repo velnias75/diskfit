@@ -19,7 +19,6 @@
 #
 
 from PyQt5.QtCore import Qt
-from PyQt5.QtCore import qDebug
 from PyQt5.QtCore import QFileInfo
 from ...util.hrsize import HRSize
 from .echotooltipitem import EchoTooltipItem
@@ -49,7 +48,7 @@ class HRFileItem(EchoTooltipItem):
         return EchoTooltipItem.UserType
 
     def relativeSizePctString(self, total_size_):
-        return format(float(self.__size * 100)/float(total_size_), ".3f") + "%"
+        return "%.3f%%" % (float(self.__size * 100) / float(total_size_))
 
     def data(self, role):
         if role == Qt.DisplayRole or role == Qt.ToolTipRole:

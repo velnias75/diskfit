@@ -20,7 +20,6 @@
 
 from PyQt5.QtCore import Qt
 from PyQt5.QtCore import QUrl
-from PyQt5.QtCore import qDebug
 from PyQt5.QtCore import QFileInfo
 from PyQt5.QtCore import QSettings
 from PyQt5.QtCore import QMimeData
@@ -29,7 +28,6 @@ from PyQt5.QtCore import pyqtSlot
 from PyQt5.QtCore import pyqtSignal
 from PyQt5.QtWidgets import QFileDialog
 from PyQt5.QtWidgets import QMessageBox
-from PyQt5.QtGui import QStandardItemModel
 from .modelitems.iconfileitem import IconFileItem
 from .modelitems.outputsizeitem import OutputSizeItem
 from .modelitems.echotooltipitem import EchoTooltipItem

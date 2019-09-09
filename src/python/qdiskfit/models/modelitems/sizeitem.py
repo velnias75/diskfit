@@ -42,7 +42,7 @@ class SizeItem(ValidatingItem):
             and pot_
 
     def displayValue(self, value):
-        return HRSize.sizeString(self.data(Qt.UserRole+1), 5)
+        return HRSize.sizeString(self.data(Qt.UserRole + 1), 5)
 
     def convertValue(self, value):
         return int(value)

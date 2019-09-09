@@ -27,12 +27,12 @@ class ValidatingItem(QStandardItem):
 
     def __init__(self, data_):
         super(ValidatingItem, self).__init__()
-        self.setData(self.convertValue(data_), Qt.UserRole+1)
+        self.setData(self.convertValue(data_), Qt.UserRole + 1)
         self.setTextAlignment(Qt.AlignVCenter)
 
     def isValid(self):
         return self.validate(self.convertValue(super(ValidatingItem, self).
-                                               data(Qt.UserRole+1)))
+                                               data(Qt.UserRole + 1)))
 
     def validate(self, value):
         raise NotImplementedError
@@ -43,12 +43,12 @@ class ValidatingItem(QStandardItem):
     def convertValue(self, value):
         raise NotImplementedError
 
-    def data(self, role=Qt.UserRole+1):
+    def data(self, role=Qt.UserRole + 1):
         if role == Qt.DisplayRole:
             return self.displayValue(super(ValidatingItem, self).
-                                     data(Qt.UserRole+1))
+                                     data(Qt.UserRole + 1))
         elif role == Qt.EditRole:
-            return str(super(ValidatingItem, self).data(Qt.UserRole+1))
+            return str(super(ValidatingItem, self).data(Qt.UserRole + 1))
         elif role == Qt.BackgroundRole:
             if self.isValid():
                 return super(ValidatingItem, self).data(Qt.BackgroundRole)
@@ -57,10 +57,10 @@ class ValidatingItem(QStandardItem):
 
         return super(ValidatingItem, self).data(role)
 
-    def setData(self, value, role=Qt.UserRole+1):
+    def setData(self, value, role=Qt.UserRole + 1):
         if role == Qt.EditRole:
             super(ValidatingItem, self).setData(self.convertValue(value),
-                                                Qt.UserRole+1)
+                                                Qt.UserRole + 1)
 
         super(ValidatingItem, self).setData(value, role)
 

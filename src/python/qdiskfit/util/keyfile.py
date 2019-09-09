@@ -44,16 +44,15 @@ class Keyfile:
             try:
                 rc_fp_ = self.__rc.load_from_dirs(".diskfitrc", sd_,
                                                   GLib.KeyFileFlags.NONE). \
-                                                      full_path
+                    full_path
             except GLib.Error as e1:
 
                 qDebug(e1.message.encode())
 
                 try:
                     rc_fp_ = self.__rc.load_from_dirs("diskfitrc", sd_,
-                                                      GLib.
-                                                      KeyFileFlags.NONE). \
-                                                          full_path
+                                                      GLib.KeyFileFlags.NONE). \
+                        full_path
                 except GLib.Error as e2:
                     qDebug(e2.message.encode())
 

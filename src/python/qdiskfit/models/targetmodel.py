@@ -25,7 +25,6 @@ from .modelitems.sizeitem import SizeItem
 from PyQt5.QtWidgets import QMessageBox
 from PyQt5.QtCore import pyqtSignal
 from PyQt5.QtCore import pyqtSlot
-from PyQt5.QtCore import qDebug
 from gi.repository import GLib
 import os
 

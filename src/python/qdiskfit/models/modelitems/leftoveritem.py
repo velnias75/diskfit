@@ -19,8 +19,6 @@
 #
 
 from PyQt5.QtCore import Qt
-from PyQt5.QtCore import QObject
-from PyQt5.QtCore import pyqtSlot
 from PyQt5.QtCore import QCoreApplication
 from .echotooltipitem import EchoTooltipItem
 from ...util.hrsize import HRSize

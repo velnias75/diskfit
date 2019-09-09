@@ -23,13 +23,12 @@ from PyQt5.QtCore import QCoreApplication
 from PyQt5.QtCore import QModelIndex
 from PyQt5.QtCore import QSettings
 from PyQt5.QtCore import pyqtSlot
-from PyQt5.QtCore import qDebug
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QFileDialog
 from .modelitems.hrfileitem import HRFileItem
 from .modelitems.iconfileitem import IconFileItem
-from ..util.hrsize import HRSize
 from .targetsizemodel import TargetSizeModel
+from ..util.hrsize import HRSize
 
 
 class InputModel(TargetSizeModel):
@@ -116,6 +115,9 @@ class InputModel(TargetSizeModel):
             self.addFileList(files_)
 
         return True
+
+    def updateTarget(self, tts_):
+        self.disableOversizeItems()
 
     @pyqtSlot()
     def modelChanged(self):
