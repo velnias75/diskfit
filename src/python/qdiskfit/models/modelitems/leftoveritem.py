@@ -57,7 +57,7 @@ class LeftOverItem(EchoTooltipItem):
                                                            else 0.0, 0)))
 
     def __init__(self, ts_, tts_, cumsize_, drag_=False, align_=Qt.AlignLeft):
-        super(LeftOverItem, self).__init__("")
+        super(LeftOverItem, self).__init__("", drag_, align_)
         self.__upd = LeftOverItem.__updater(self, cumsize_, ts_)
         self.__upd.updateToolTip(tts_)
 

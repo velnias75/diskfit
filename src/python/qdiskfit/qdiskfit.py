@@ -472,6 +472,7 @@ class MainWindow(QMainWindow):
             progress_ = QProgressDialog(QApplication.
                                         translate("@default", prm_), None, 0,
                                         len(self.__lastResult) * 2)
+            progress_.setWindowFlag(Qt.WindowContextHelpButtonHint, False)
             progress_.setWindowModality(Qt.WindowModal)
             progress_.setMinimumDuration(750)
             progress_.setAutoReset(True)
