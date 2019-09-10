@@ -25,6 +25,7 @@ SOURCES = qdiskfit/mainwindow/__init__.py \
           qdiskfit/inputwidget.py \
           qdiskfit/progresswidget.py \
           qdiskfit/qdiskfit.py \
+          qdiskfit/diskfitprocess.py \
           qdiskfit/__init__.py \
           qdiskfit/site.py \
           qdiskfit/profileedit.py \

@@ -6,4 +6,5 @@ EXTRA_DIST = __init__.py \
              qdiskfit.py \
              profileedit.py \
              progresswidget.py \
+             diskfitprocess.py \
              site.py

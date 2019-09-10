@@ -23,7 +23,6 @@ from PyQt5.QtCore import QXmlStreamReader
 from PyQt5.QtCore import QTemporaryFile
 from PyQt5.QtCore import QTranslator
 from PyQt5.QtCore import QSettings
-from PyQt5.QtCore import QProcess
 from PyQt5.QtCore import pyqtSlot
 from PyQt5.QtCore import QLocale
 from PyQt5.QtCore import qDebug
@@ -39,12 +38,12 @@ from PyQt5.QtWidgets import QMainWindow
 from PyQt5.QtWidgets import QAction
 from PyQt5.QtWidgets import QLabel
 from PyQt5.QtWidgets import QMenu
-from .util.langcenv import LangCProcessEnvironment
 from .models.outputmodel import OutputModel
 from .models.inputmodel import InputModel
 from .profileedit import ProfileEdit
 from .mainwindow import mainwindow
 from .exclusivedlg import ExclusiveDlg
+from .util.diskfitprocess import DiskFitProcess
 from .progresswidget import ProgressWidget
 from .util.keyfile import Keyfile
 from .util.hrsize import HRSize
@@ -65,12 +64,11 @@ class MainWindow(QMainWindow):
 
     __ui = None
     __tmp = None
-    __proc1 = QProcess()
-    __proc2 = QProcess()
-    __proc3 = QProcess()
+    __proc1 = DiskFitProcess()
+    __proc2 = DiskFitProcess()
+    __proc3 = DiskFitProcess()
     __inputModel = None
     __outputModel = None
-    __diskfit = Site().get("diskfitPath", "/usr/bin/diskfit")
     __diskfitProgress = None
     __lastResult = []
     __resultXml = None
@@ -87,15 +85,6 @@ class MainWindow(QMainWindow):
     def __init__(self):
 
         super(MainWindow, self).__init__()
-
-        df_env_ = LangCProcessEnvironment().env()
-        df_env_.remove("DISKFIT_STRIPDIR")
-        df_env_.insert("DISKFIT_XMLOUT", "1")
-        df_env_.insert("LANG", "C")
-
-        self.__proc1.setProcessEnvironment(df_env_)
-        self.__proc2.setProcessEnvironment(df_env_)
-        self.__proc3.setProcessEnvironment(df_env_)
 
         self.__ui = mainwindow.Ui_MainWindow()
         self.__ui.setupUi(self)
@@ -192,8 +181,7 @@ class MainWindow(QMainWindow):
     def getTargets(self):
         self.__proc1.errorOccurred.connect(self.error)
         self.__proc1.readyReadStandardOutput.connect(self.targetsAvailable)
-        self.__proc1.start(self.__diskfit, [], QProcess.ReadOnly |
-                           QProcess.Unbuffered)
+        self.__proc1.runDiskFit()
 
         while self.__ui.combo_target.count() > 1:
             self.__ui.combo_target.removeItem(0)
@@ -385,8 +373,7 @@ class MainWindow(QMainWindow):
 
             self.__resultXml = QXmlStreamReader()
 
-            self.__proc3.start(self.__diskfit, args_, QProcess.ReadOnly |
-                               QProcess.Unbuffered)
+            self.__proc3.runDiskFit(args_)
             self.__proc3.waitForStarted()
             self.__runningTime = time.clock_gettime(time.CLOCK_MONOTONIC_RAW)
             self.__etaProgress = self.__runningTime
@@ -397,7 +384,7 @@ class MainWindow(QMainWindow):
         else:
             QMessageBox.critical(None, self.tr("Error"),
                                  self.__tmp.errorString())
-            self.finished(0, QProcess.NormalExit)
+            self.finished(0, DiskFitProcess.NormalExit)
 
     @pyqtSlot()
     def stop(self):
@@ -416,13 +403,13 @@ class MainWindow(QMainWindow):
         else:
             self.__proc3.terminate()
 
-    @pyqtSlot(QProcess.ProcessError)
+    @pyqtSlot(DiskFitProcess.ProcessError)
     def error(self, err):
-        if err == QProcess.FailedToStart:
+        if err == DiskFitProcess.FailedToStart:
             QMessageBox.critical(None, self.tr("Error"),
                                  self.tr("Failed to launch {}.".
-                                         format(self.__diskfit)))
-        self.finished(0, QProcess.NormalExit)
+                                         format(DiskFitProcess.diskfitPath())))
+        self.finished(0, DiskFitProcess.NormalExit)
 
     def appendResultFiles(self, files_, bs_):
 
@@ -438,10 +425,10 @@ class MainWindow(QMainWindow):
         self.__lastResult.append((files_, str(len(files_)),
                                   HRSize.sizeString(ts_)))
 
-    @pyqtSlot(int, QProcess.ExitStatus)
+    @pyqtSlot(int, DiskFitProcess.ExitStatus)
     def finished(self, ec, es):
 
-        if not QProcess.CrashExit or ec == 0:
+        if not DiskFitProcess.CrashExit or ec == 0:
 
             if self.__proc3.receivers(self.__proc3.finished):
                 self.__proc3.finished.disconnect(self.finished)
@@ -574,8 +561,7 @@ class MainWindow(QMainWindow):
                 self.__proc2.readyReadStandardOutput. \
                     connect(self.targetSizeAvailable)
 
-                self.__proc2.start(self.__diskfit, l_, QProcess.ReadOnly |
-                                   QProcess.Unbuffered)
+                self.__proc2.runDiskFit(l_)
                 self.__proc2.waitForFinished(-1)
 
         settings = QSettings()
@@ -687,7 +673,7 @@ def main(args=None):
     translator = QTranslator()
 
     app.setApplicationName("QDiskFit")
-    app.setApplicationVersion("2.0.4.3")
+    app.setApplicationVersion("2.0.4.4")
     app.setApplicationDisplayName(app.applicationName() + " " +
                                   app.applicationVersion())
     app.setOrganizationDomain("rangun.de")
