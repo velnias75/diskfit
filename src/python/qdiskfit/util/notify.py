@@ -18,62 +18,76 @@
 # along with DiskFit.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-import gi
-from PyQt5.QtCore import QCoreApplication
-gi.require_version('Notify', '0.7')
-from gi.repository import Notify
+from PyQt5.QtWidgets import QApplication
 from shutil import which
 from shlex import quote
 import subprocess
+import notify2
 import os
 import re
 
 
 class Notify:
 
-    __nini = Notify.init("KDEConnect")
-    __noti = Notify.Notification.new("", None, "qdiskfit")
+    __instance = None
 
-    def __del__(self):
-        Notify.uninit()
+    class __Notify:
 
-    @staticmethod
-    def message(msg_):
+        __appn = None
+        __nini = None
+        __noti = None
+        __kcli = None
 
-        app_ = "%s v%s" % (QCoreApplication.applicationName(),
-                           QCoreApplication.applicationVersion())
+        def __init__(self):
+            self.__appn = "%s v%s" % (QApplication.applicationName(),
+                                      QApplication.applicationVersion())
+            self.__nini = notify2.init(self.__appn)
+            self.__noti = notify2.Notification("", "", "qdiskfit")
+            self.__kcli = which('kdeconnect-cli')
 
-        kcli_ = which('kdeconnect-cli')
+        def __del__(self):
+            notify2.uninit()
 
-        if kcli_ is not None:
+        def message(self, msg_):
 
-            my_env_ = os.environ.copy()
-            my_env_["LANG"] = "C"
+            self.__noti.update("", msg_, "qdiskfit")
+            self.__noti.set_timeout(8000)
+            self.__noti.set_urgency(notify2.URGENCY_NORMAL)
+            self.__noti.show()
 
-            devices_ = []
+            if self.__kcli is not None:
 
-            proc_ = subprocess.Popen([kcli_, '-a'], stdout=subprocess.PIPE,
-                                     env=my_env_)
-            while True:
-                line_ = proc_.stdout.readline()
-                if not line_:
-                    break
+                my_env_ = os.environ.copy()
+                my_env_["LANG"] = "C"
 
-                dev_match_ = re.compile('[^:]+: ([^\s]+).*'). \
-                    match(str(line_.rstrip()))
+                devices_ = []
 
-                if dev_match_ is not None:
-                    devices_.append(dev_match_.group(1))
+                proc_ = subprocess.Popen([self.__kcli, '-a'],
+                                         stdout=subprocess.PIPE,
+                                         env=my_env_)
+                while True:
+                    line_ = proc_.stdout.readline()
+                    if not line_:
+                        break
 
-            pmsg_ = "%s: %s" % (app_, msg_)
+                    dev_match_ = re.compile('[^:]+: ([^\s]+).*'). \
+                        match(str(line_.rstrip()))
 
-            Notify.__noti.set_app_name(app_)
-            Notify.__noti.update(msg_, None, "qdiskfit")
-            Notify.__noti.set_timeout(10000)
-            Notify.__noti.set_urgency(1)
-            Notify.__noti.show()
+                    if dev_match_ is not None:
+                        devices_.append(dev_match_.group(1))
 
-            for d_ in devices_:
-                os.system(kcli_ + " -d " + d_ + " --ping-msg " + quote(pmsg_))
+                pmsg_ = "%s: %s" % (self.__appn, msg_)
+
+                for d_ in devices_:
+                    os.system(self.__kcli + " -d " + d_ + " --ping-msg " +
+                              quote(pmsg_))
+
+    def __new__(cls):
+        if not Notify.__instance:
+            Notify.__instance = Notify.__Notify()
+        return Notify.__instance
+
+    def __getattr__(self, atname_):
+        return getattr(self.__instance, atname_)
 
 # kate: indent-mode: python

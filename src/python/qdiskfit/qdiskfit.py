@@ -377,8 +377,8 @@ class MainWindow(QMainWindow):
             self.__proc3.runDiskFit(args_)
             self.__proc3.waitForStarted()
 
-            Notify.message(self.tr("Calculation started for {} files").
-                           format(self.__inputModel.enabledItems()))
+            Notify().message(self.tr("Calculation started for {} files").
+                             format(self.__inputModel.enabledItems()))
 
             self.__runningTime = time.clock_gettime(time.CLOCK_MONOTONIC_RAW)
             self.__etaProgress = self.__runningTime
@@ -485,11 +485,12 @@ class MainWindow(QMainWindow):
             else:
                 self.__statusBar.clearMessage()
 
-            Notify.message("".join((self.tr("Calculation finished"),
-                                    " — ",
-                                    self.tr("{} results found").
-                                    format(str(self.__outputModel.rowCount())),
-                                    " — ", etime_)))
+            Notify().message("".join((self.tr("Calculation finished"),
+                                      " — ",
+                                      self.tr("{} results found").
+                                      format(str(self.__outputModel.
+                                                 rowCount())),
+                                      " — ", etime_)))
 
             progress_.reset()
             self.__ui.table_output.setEnabled(True)
