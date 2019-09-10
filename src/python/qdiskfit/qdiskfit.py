@@ -43,8 +43,9 @@ from .models.inputmodel import InputModel
 from .profileedit import ProfileEdit
 from .mainwindow import mainwindow
 from .exclusivedlg import ExclusiveDlg
-from .util.diskfitprocess import DiskFitProcess
 from .progresswidget import ProgressWidget
+from .util.diskfitprocess import DiskFitProcess
+from .util.notify import Notify
 from .util.keyfile import Keyfile
 from .util.hrsize import HRSize
 from datetime import timedelta
@@ -375,6 +376,10 @@ class MainWindow(QMainWindow):
 
             self.__proc3.runDiskFit(args_)
             self.__proc3.waitForStarted()
+
+            Notify.message(self.tr("Calculation started for {} files").
+                           format(self.__inputModel.enabledItems()))
+
             self.__runningTime = time.clock_gettime(time.CLOCK_MONOTONIC_RAW)
             self.__etaProgress = self.__runningTime
 
@@ -471,14 +476,20 @@ class MainWindow(QMainWindow):
             self.__ui.table_output.setEnabled(False)
             self.__outputModel.setLastResult(self.__lastResult, progress_)
 
+            etime_ = self.tr("Calculation took {}"). \
+                format(time.strftime("%H:%M:%S", time.
+                                     gmtime(int(elapsedTime_))))
+
             if elapsedTime_ > 1.0:
-                self.__statusBar. \
-                    showMessage(self.tr("Calculation took {}").
-                                format(time.
-                                       strftime("%H:%M:%S", time.
-                                                gmtime(int(elapsedTime_)))), 0)
+                self.__statusBar.showMessage(etime_, 0)
             else:
                 self.__statusBar.clearMessage()
+
+            Notify.message("".join((self.tr("Calculation finished"),
+                                    " — ",
+                                    self.tr("{} results found").
+                                    format(str(self.__outputModel.rowCount())),
+                                    " — ", etime_)))
 
             progress_.reset()
             self.__ui.table_output.setEnabled(True)

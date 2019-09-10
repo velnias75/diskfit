@@ -25,14 +25,15 @@ SOURCES = qdiskfit/mainwindow/__init__.py \
           qdiskfit/inputwidget.py \
           qdiskfit/progresswidget.py \
           qdiskfit/qdiskfit.py \
-          qdiskfit/diskfitprocess.py \
           qdiskfit/__init__.py \
           qdiskfit/site.py \
           qdiskfit/profileedit.py \
           qdiskfit/util/__init__.py \
+          qdiskfit/util/diskfitprocess.py \
           qdiskfit/util/hrsize.py \
           qdiskfit/util/keyfile.py \
           qdiskfit/util/langcenv.py \
+          qdiskfit/util/notify.py \
           qdiskfit/dialogs/__init__.py \
           qdiskfit/dialogs/exclusivewidget.py \
           qdiskfit/dialogs/nowhatsthisdlg.py
