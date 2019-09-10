@@ -673,6 +673,7 @@ int main(int argc, char *argv[]) {
                     xmlSaveFormatFileEnc("-", doc, "UTF-8", 1);
                     xmlFreeDoc(doc);
                     xmlCleanupParser();
+                    fflush(stdout);
                 }
 
                 g_slist_free(rp.rl);
