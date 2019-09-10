@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 # -*- coding: utf-8 -*-
 #
 # Copyright 2019 by Heiko Schäfer <heiko@rangun.de>
@@ -74,7 +72,7 @@ class MainWindow(QMainWindow):
     __outputModel = None
     __diskfit = Site().get("diskfitPath", "/usr/bin/diskfit")
     __diskfitProgress = None
-    __lastResult = list()
+    __lastResult = []
     __resultXml = None
     __statusBar = None
     __unselInputSum = None
@@ -194,7 +192,8 @@ class MainWindow(QMainWindow):
     def getTargets(self):
         self.__proc1.errorOccurred.connect(self.error)
         self.__proc1.readyReadStandardOutput.connect(self.targetsAvailable)
-        self.__proc1.start(self.__diskfit, list(), QProcess.ReadOnly)
+        self.__proc1.start(self.__diskfit, [], QProcess.ReadOnly |
+                           QProcess.Unbuffered)
 
         while self.__ui.combo_target.count() > 1:
             self.__ui.combo_target.removeItem(0)
@@ -359,7 +358,7 @@ class MainWindow(QMainWindow):
 
         self.__diskfitProgress.setHidden(False)
 
-        args_ = list()
+        args_ = []
 
         if self.__ui.combo_target.currentIndex() is \
            not self.__ui.combo_target.model().rowCount() - 1:
@@ -386,7 +385,8 @@ class MainWindow(QMainWindow):
 
             self.__resultXml = QXmlStreamReader()
 
-            self.__proc3.start(self.__diskfit, args_, QProcess.ReadOnly)
+            self.__proc3.start(self.__diskfit, args_, QProcess.ReadOnly |
+                               QProcess.Unbuffered)
             self.__proc3.waitForStarted()
             self.__runningTime = time.clock_gettime(time.CLOCK_MONOTONIC_RAW)
             self.__etaProgress = self.__runningTime
@@ -460,7 +460,7 @@ class MainWindow(QMainWindow):
                     if self.__resultXml.name() == "files":
                         if files_ is not None:
                             self.appendResultFiles(files_, bs_)
-                        files_ = list()
+                        files_ = []
                     elif self.__resultXml.name() == "filename":
                         files_.append((self.__resultXml.readElementText()))
 
@@ -526,29 +526,33 @@ class MainWindow(QMainWindow):
 
     @pyqtSlot()
     def progressAvailable(self):
-        for p_ in str(self.__proc3.readAllStandardError().data().
-                      decode("utf-8")).splitlines(False):
-            p_match_ = p_rex.search(p_)
-            if p_match_:
-                p_ = int(p_match_.group(2))
-                eta_ = (time.clock_gettime(time.CLOCK_MONOTONIC_RAW) -
-                        self.__etaProgress) * (90 - p_)
-                self.__etaProgress = time.clock_gettime(time.
-                                                        CLOCK_MONOTONIC_RAW)
-                if p_ == 0:
-                    self.__diskfitProgress.setMaximum(0)
-                else:
-                    self.__diskfitProgress.setMaximum(100)
-                    if p_ == 1:
-                        self.__initialEta = eta_
-                    self.updateETA(eta_, p_)
 
-                self.__diskfitProgress.setValue(p_)
+        try:
+            for p_ in str(self.__proc3.readAllStandardError().data().
+                          decode("utf-8")).splitlines(False):
+                p_match_ = p_rex.search(p_)
+                if p_match_:
+                    p_ = int(p_match_.group(2))
+                    eta_ = (time.clock_gettime(time.CLOCK_MONOTONIC_RAW) -
+                            self.__etaProgress) * (90 - p_)
+                    self.__etaProgress = time. \
+                        clock_gettime(time.CLOCK_MONOTONIC_RAW)
+                    if p_ == 0:
+                        self.__diskfitProgress.setMaximum(0)
+                    else:
+                        self.__diskfitProgress.setMaximum(100)
+                        if p_ == 1:
+                            self.__initialEta = eta_
+                        self.updateETA(eta_, p_)
+
+                    self.__diskfitProgress.setValue(p_)
+        except UnicodeDecodeError as e:
+            qDebug("".join(("UnicodeDecodeError in parsing progress. "
+                            "Ignored. - ", str(e))))
 
     @pyqtSlot()
     def resultAvailable(self):
-        self.__resultXml.addData(self.__proc3.readAllStandardOutput().data().
-                                 decode("utf-8"))
+        self.__resultXml.addData(self.__proc3.readAllStandardOutput().data())
 
     @pyqtSlot()
     def targetsAvailable(self):
@@ -560,7 +564,7 @@ class MainWindow(QMainWindow):
 
             if t_match_ is not None:
 
-                l_ = list()
+                l_ = []
                 m_ = t_match_.group(1)
                 l_.append(m_)
 
@@ -570,7 +574,8 @@ class MainWindow(QMainWindow):
                 self.__proc2.readyReadStandardOutput. \
                     connect(self.targetSizeAvailable)
 
-                self.__proc2.start(self.__diskfit, l_, QProcess.ReadOnly)
+                self.__proc2.start(self.__diskfit, l_, QProcess.ReadOnly |
+                                   QProcess.Unbuffered)
                 self.__proc2.waitForFinished(-1)
 
         settings = QSettings()

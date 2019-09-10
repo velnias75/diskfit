@@ -153,12 +153,14 @@ class OutputModel(TargetSizeModel):
     @pyqtSlot(float)
     def updateTarget(self, tts_):
 
-        self.blockSignals(True)
-        for r_ in range(0, self.rowCount()):
-            item_ = self.item(r_, 3)
-            item_.updateToolTip(tts_)
-            self.disableOversizeItem(item_)
-        self.blockSignals(False)
+        try:
+            self.blockSignals(True)
+            for r_ in range(0, self.rowCount()):
+                item_ = self.item(r_, 3)
+                item_.updateToolTip(tts_)
+                self.disableOversizeItem(item_)
+        finally:
+            self.blockSignals(False)
 
         self.dataChanged.emit(QModelIndex(), QModelIndex(), ())
 
@@ -208,7 +210,7 @@ class OutputModel(TargetSizeModel):
 
     def mimeData(self, indexes):
 
-        urls_ = list()
+        urls_ = []
         mime_ = QMimeData()
 
         for idx in indexes:

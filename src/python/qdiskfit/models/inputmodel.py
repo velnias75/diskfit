@@ -62,7 +62,7 @@ class InputModel(TargetSizeModel):
 
     def sort(self, col, order):
 
-        l_ = list()
+        l_ = []
 
         while self.rowCount() > 0:
             s_ = self.__par.selectionModel().isRowSelected(0, QModelIndex())
@@ -86,7 +86,7 @@ class InputModel(TargetSizeModel):
 
     def files(self):
 
-        files_ = list()
+        files_ = []
 
         for i in range(0, self.rowCount()):
             if self.item(i).isEnabled():
@@ -106,7 +106,7 @@ class InputModel(TargetSizeModel):
 
         if data.hasUrls():
 
-            files_ = list()
+            files_ = []
 
             for url_ in data.urls():
                 if url_.isLocalFile():

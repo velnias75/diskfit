@@ -91,7 +91,7 @@ class ProfileEdit(NoWhatsThisDialog):
 
     def detectCDCapacity(self):
 
-        args_ = list()
+        args_ = []
         args_.append("-i")
         args_.append("-d")
         args_.append("/dev/cdrw")
@@ -107,7 +107,7 @@ class ProfileEdit(NoWhatsThisDialog):
 
     def detectDVDCapacity(self):
 
-        arg_ = list()
+        arg_ = []
         arg_.append("/dev/dvdrw")
 
         self.__cp = ""

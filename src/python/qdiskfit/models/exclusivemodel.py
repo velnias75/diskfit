@@ -34,7 +34,7 @@ class ExclusiveModel(InputModel):
 
     def mimeData(self, indexes):
 
-        urls_ = list()
+        urls_ = []
         mime_ = QMimeData()
 
         for idx in indexes:

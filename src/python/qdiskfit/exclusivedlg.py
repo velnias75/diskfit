@@ -50,7 +50,7 @@ class ExclusiveDlg(NoWhatsThisDialog):
             if len(self.__em.findItems(input_.model().item(idx_.row(), 0).
                                        data(Qt.DisplayRole))) == 0:
                 if idx_.row() not in d_:
-                    d_[idx_.row()] = list()
+                    d_[idx_.row()] = []
                     d_[idx_.row()].append(input_.model().
                                           item(idx_.row(),
                                                idx_.column()).copy(True))
