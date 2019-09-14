@@ -84,6 +84,8 @@ typedef struct {
     mpq_t ninehundred, ten;
 } SCALE;
 
+static const char* _progress_prefix = NULL;
+static const char* _progress_suffix = NULL;
 static volatile int _interrupted = 0;
 static SCALE _scale;
 
@@ -235,8 +237,9 @@ static inline void printProgress(mpz_srcptr const it_cur, mpz_srcptr const it_to
 
         if (mpz_cmp(CAND_PARAMS_CAST(user_data)->fc, CAND_PARAMS_CAST(user_data)->fak_last) || initial) {
             mpz_set(CAND_PARAMS_CAST(user_data)->fak_last, CAND_PARAMS_CAST(user_data)->fc);
-            gmp_fprintf(stderr, "\033[sComputing for %zu files: %Zd%% ...\033[u",
-                        CAND_PARAMS_CAST(user_data)->nitems, CAND_PARAMS_CAST(user_data)->fak_last);
+            gmp_fprintf(stderr, "%sComputing for %zu files: %Zd%% ...%s",
+                        _progress_prefix, CAND_PARAMS_CAST(user_data)->nitems,
+                        CAND_PARAMS_CAST(user_data)->fak_last, _progress_suffix);
         }
     }
 }
@@ -622,6 +625,14 @@ int main(int argc, char *argv[]) {
                 insertion_sort(fitems, nitems);
 
                 init_scale();
+
+#if _POSIX_C_SOURCE
+                _progress_prefix = isatty(fileno(stderr)) ? "\033[s" : "";
+                _progress_suffix = isatty(fileno(stderr)) ? "\033[u" : "\n";
+#else
+                _progress_prefix = "\033[s";
+                _progress_suffix = "\033[u";
+#endif
 
                 isInterrupted = diskfit_get_candidates(fitems, nitems, tsize, tg, addCandidate,
                                                        printProgress, &cp, &_interrupted);

@@ -33,7 +33,6 @@ class DiskFitProcess(QProcess):
         df_env_ = LangCProcessEnvironment().env()
         df_env_.remove("DISKFIT_STRIPDIR")
         df_env_.insert("DISKFIT_XMLOUT", "1")
-        df_env_.insert("LANG", "C")
 
         self.setProcessEnvironment(df_env_)
         self.setWorkingDirectory(tempfile.gettempdir())

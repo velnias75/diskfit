@@ -27,6 +27,8 @@ class LangCProcessEnvironment:
         dc_env_ = QProcessEnvironment.systemEnvironment()
         dc_env_.remove("LANG")
         dc_env_.insert("LANG", "C")
+        dc_env_.remove("LC_ALL")
+        dc_env_.insert("LC_ALL", "C")
 
         return dc_env_
 

@@ -90,6 +90,11 @@ class MainWindow(QMainWindow):
         self.__ui = mainwindow.Ui_MainWindow()
         self.__ui.setupUi(self)
 
+        if self.layoutDirection() == Qt.RightToLeft:
+            self.removeToolBar(self.__ui.toolBar)
+            self.addToolBar(Qt.LeftToolBarArea, self.__ui.toolBar)
+            self.__ui.toolBar.setVisible(True)
+
         self.__etaProgressLabel = QLabel()
 
         self.__diskfitProgress = ProgressWidget(self.__ui.actionStop)
@@ -685,7 +690,7 @@ def main(args=None):
     translator = QTranslator()
 
     app.setApplicationName("QDiskFit")
-    app.setApplicationVersion("2.0.4.4")
+    app.setApplicationVersion("2.0.4.5")
     app.setApplicationDisplayName(app.applicationName() + " " +
                                   app.applicationVersion())
     app.setOrganizationDomain("rangun.de")
