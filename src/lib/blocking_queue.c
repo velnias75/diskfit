@@ -20,22 +20,26 @@
 #include <stdlib.h>
 #include <pthread.h>
 
+#ifndef NDEBUG
+#include <stdio.h>
+#endif
+
 #include "blocking_queue.h"
 
 struct blocking_queue_t {
-    pthread_mutex_t lock;
+    pthread_mutex_t lock, sl;
     pthread_cond_t notFull;
     pthread_cond_t notEmpty;
 
     size_t capacity;
-    size_t count;
-    size_t read;
-    size_t write;
+    size_t front;
+    size_t rear;
+    size_t size;
 
-    const void **entries;
+    void **entries;
 };
 
-const void *blocking_queue_take(struct blocking_queue_t *q) {
+void *blocking_queue_take(struct blocking_queue_t *q) {
 
     pthread_mutex_lock(&(q->lock));
 
@@ -43,11 +47,13 @@ const void *blocking_queue_take(struct blocking_queue_t *q) {
         pthread_cond_wait(&(q->notEmpty), &(q->lock));
     }
 
-    const void *e = q ? q->entries[(q->read)++] : NULL;
+    void *e = q->entries[q->front];
 
-    if(q->read == q->capacity) q->read = 0u;
+    q->front = (q->front + 1u) % q->capacity;
 
-    --q->count;
+    pthread_mutex_lock(&(q->sl));
+    q->size -= 1u;
+    pthread_mutex_unlock(&(q->sl));
 
     pthread_cond_broadcast(&(q->notFull));
     pthread_mutex_unlock(&(q->lock));
@@ -55,21 +61,22 @@ const void *blocking_queue_take(struct blocking_queue_t *q) {
     return e;
 }
 
-void blocking_queue_put(struct blocking_queue_t *q, const void * const e) {
+void blocking_queue_put(struct blocking_queue_t *q, void *e) {
 
     pthread_mutex_lock(&(q->lock));
 
     if(q) {
 
-        if(q->count == q->capacity) {
+        if(blocking_queue_isFull(q)) {
             pthread_cond_wait(&(q->notFull), &(q->lock));
         }
 
-        q->entries[(q->write)++] = e;
+        q->rear = (q->rear + 1u) % q->capacity;
+        q->entries[q->rear] = e;
 
-        if(q->write == q->capacity) q->write = 0u;
-
-        ++q->count;
+        pthread_mutex_lock(&(q->sl));
+        q->size += 1u;
+        pthread_mutex_unlock(&(q->sl));
 
         pthread_cond_broadcast(&(q->notEmpty));
     }
@@ -78,8 +85,18 @@ void blocking_queue_put(struct blocking_queue_t *q, const void * const e) {
 }
 
 inline int blocking_queue_isEmpty(struct blocking_queue_t *q) {
-    return q ? q->count == 0u : 1;
+
+    pthread_mutex_lock(&(q->sl));
+    const int r = q ? q->size == 0u : 1;
+    pthread_mutex_unlock(&(q->sl));
+
+    return r;
 }
+
+inline int blocking_queue_isFull(struct blocking_queue_t *q) {
+    return q ? q->size == q->capacity : 1;
+}
+
 
 struct blocking_queue_t *blocking_queue_create(size_t capacity) {
 
@@ -87,11 +104,13 @@ struct blocking_queue_t *blocking_queue_create(size_t capacity) {
         (struct blocking_queue_t *)malloc(sizeof(struct blocking_queue_t));
 
     pthread_mutex_init(&(q->lock), NULL);
+    pthread_mutex_init(&(q->sl), NULL);
     pthread_cond_init(&(q->notFull), NULL);
     pthread_cond_init(&(q->notEmpty), NULL);
 
     q->capacity = capacity;
-    q->count = q->read = q->write = 0u;
+    q->front = q->size = 0u;
+    q->rear = capacity - 1u;
     q->entries = calloc(sizeof(void *), capacity);
 
     if(q->entries) {
@@ -109,6 +128,7 @@ void blocking_queue_destroy(struct blocking_queue_t * const q) {
         pthread_cond_destroy(&(q->notEmpty));
         pthread_cond_destroy(&(q->notFull));
         pthread_mutex_destroy(&(q->lock));
+        pthread_mutex_destroy(&(q->sl));
         free((void *)q->entries);
     }
 
