@@ -20,24 +20,18 @@
 #ifndef BLOCKING_QUEUE_H
 #define BLOCKING_QUEUE_H
 
-#define BLOCKING_QUEUE_EXPORT __attribute__((visibility ("default")))
-
 #ifdef _cplusplus
 extern "C" {
 #endif
 
 typedef struct blocking_queue_t blocking_queue_t;
 
-BLOCKING_QUEUE_EXPORT blocking_queue_t *blocking_queue_create(size_t);
+blocking_queue_t *blocking_queue_create(size_t);
+void blocking_queue_destroy(blocking_queue_t * const);
 
-BLOCKING_QUEUE_EXPORT void blocking_queue_destroy(blocking_queue_t * const);
-
-BLOCKING_QUEUE_EXPORT void blocking_queue_put(blocking_queue_t *,
-                                              void * const);
-
-BLOCKING_QUEUE_EXPORT void *blocking_queue_take(blocking_queue_t *);
-
-BLOCKING_QUEUE_EXPORT int blocking_queue_isEmpty(blocking_queue_t *);
+void blocking_queue_put(blocking_queue_t *, const void * const);
+const void *blocking_queue_take(blocking_queue_t *);
+int blocking_queue_isEmpty(blocking_queue_t *);
 
 #ifdef _cplusplus
 }

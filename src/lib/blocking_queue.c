@@ -26,14 +26,16 @@ struct blocking_queue_t {
     pthread_mutex_t lock;
     pthread_cond_t notFull;
     pthread_cond_t notEmpty;
+
     size_t capacity;
     size_t count;
     size_t read;
     size_t write;
-    void **entries;
+
+    const void **entries;
 };
 
-void *blocking_queue_take(struct blocking_queue_t *q) {
+const void *blocking_queue_take(struct blocking_queue_t *q) {
 
     pthread_mutex_lock(&(q->lock));
 
@@ -41,7 +43,7 @@ void *blocking_queue_take(struct blocking_queue_t *q) {
         pthread_cond_wait(&(q->notEmpty), &(q->lock));
     }
 
-    void *e = q ? q->entries[(q->read)++] : NULL;
+    const void *e = q ? q->entries[(q->read)++] : NULL;
 
     if(q->read == q->capacity) q->read = 0u;
 
@@ -53,7 +55,7 @@ void *blocking_queue_take(struct blocking_queue_t *q) {
     return e;
 }
 
-void blocking_queue_put(struct blocking_queue_t *q, void * const e) {
+void blocking_queue_put(struct blocking_queue_t *q, const void * const e) {
 
     pthread_mutex_lock(&(q->lock));
 
@@ -79,7 +81,7 @@ inline int blocking_queue_isEmpty(struct blocking_queue_t *q) {
     return q ? q->count == 0u : 1;
 }
 
-struct blocking_queue_t *blocking_queue_create(size_t n) {
+struct blocking_queue_t *blocking_queue_create(size_t capacity) {
 
     struct blocking_queue_t *q =
         (struct blocking_queue_t *)malloc(sizeof(struct blocking_queue_t));
@@ -88,9 +90,9 @@ struct blocking_queue_t *blocking_queue_create(size_t n) {
     pthread_cond_init(&(q->notFull), NULL);
     pthread_cond_init(&(q->notEmpty), NULL);
 
-    q->capacity = n;
+    q->capacity = capacity;
     q->count = q->read = q->write = 0u;
-    q->entries = calloc(sizeof(void *), n);
+    q->entries = calloc(sizeof(void *), capacity);
 
     if(q->entries) {
         return q;
