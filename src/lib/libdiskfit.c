@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2019 by Heiko Schäfer <heiko@rangun.de>
+ * Copyright 2016-2020 by Heiko Schäfer <heiko@rangun.de>
  *
  * This file is part of DiskFit.
  *
@@ -21,6 +21,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 #include <pthread.h>
 #include <inttypes.h>
 
@@ -72,6 +73,8 @@ inline static void threadCPUInfo(pthread_t th, const char *s) {
             if (CPU_ISSET(j, cpu)) fprintf(stderr, "[DEBUG] %s thread runs on CPU: %d\n", s, j);
         }
     }
+
+    CPU_FREE(cpu);
 }
 #endif
 
@@ -85,8 +88,11 @@ static inline void add(const PERMUTE_ARGS *const pa) {
 
             uint64_t cs = 0u;
 
+            size_t *combis = _diskfit_mem_alloc(sizeof(size_t) * ck);
+
             for (register size_t ci = 0; ci < ck; ++ci) {
-                cs += pa->array[gsl_combination_get(pa->combination, ci)].fsize;
+                combis[ci] = gsl_combination_get(pa->combination, ci);
+                cs += pa->array[combis[ci]].fsize;
             }
 
             mpz_add_ui(pa->it_cur, pa->it_cur, 1UL);
@@ -97,13 +103,14 @@ static inline void add(const PERMUTE_ARGS *const pa) {
                 DISKFIT_FITEM *const p = _diskfit_mem_alloc(ck * sizeof(DISKFIT_FITEM));
 
                 for (register size_t ci = 0; ci < ck; ++ci) {
-                    memcpy(&p[ci], &pa->array[gsl_combination_get(pa->combination, ci)],
-                       sizeof(DISKFIT_FITEM));
+                    __builtin_memcpy(&p[ci], &pa->array[combis[ci]], sizeof(DISKFIT_FITEM));
                 }
 
                 pa->adder(p, ck, cs, pa->user_data);
                 _diskfit_mem_free(p);
             }
+
+            _diskfit_mem_free(combis);
         }
     }
 }
@@ -131,10 +138,10 @@ inline static void createEntry(void *buffer, size_t size, void *user_data) {
     PERMUTE_ARGS *pa_in = buffer;
     void **ud = user_data;
 
-    memcpy(pa_in, ud[0], size);
+    __builtin_memcpy(pa_in, ud[0], size);
 
     pa_in->combination = gsl_combination_alloc(pa_in->length, pa_in->c_index);
-    gsl_combination_memcpy(pa_in->combination, ud[1]);
+    gsl_combination_memcpy(pa_in->combination, (gsl_combination *)ud[1]);
 }
 
 int diskfit_get_candidates(DISKFIT_FITEM *array, size_t length, uint64_t total,
@@ -190,8 +197,16 @@ int diskfit_get_candidates(DISKFIT_FITEM *array, size_t length, uint64_t total,
 
             mpz_clear(aux);
 
-            blocking_queue_t *q =
-                blocking_queue_create(sizeof(PERMUTE_ARGS), 1024u);
+            blocking_queue_t *q = NULL;
+            size_t cap = (size_t)(0.05f *
+                (sysconf(_SC_PAGESIZE) * sysconf(_SC_AVPHYS_PAGES)))/sizeof(PERMUTE_ARGS);
+            i = 0u;
+
+            while((q = blocking_queue_create(sizeof(PERMUTE_ARGS), cap)) == NULL
+                || i > 10u) {
+                cap >>= 1u;
+                ++i;
+            }
 
             if(q == NULL) {
 
@@ -206,7 +221,7 @@ int diskfit_get_candidates(DISKFIT_FITEM *array, size_t length, uint64_t total,
             cpu_set_t *cpu = CPU_ALLOC(2);
             CPU_ZERO_S(CPU_ALLOC_SIZE(2), cpu);
 
-            CPU_SET(0, cpu);
+            CPU_SET(1, cpu);
             if(pthread_setaffinity_np(pthread_self(), CPU_ALLOC_SIZE(2), cpu) == EINVAL) {
 #ifndef NDEBUG
                 fprintf(stderr, "[DEBUG] affinity for producer thread is invalid\n");
@@ -219,13 +234,15 @@ int diskfit_get_candidates(DISKFIT_FITEM *array, size_t length, uint64_t total,
             pthread_create(&t, NULL, consume_permutations, q);
             pthread_setname_np(t, PACKAGE_NAME " - Consumer Thread");
 
-            CPU_CLR(0, cpu);
-            CPU_SET(1, cpu);
+            CPU_CLR(1, cpu);
+            CPU_SET(0, cpu);
             if(pthread_setaffinity_np(t, CPU_ALLOC_SIZE(2), cpu) == EINVAL) {
 #ifndef NDEBUG
                 fprintf(stderr, "[DEBUG] affinity for consumer thread is invalid\n");
 #endif
             }
+
+            CPU_FREE(cpu);
 
             for (i = 0; i <= length && !(*interrupted); i++) {
 
@@ -233,8 +250,9 @@ int diskfit_get_candidates(DISKFIT_FITEM *array, size_t length, uint64_t total,
 
                 do {
 
-                    PERMUTE_ARGS pa = { array, /*{ 0u, NULL }*/ NULL, i, length, total, target, adder, progress,
+                    PERMUTE_ARGS pa = { array, NULL, i, length, total, target, adder, progress,
                                      it_cur, it_tot, div_by, interrupted, user_data };
+
                     void *ud[2] = { &pa, c };
 
                     blocking_queue_put(q, createEntry, &ud);

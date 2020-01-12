@@ -55,7 +55,7 @@ void blocking_queue_take(struct blocking_queue_t *q, void *out) {
         pthread_cond_wait(&(q->notEmpty), &(q->lock));
     }
 
-    memcpy(out, (q->entries + (q->front * q->elem_size)), q->elem_size);
+    __builtin_memcpy(out, (q->entries + (q->front * q->elem_size)), q->elem_size);
 
     q->front = (q->front + 1u) % q->capacity;
     q->size -= 1u;
@@ -87,6 +87,10 @@ void blocking_queue_put(struct blocking_queue_t *q, DATA dataFn, void *p) {
 }
 
 struct blocking_queue_t *blocking_queue_create(size_t size, size_t capacity) {
+
+#ifndef NDEBUG
+    fprintf(stderr, "[DEBUG] blocking queue capacity: %zu\n", capacity);
+#endif
 
     struct blocking_queue_t *q =
         (struct blocking_queue_t *)_bq_mem_alloc(sizeof(struct blocking_queue_t));
