@@ -160,7 +160,7 @@ int diskfit_get_candidates(DISKFIT_FITEM *array, size_t length, uint64_t total,
             mpz_clear(aux);
 
             pthread_t t;
-            blocking_queue_t *q = blocking_queue_create(sizeof(PERMUTE_ARGS), 1024u);
+            blocking_queue_t *q = blocking_queue_create(sizeof(PERMUTE_ARGS), 32768u);
 
             pthread_create(&t, NULL, consume_permutations, q);
 

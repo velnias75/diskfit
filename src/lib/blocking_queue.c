@@ -38,7 +38,7 @@ struct blocking_queue_t {
     size_t size;
 
     size_t elem_size;
-    void **entries;
+    void  *entries;
 };
 
 void blocking_queue_take(struct blocking_queue_t *q, void *out) {
@@ -49,7 +49,7 @@ void blocking_queue_take(struct blocking_queue_t *q, void *out) {
         pthread_cond_wait(&(q->notEmpty), &(q->lock));
     }
 
-    memcpy(out, q->entries[q->front], q->elem_size);
+    memcpy(out, (q->entries + (q->front * q->elem_size)), q->elem_size);
 
     q->front = (q->front + 1u) % q->capacity;
     q->size -= 1u;
@@ -69,7 +69,7 @@ void blocking_queue_put(struct blocking_queue_t *q, void *e) {
         }
 
         q->rear = (q->rear + 1u) % q->capacity;
-        memcpy(q->entries[q->rear], e, q->elem_size);
+        memcpy((q->entries + (q->rear * q->elem_size)), e, q->elem_size);
         q->size += 1u;
 
         pthread_cond_broadcast(&(q->notEmpty));
@@ -91,17 +91,10 @@ struct blocking_queue_t *blocking_queue_create(size_t size, size_t capacity) {
     q->front = q->size = 0u;
     q->rear = capacity - 1u;
     q->elem_size = size;
-
-    q->entries = calloc(sizeof(void *), capacity);
+    q->entries = malloc(size * capacity);
 
     if(q->entries) {
-
-        for(size_t i = 0u; i < capacity; ++i) {
-            q->entries[i] = malloc(size);
-        }
-
         return q;
-
     } else {
         free((void *)q);
     }
@@ -116,8 +109,6 @@ void blocking_queue_destroy(struct blocking_queue_t * const q) {
         pthread_cond_destroy(&(q->notEmpty));
         pthread_cond_destroy(&(q->notFull));
         pthread_mutex_destroy(&(q->lock));
-
-        for(register size_t i = 0u; i < q->capacity; ++i) free(q->entries[i]);
 
         free((void *)q->entries);
     }

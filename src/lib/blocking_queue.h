@@ -32,9 +32,6 @@ void blocking_queue_destroy(blocking_queue_t * const);
 void blocking_queue_put(blocking_queue_t *, void *);
 void blocking_queue_take(blocking_queue_t *, void *);
 
-//int blocking_queue_isEmpty(blocking_queue_t *);
-//int blocking_queue_isFull(blocking_queue_t *);
-
 #ifdef _cplusplus
 }
 #endif
