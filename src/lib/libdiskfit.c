@@ -63,7 +63,6 @@ static inline void add(const PERMUTE_ARGS *const pa) {
 
     if (!*pa->interrupted) {
 
-        //register const size_t ck = gsl_combination_k(pa->combination);
         register const size_t ck = pa->combination.k;
 
         if (ck) {
@@ -71,7 +70,6 @@ static inline void add(const PERMUTE_ARGS *const pa) {
             uint64_t cs = 0u;
 
             for (register size_t ci = 0; ci < ck; ++ci) {
-                //cs += pa->array[gsl_combination_get(pa->combination, ci)].fsize;
                 cs += pa->array[pa->combination.c[ci]].fsize;
             }
 
@@ -96,12 +94,13 @@ static inline void add(const PERMUTE_ARGS *const pa) {
 
 static void *consume_permutations(void *queue) {
 
-    blocking_queue_t *q  = queue;
+    blocking_queue_t *q = queue;
     PERMUTE_ARGS      pa;
 
     do {
         blocking_queue_take(q, &pa);
         add(&pa);
+        free(pa.combination.c);
     } while(!(*(pa.interrupted)) && pa.c_index < pa.length);
 
     pthread_exit(NULL);
