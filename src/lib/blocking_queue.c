@@ -17,6 +17,7 @@
  * along with DiskFit.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <assert.h>
 #include <string.h>
 #include <stdlib.h>
 #include <pthread.h>
@@ -41,7 +42,12 @@ struct blocking_queue_t {
     void  *entries;
 };
 
+static DISKFIT_ALLOC _bq_mem_alloc = malloc;
+static DISKFIT_FREE  _bq_mem_free  = free;
+
 void blocking_queue_take(struct blocking_queue_t *q, void *out) {
+
+    assert(q);
 
     pthread_mutex_lock(&(q->lock));
 
@@ -58,7 +64,9 @@ void blocking_queue_take(struct blocking_queue_t *q, void *out) {
     pthread_mutex_unlock(&(q->lock));
 }
 
-void blocking_queue_put(struct blocking_queue_t *q, void *e) {
+void blocking_queue_put(struct blocking_queue_t *q, DATA dataFn, void *p) {
+
+    assert(q);
 
     pthread_mutex_lock(&(q->lock));
 
@@ -69,7 +77,7 @@ void blocking_queue_put(struct blocking_queue_t *q, void *e) {
         }
 
         q->rear = (q->rear + 1u) % q->capacity;
-        memcpy((q->entries + (q->rear * q->elem_size)), e, q->elem_size);
+        dataFn((q->entries + (q->rear * q->elem_size)), q->elem_size, p);
         q->size += 1u;
 
         pthread_cond_broadcast(&(q->notEmpty));
@@ -81,7 +89,7 @@ void blocking_queue_put(struct blocking_queue_t *q, void *e) {
 struct blocking_queue_t *blocking_queue_create(size_t size, size_t capacity) {
 
     struct blocking_queue_t *q =
-        (struct blocking_queue_t *)malloc(sizeof(struct blocking_queue_t));
+        (struct blocking_queue_t *)_bq_mem_alloc(sizeof(struct blocking_queue_t));
 
     pthread_mutex_init(&(q->lock), NULL);
     pthread_cond_init(&(q->notFull), NULL);
@@ -91,14 +99,16 @@ struct blocking_queue_t *blocking_queue_create(size_t size, size_t capacity) {
     q->front = q->size = 0u;
     q->rear = capacity - 1u;
     q->elem_size = size;
-    q->entries = malloc(size * capacity);
+    q->entries = _bq_mem_alloc(size * capacity);
 
     if(q->entries) {
         return q;
     } else {
-        free((void *)q);
+        _bq_mem_free((void *)q);
+        q = NULL;
     }
 
+    assert(q == NULL);
     return NULL;
 }
 
@@ -110,10 +120,15 @@ void blocking_queue_destroy(struct blocking_queue_t * const q) {
         pthread_cond_destroy(&(q->notFull));
         pthread_mutex_destroy(&(q->lock));
 
-        free((void *)q->entries);
+        _bq_mem_free((void *)q->entries);
     }
 
-    free((void *)q);
+    _bq_mem_free((void *)q);
+}
+
+void blocking_queue_set_mem_funcs(DISKFIT_ALLOC a, DISKFIT_FREE f) {
+    _bq_mem_alloc = a ? a : malloc;
+    _bq_mem_free  = f ? f : free;
 }
 
 // kate: indent-mode cstyle; indent-width 4; replace-tabs on; remove-trailing-space on;

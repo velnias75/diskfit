@@ -20,17 +20,22 @@
 #ifndef BLOCKING_QUEUE_H
 #define BLOCKING_QUEUE_H
 
+#include "diskfit.h"
+
 #ifdef _cplusplus
 extern "C" {
 #endif
 
 typedef struct blocking_queue_t blocking_queue_t;
+typedef void (*DATA)(void *, size_t, void *);
 
 blocking_queue_t *blocking_queue_create(size_t, size_t);
 void blocking_queue_destroy(blocking_queue_t * const);
 
-void blocking_queue_put(blocking_queue_t *, void *);
+void blocking_queue_put(blocking_queue_t *, DATA, void *);
 void blocking_queue_take(blocking_queue_t *, void *);
+
+void blocking_queue_set_mem_funcs(DISKFIT_ALLOC a, DISKFIT_FREE f);
 
 #ifdef _cplusplus
 }

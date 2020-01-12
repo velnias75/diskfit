@@ -21,8 +21,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <inttypes.h>
 #include <pthread.h>
+#include <inttypes.h>
 
 #include "diskfit.h"
 #include "fitem.h"
@@ -42,7 +42,7 @@ typedef struct {
 
 typedef struct {
     DISKFIT_FITEM         *const array;
-    COMBINATIONS           combination;
+    gsl_combination       *combination;
     const size_t           c_index;
     const size_t           length;
     const uint64_t         total;
@@ -59,18 +59,34 @@ typedef struct {
 static DISKFIT_ALLOC _diskfit_mem_alloc = malloc;
 static DISKFIT_FREE  _diskfit_mem_free  = free;
 
+static pthread_t t;
+
+#ifndef NDEBUG
+inline static void threadCPUInfo(pthread_t th, const char *s) {
+
+    cpu_set_t *cpu = CPU_ALLOC(2);
+    CPU_ZERO_S(CPU_ALLOC_SIZE(2), cpu);
+
+    if(!pthread_getaffinity_np(th, CPU_ALLOC_SIZE(2), cpu)) {
+        for (int j = 0; j < 2; j++) {
+            if (CPU_ISSET(j, cpu)) fprintf(stderr, "[DEBUG] %s thread runs on CPU: %d\n", s, j);
+        }
+    }
+}
+#endif
+
 static inline void add(const PERMUTE_ARGS *const pa) {
 
     if (!*pa->interrupted) {
 
-        register const size_t ck = pa->combination.k;
+        register const size_t ck = gsl_combination_k(pa->combination);
 
         if (ck) {
 
             uint64_t cs = 0u;
 
             for (register size_t ci = 0; ci < ck; ++ci) {
-                cs += pa->array[pa->combination.c[ci]].fsize;
+                cs += pa->array[gsl_combination_get(pa->combination, ci)].fsize;
             }
 
             mpz_add_ui(pa->it_cur, pa->it_cur, 1UL);
@@ -81,7 +97,7 @@ static inline void add(const PERMUTE_ARGS *const pa) {
                 DISKFIT_FITEM *const p = _diskfit_mem_alloc(ck * sizeof(DISKFIT_FITEM));
 
                 for (register size_t ci = 0; ci < ck; ++ci) {
-                    memcpy(&p[ci], &pa->array[pa->combination.c[ci]],
+                    memcpy(&p[ci], &pa->array[gsl_combination_get(pa->combination, ci)],
                        sizeof(DISKFIT_FITEM));
                 }
 
@@ -97,13 +113,28 @@ static void *consume_permutations(void *queue) {
     blocking_queue_t *q = queue;
     PERMUTE_ARGS      pa;
 
+#ifndef NDEBUG
+    threadCPUInfo(t, "consumer");
+#endif
+
     do {
         blocking_queue_take(q, &pa);
         add(&pa);
-        free(pa.combination.c);
+        gsl_combination_free(pa.combination);
     } while(!(*(pa.interrupted)) && pa.c_index < pa.length);
 
     pthread_exit(NULL);
+}
+
+inline static void createEntry(void *buffer, size_t size, void *user_data) {
+
+    PERMUTE_ARGS *pa_in = buffer;
+    void **ud = user_data;
+
+    memcpy(pa_in, ud[0], size);
+
+    pa_in->combination = gsl_combination_alloc(pa_in->length, pa_in->c_index);
+    gsl_combination_memcpy(pa_in->combination, ud[1]);
 }
 
 int diskfit_get_candidates(DISKFIT_FITEM *array, size_t length, uint64_t total,
@@ -159,10 +190,42 @@ int diskfit_get_candidates(DISKFIT_FITEM *array, size_t length, uint64_t total,
 
             mpz_clear(aux);
 
-            pthread_t t;
-            blocking_queue_t *q = blocking_queue_create(sizeof(PERMUTE_ARGS), 32768u);
+            blocking_queue_t *q =
+                blocking_queue_create(sizeof(PERMUTE_ARGS), 1024u);
 
+            if(q == NULL) {
+
+                fprintf(stderr, "Out of memory\n");
+
+                mpz_clear(it_cur);
+                mpz_clear(it_tot);
+
+                return 1;
+            }
+
+            cpu_set_t *cpu = CPU_ALLOC(2);
+            CPU_ZERO_S(CPU_ALLOC_SIZE(2), cpu);
+
+            CPU_SET(0, cpu);
+            if(pthread_setaffinity_np(pthread_self(), CPU_ALLOC_SIZE(2), cpu) == EINVAL) {
+#ifndef NDEBUG
+                fprintf(stderr, "[DEBUG] affinity for producer thread is invalid\n");
+#endif
+            }
+
+#ifndef NDEBUG
+            threadCPUInfo(pthread_self(), "producer");
+#endif
             pthread_create(&t, NULL, consume_permutations, q);
+            pthread_setname_np(t, PACKAGE_NAME " - Consumer Thread");
+
+            CPU_CLR(0, cpu);
+            CPU_SET(1, cpu);
+            if(pthread_setaffinity_np(t, CPU_ALLOC_SIZE(2), cpu) == EINVAL) {
+#ifndef NDEBUG
+                fprintf(stderr, "[DEBUG] affinity for consumer thread is invalid\n");
+#endif
+            }
 
             for (i = 0; i <= length && !(*interrupted); i++) {
 
@@ -170,17 +233,11 @@ int diskfit_get_candidates(DISKFIT_FITEM *array, size_t length, uint64_t total,
 
                 do {
 
-                    PERMUTE_ARGS pa = { array, { 0u, NULL }, i, length, total, target, adder, progress,
+                    PERMUTE_ARGS pa = { array, /*{ 0u, NULL }*/ NULL, i, length, total, target, adder, progress,
                                      it_cur, it_tot, div_by, interrupted, user_data };
+                    void *ud[2] = { &pa, c };
 
-                    pa.combination.k = gsl_combination_k(c);
-                    pa.combination.c = malloc(sizeof(size_t) * pa.combination.k);
-
-                    for(size_t ci = 0u; ci < pa.combination.k; ++ci) {
-                        pa.combination.c[ci] = gsl_combination_get(c, ci);
-                    }
-
-                    blocking_queue_put(q, &pa);
+                    blocking_queue_put(q, createEntry, &ud);
 
                 } while (gsl_combination_next(c) == GSL_SUCCESS && !(*interrupted));
 
@@ -278,6 +335,9 @@ uint64_t diskfit_target_size(const char *tgs, DISKFIT_TARGETMAPPER tmp, void *us
 }
 
 void diskfit_set_mem_funcs(DISKFIT_ALLOC a, DISKFIT_FREE f) {
+
+    blocking_queue_set_mem_funcs(a, f);
+
     _diskfit_mem_alloc = a ? a : malloc;
     _diskfit_mem_free  = f ? f : free;
 }
