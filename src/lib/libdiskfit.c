@@ -97,18 +97,15 @@ static inline void add(const PERMUTE_ARGS *const pa) {
 static void *consume_permutations(void *queue) {
 
     blocking_queue_t *q  = queue;
-    PERMUTE_ARGS     *pa;
+    PERMUTE_ARGS      pa;
 
     do {
-        pa = blocking_queue_take(q);
-        add(pa);
-        free(pa->combination.c);
-        free(pa);
-    } while(!blocking_queue_isEmpty(q) && !(*pa->interrupted));
+        blocking_queue_take(q, &pa);
+        add(&pa);
+    } while(!(*(pa.interrupted)) && pa.c_index < pa.length);
 
     pthread_exit(NULL);
 }
-
 
 int diskfit_get_candidates(DISKFIT_FITEM *array, size_t length, uint64_t total,
                            uint64_t target, DISKFIT_INSERTER adder,
@@ -164,7 +161,7 @@ int diskfit_get_candidates(DISKFIT_FITEM *array, size_t length, uint64_t total,
             mpz_clear(aux);
 
             pthread_t t;
-            blocking_queue_t *q = blocking_queue_create(65536u);
+            blocking_queue_t *q = blocking_queue_create(sizeof(PERMUTE_ARGS), 1024u);
 
             pthread_create(&t, NULL, consume_permutations, q);
 
@@ -177,17 +174,14 @@ int diskfit_get_candidates(DISKFIT_FITEM *array, size_t length, uint64_t total,
                     PERMUTE_ARGS pa = { array, { 0u, NULL }, i, length, total, target, adder, progress,
                                      it_cur, it_tot, div_by, interrupted, user_data };
 
-                    PERMUTE_ARGS *pax = malloc(sizeof(PERMUTE_ARGS));
-                    memcpy(pax, &pa, sizeof(PERMUTE_ARGS));
+                    pa.combination.k = gsl_combination_k(c);
+                    pa.combination.c = malloc(sizeof(size_t) * pa.combination.k);
 
-                    pax->combination.k = gsl_combination_k(c);
-                    pax->combination.c = malloc(sizeof(size_t) * pax->combination.k);
-
-                    for(size_t ci = 0u; ci < pax->combination.k; ++ci) {
-                        pax->combination.c[ci] = gsl_combination_get(c, ci);
+                    for(size_t ci = 0u; ci < pa.combination.k; ++ci) {
+                        pa.combination.c[ci] = gsl_combination_get(c, ci);
                     }
 
-                    blocking_queue_put(q, pax);
+                    blocking_queue_put(q, &pa);
 
                 } while (gsl_combination_next(c) == GSL_SUCCESS && !(*interrupted));
 
@@ -195,12 +189,6 @@ int diskfit_get_candidates(DISKFIT_FITEM *array, size_t length, uint64_t total,
             }
 
             pthread_join(t, NULL);
-
-            while(!blocking_queue_isEmpty(q)) {
-                PERMUTE_ARGS *pa = blocking_queue_take(q);
-                free(pa->combination.c);
-                free(pa);
-            }
 
             blocking_queue_destroy(q);
 
