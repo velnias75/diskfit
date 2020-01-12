@@ -98,6 +98,14 @@ static void term_handler(int sig, siginfo_t *si, void *unused) {
     _interrupted = 1;
 }
 
+static void glib_cleanup(GKeyFile *const rc, gchar **const env,
+                         gchar *rcfile, const gchar **sd) {
+    g_strfreev(env);
+    g_free((void *)sd[1]);
+    g_free(rcfile);
+    g_key_file_free(rc);
+}
+
 static inline void init_scale() {
 
     mpq_init(_scale.aux_q);
@@ -475,10 +483,7 @@ int main(int argc, char *argv[]) {
             g_fprintf(stdout, "\tdvd = %s\n\tcd = %s\n", hr_dvd, hr_cd);
         }
 
-        g_strfreev(env);
-        g_free((void *)sd[1]);
-        g_key_file_free(rc);
-        g_free(rcfile);
+        glib_cleanup(rc, env, rcfile, sd);
 
         return EXIT_FAILURE;
 
@@ -487,10 +492,7 @@ int main(int argc, char *argv[]) {
         g_fprintf(stdout, "%" G_GUINT64_FORMAT "\n", diskfit_target_size(argv[1], tmap,
                 has_rc ? rc : NULL));
 
-        g_strfreev(env);
-        g_free((void *)sd[1]);
-        g_key_file_free(rc);
-        g_free(rcfile);
+        glib_cleanup(rc, env, rcfile, sd);
 
         return EXIT_SUCCESS;
 
@@ -721,11 +723,8 @@ int main(int argc, char *argv[]) {
         g_fprintf(stderr, "\n");
     }
 
-    g_strfreev(env);
-    g_free((void *)sd[1]);
-    g_key_file_free(rc);
-    g_free(rcfile);
 
+    glib_cleanup(rc, env, rcfile, sd);
     return EXIT_SUCCESS;
 }
 
