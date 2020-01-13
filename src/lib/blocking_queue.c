@@ -41,10 +41,23 @@ struct blocking_queue_t {
 
     size_t elem_size;
     void  *entries;
+
+#ifndef NDEBUG
+    unsigned long long navg, fulls, empties;
+    float cavg;
+#endif
 };
 
 static DISKFIT_ALLOC _bq_mem_alloc = malloc;
 static DISKFIT_FREE  _bq_mem_free  = free;
+
+#ifndef NDEBUG
+#define stats { ++q->navg; q->cavg += (q->size - q->cavg)/q->navg; \
+    q->fulls += q->size == q->capacity ? 1u : 0u; \
+    q->empties += q->size == 0u ? 1u :0u; }
+#else
+#define stats
+#endif
 
 void blocking_queue_take(struct blocking_queue_t *q, void *out) {
 
@@ -57,6 +70,8 @@ void blocking_queue_take(struct blocking_queue_t *q, void *out) {
     __builtin_memcpy(out, (q->entries + (q->front * q->elem_size)), q->elem_size);
     q->front = (q->front + 1u) % q->capacity;
     --q->size;
+
+    stats;
 
     pthread_cond_broadcast(&(q->notFull));
     pthread_mutex_unlock(&(q->lock));
@@ -74,6 +89,8 @@ void blocking_queue_put(struct blocking_queue_t *q, DATA dataFn, void *user_data
     dataFn((q->entries + (q->rear * q->elem_size)), q->elem_size, user_data);
     ++q->size;
 
+    stats;
+
     pthread_cond_broadcast(&(q->notEmpty));
     pthread_mutex_unlock(&(q->lock));
 }
@@ -81,7 +98,7 @@ void blocking_queue_put(struct blocking_queue_t *q, DATA dataFn, void *user_data
 struct blocking_queue_t *blocking_queue_create(size_t size, size_t capacity) {
 
 #ifndef NDEBUG
-    fprintf(stderr, "[DEBUG] blocking queue capacity: %zu * %zu\n", capacity, size);
+    fprintf(stderr, "[DEBUG] blocking queue capacity: %zu @ %zu\n", capacity, size);
 #endif
 
     struct blocking_queue_t *q =
@@ -96,6 +113,12 @@ struct blocking_queue_t *blocking_queue_create(size_t size, size_t capacity) {
     q->rear = capacity - 1u;
     q->elem_size = size;
     q->entries = _bq_mem_alloc(size * capacity);
+
+#ifndef NDEBUG
+    q->empties = 1u;
+    q->fulls = q->navg = 0u;
+    q->cavg = 0.0f;
+#endif
 
     if(q->entries) {
         return q;
@@ -117,9 +140,20 @@ void blocking_queue_destroy(struct blocking_queue_t * const q) {
         pthread_mutex_destroy(&(q->lock));
 
         _bq_mem_free((void *)q->entries);
+
+#ifndef NDEBUG
+        fprintf(stderr, "\n[DEBUG] blocking queue average fill: %.0f (%f %%)\n",
+                q->cavg, (100.0f * q->cavg)/q->capacity);
+        fprintf(stderr, "[DEBUG] blocking queue fulls: %llu\n", q->fulls);
+        fprintf(stderr, "[DEBUG] blocking queue empties: %llu\n", q->empties);
+#endif
     }
 
     _bq_mem_free((void *)q);
+}
+
+size_t blocking_queue_elem_size(struct blocking_queue_t *q) {
+    return q->elem_size;
 }
 
 void blocking_queue_set_mem_funcs(DISKFIT_ALLOC a, DISKFIT_FREE f) {

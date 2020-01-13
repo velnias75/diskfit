@@ -35,6 +35,7 @@ void blocking_queue_destroy(blocking_queue_t * const);
 void blocking_queue_put(blocking_queue_t *, DATA, void *);
 void blocking_queue_take(blocking_queue_t *, void *);
 
+size_t blocking_queue_elem_size(blocking_queue_t *);
 void blocking_queue_set_mem_funcs(DISKFIT_ALLOC a, DISKFIT_FREE f);
 
 #ifdef _cplusplus

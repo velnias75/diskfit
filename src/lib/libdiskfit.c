@@ -41,19 +41,24 @@
 #endif
 
 typedef struct {
-    DISKFIT_FITEM         *const array;
-    gsl_combination       *combination;
-    const size_t           c_index;
-    const size_t           length;
-    const uint64_t         total;
-    const uint64_t         target;
-    DISKFIT_INSERTER       adder;
-    DISKFIT_PROGRESS       progress;
-    const mpz_ptr          it_cur;
-    const mpz_srcptr       it_tot;
-    const mp_bitcnt_t      div_by;
-    volatile int          *const interrupted;
-    void                  *const user_data;
+    size_t  k;
+    size_t *d;
+} COMBINATIONS;
+
+typedef struct {
+    DISKFIT_FITEM      *const array;
+    COMBINATIONS        combination;
+    const size_t        c_index;
+    const size_t        length;
+    const uint64_t      total;
+    const uint64_t      target;
+    DISKFIT_INSERTER    adder;
+    DISKFIT_PROGRESS    progress;
+    const mpz_ptr       it_cur;
+    const mpz_srcptr    it_tot;
+    const mp_bitcnt_t   div_by;
+    volatile int *const interrupted;
+    void         *const user_data;
 } PERMUTE_ARGS;
 
 static DISKFIT_ALLOC _diskfit_mem_alloc = malloc;
@@ -81,17 +86,14 @@ static inline void add(const PERMUTE_ARGS *const pa) {
 
     if (!*pa->interrupted) {
 
-        register const size_t ck = gsl_combination_k(pa->combination);
+        register const size_t ck = pa->combination.k;
 
         if (ck) {
 
             uint64_t cs = 0u;
 
-            size_t *const combis = _diskfit_mem_alloc(sizeof(size_t) * ck);
-
             for (register size_t ci = 0; ci < ck; ++ci) {
-                combis[ci] = gsl_combination_get(pa->combination, ci);
-                cs += pa->array[combis[ci]].fsize;
+                cs += pa->array[pa->combination.d[ci]].fsize;
             }
 
             mpz_add_ui(pa->it_cur, pa->it_cur, 1UL);
@@ -102,22 +104,22 @@ static inline void add(const PERMUTE_ARGS *const pa) {
                 DISKFIT_FITEM *const p = _diskfit_mem_alloc(ck * sizeof(DISKFIT_FITEM));
 
                 for (register size_t ci = 0; ci < ck; ++ci) {
-                    __builtin_memcpy(&p[ci], &pa->array[combis[ci]], sizeof(DISKFIT_FITEM));
+                    __builtin_memcpy(&p[ci], &pa->array[pa->combination.d[ci]],
+                                     sizeof(DISKFIT_FITEM));
                 }
 
                 pa->adder(p, ck, cs, pa->user_data);
                 _diskfit_mem_free(p);
             }
-
-            _diskfit_mem_free(combis);
         }
     }
 }
 
 static void *consume_permutations(void *queue) {
 
-    blocking_queue_t *q = queue;
-    PERMUTE_ARGS      pa;
+    blocking_queue_t *q   = queue;
+    void             *buf = _diskfit_mem_alloc(blocking_queue_elem_size(q));
+    PERMUTE_ARGS     *pa  = buf;
 
 #ifndef NDEBUG
     threadCPUInfo(t, "consumer");
@@ -125,11 +127,12 @@ static void *consume_permutations(void *queue) {
 
     do {
 
-        blocking_queue_take(q, &pa);
-        add(&pa);
-        gsl_combination_free(pa.combination);
+        blocking_queue_take(q, buf);
+        add(pa);
 
-    } while(!(*(pa.interrupted)) && pa.c_index < pa.length);
+    } while(!(*(pa->interrupted)) && pa->c_index < pa->length);
+
+    _diskfit_mem_free(buf);
 
     pthread_exit(NULL);
 }
@@ -138,11 +141,17 @@ inline static void createEntry(void *buffer, size_t size, void *user_data) {
 
     PERMUTE_ARGS *pa_in = buffer;
     void **ud = user_data;
+    (void)size;
 
-    __builtin_memcpy(pa_in, ud[0], size);
+    const size_t k = gsl_combination_k(ud[1]);
 
-    pa_in->combination = gsl_combination_alloc(pa_in->length, pa_in->c_index);
-    gsl_combination_memcpy(pa_in->combination, (gsl_combination *)ud[1]);
+    __builtin_memcpy(pa_in, ud[0], sizeof(PERMUTE_ARGS));
+
+    pa_in->combination.k = k;
+    pa_in->combination.d = buffer + sizeof(PERMUTE_ARGS);
+
+    __builtin_memcpy(pa_in->combination.d, gsl_combination_data(ud[1]),
+                     sizeof(size_t) * k);
 }
 
 int diskfit_get_candidates(DISKFIT_FITEM *array, size_t length, uint64_t total,
@@ -198,14 +207,14 @@ int diskfit_get_candidates(DISKFIT_FITEM *array, size_t length, uint64_t total,
             mpz_clear(aux);
 
             blocking_queue_t *q = NULL;
-            size_t cap = (size_t)(0.05f *
+            size_t cap = (size_t)(0.6f *
                 (sysconf(_SC_PAGESIZE) * sysconf(_SC_AVPHYS_PAGES))) /
-                sizeof(PERMUTE_ARGS);
+                (sizeof(PERMUTE_ARGS) + (length * sizeof(size_t)));
 
             i = 0u;
 
-            while((q = blocking_queue_create(sizeof(PERMUTE_ARGS), cap)) == NULL
-                || i > 10u) {
+            while((q = blocking_queue_create(sizeof(PERMUTE_ARGS) +
+                (length * sizeof(size_t)), cap)) == NULL || i > 10u) {
                 cap >>= 1u;
                 ++i;
             }
@@ -254,8 +263,8 @@ int diskfit_get_candidates(DISKFIT_FITEM *array, size_t length, uint64_t total,
 
                 do {
 
-                    PERMUTE_ARGS pa = { array, NULL, i, length, total, target, adder, progress,
-                                     it_cur, it_tot, div_by, interrupted, user_data };
+                    PERMUTE_ARGS pa = { array, { 0u, NULL }, i, length, total, target, adder, progress,
+                                        it_cur, it_tot, div_by, interrupted, user_data };
                     ud[0] = &pa;
 
                     blocking_queue_put(q, createEntry, &ud);
