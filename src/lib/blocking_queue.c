@@ -51,38 +51,29 @@ void blocking_queue_take(struct blocking_queue_t *q, void *out) {
 
     pthread_mutex_lock(&(q->lock));
 
-    while(q->size == 0u) {
-        pthread_cond_wait(&(q->notEmpty), &(q->lock));
-    }
+    while(q->size == 0u) pthread_cond_wait(&(q->notEmpty), &(q->lock));
 
     __builtin_memcpy(out, (q->entries + (q->front * q->elem_size)), q->elem_size);
-
     q->front = (q->front + 1u) % q->capacity;
-    q->size -= 1u;
+    --q->size;
 
     pthread_cond_broadcast(&(q->notFull));
     pthread_mutex_unlock(&(q->lock));
 }
 
-void blocking_queue_put(struct blocking_queue_t *q, DATA dataFn, void *p) {
+void blocking_queue_put(struct blocking_queue_t *q, DATA dataFn, void *user_data) {
 
     assert(q);
 
     pthread_mutex_lock(&(q->lock));
 
-    if(q) {
+    if(q->size == q->capacity) pthread_cond_wait(&(q->notFull), &(q->lock));
 
-        if(q->size == q->capacity) {
-            pthread_cond_wait(&(q->notFull), &(q->lock));
-        }
+    q->rear = (q->rear + 1u) % q->capacity;
+    dataFn((q->entries + (q->rear * q->elem_size)), q->elem_size, user_data);
+    ++q->size;
 
-        q->rear = (q->rear + 1u) % q->capacity;
-        dataFn((q->entries + (q->rear * q->elem_size)), q->elem_size, p);
-        q->size += 1u;
-
-        pthread_cond_broadcast(&(q->notEmpty));
-    }
-
+    pthread_cond_broadcast(&(q->notEmpty));
     pthread_mutex_unlock(&(q->lock));
 }
 
