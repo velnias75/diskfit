@@ -34,9 +34,9 @@ struct blocking_queue_t {
     pthread_cond_t notEmpty;
 
     size_t capacity;
-    size_t front;
-    size_t rear;
-    size_t size;
+    volatile size_t front;
+    volatile size_t rear;
+    volatile size_t size;
 
     size_t elem_size;
     void  *entries;

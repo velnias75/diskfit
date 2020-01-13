@@ -88,7 +88,7 @@ static inline void add(const PERMUTE_ARGS *const pa) {
 
             uint64_t cs = 0u;
 
-            size_t *combis = _diskfit_mem_alloc(sizeof(size_t) * ck);
+            size_t *const combis = _diskfit_mem_alloc(sizeof(size_t) * ck);
 
             for (register size_t ci = 0; ci < ck; ++ci) {
                 combis[ci] = gsl_combination_get(pa->combination, ci);
@@ -125,9 +125,11 @@ static void *consume_permutations(void *queue) {
 #endif
 
     do {
+
         blocking_queue_take(q, &pa);
         add(&pa);
         gsl_combination_free(pa.combination);
+
     } while(!(*(pa.interrupted)) && pa.c_index < pa.length);
 
     pthread_exit(NULL);
@@ -199,7 +201,9 @@ int diskfit_get_candidates(DISKFIT_FITEM *array, size_t length, uint64_t total,
 
             blocking_queue_t *q = NULL;
             size_t cap = (size_t)(0.05f *
-                (sysconf(_SC_PAGESIZE) * sysconf(_SC_AVPHYS_PAGES)))/sizeof(PERMUTE_ARGS);
+                (sysconf(_SC_PAGESIZE) * sysconf(_SC_AVPHYS_PAGES))) /
+                sizeof(PERMUTE_ARGS);
+
             i = 0u;
 
             while((q = blocking_queue_create(sizeof(PERMUTE_ARGS), cap)) == NULL
