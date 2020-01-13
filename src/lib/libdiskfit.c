@@ -36,6 +36,10 @@
 
 #include <gsl/gsl_combination.h>
 
+#ifndef NDEBUG
+#pragma GCC diagnostic warning "-Wpadded"
+#endif
+
 typedef struct {
     size_t k;
     size_t *c;
@@ -57,10 +61,17 @@ typedef struct {
     void                  *const user_data;
 } PERMUTE_ARGS;
 
+typedef struct {
+    DISKFIT_FITEM* const p;
+    const size_t ck;
+    const uint64_t cs;
+    void* const user_data;
+} ADDER_DATA;
+
 static DISKFIT_ALLOC _diskfit_mem_alloc = malloc;
 static DISKFIT_FREE  _diskfit_mem_free  = free;
 
-static pthread_t t;
+static pthread_t t1, t2;
 
 #ifndef NDEBUG
 inline static void threadCPUInfo(pthread_t th, const char *s) {
@@ -121,7 +132,7 @@ static void *consume_permutations(void *queue) {
     PERMUTE_ARGS      pa;
 
 #ifndef NDEBUG
-    threadCPUInfo(t, "consumer");
+    threadCPUInfo(t1, "consumer #1");
 #endif
 
     do {
@@ -131,6 +142,17 @@ static void *consume_permutations(void *queue) {
         gsl_combination_free(pa.combination);
 
     } while(!(*(pa.interrupted)) && pa.c_index < pa.length);
+
+    pthread_exit(NULL);
+}
+
+static void *consume_candidates(void *queue) {
+
+    blocking_queue_t *q = queue;
+
+#ifndef NDEBUG
+    threadCPUInfo(t2, "consumer #2");
+#endif
 
     pthread_exit(NULL);
 }
@@ -199,20 +221,32 @@ int diskfit_get_candidates(DISKFIT_FITEM *array, size_t length, uint64_t total,
 
             mpz_clear(aux);
 
-            blocking_queue_t *q = NULL;
+            blocking_queue_t *qc = blocking_queue_create(sizeof(ADDER_DATA), 1024u);
+
+            if(qc == NULL) {
+
+                fprintf(stderr, "Out of memory\n");
+
+                mpz_clear(it_cur);
+                mpz_clear(it_tot);
+
+                return 1;
+            }
+
+            blocking_queue_t *qp = NULL;
             size_t cap = (size_t)(0.05f *
                 (sysconf(_SC_PAGESIZE) * sysconf(_SC_AVPHYS_PAGES))) /
                 sizeof(PERMUTE_ARGS);
 
             i = 0u;
 
-            while((q = blocking_queue_create(sizeof(PERMUTE_ARGS), cap)) == NULL
+            while((qp = blocking_queue_create(sizeof(PERMUTE_ARGS), cap)) == NULL
                 || i > 10u) {
                 cap >>= 1u;
                 ++i;
             }
 
-            if(q == NULL) {
+            if(qp == NULL) {
 
                 fprintf(stderr, "Out of memory\n");
 
@@ -235,18 +269,21 @@ int diskfit_get_candidates(DISKFIT_FITEM *array, size_t length, uint64_t total,
 #ifndef NDEBUG
             threadCPUInfo(pthread_self(), "producer");
 #endif
-            pthread_create(&t, NULL, consume_permutations, q);
-            pthread_setname_np(t, PACKAGE_NAME " - Consumer Thread");
+            pthread_create(&t1, NULL, consume_permutations, qp);
+            pthread_setname_np(t1, PACKAGE_NAME " - Consumer Thread #1");
 
             CPU_CLR(1, cpu);
             CPU_SET(0, cpu);
-            if(pthread_setaffinity_np(t, CPU_ALLOC_SIZE(2), cpu) == EINVAL) {
+            if(pthread_setaffinity_np(t1, CPU_ALLOC_SIZE(2), cpu) == EINVAL) {
 #ifndef NDEBUG
                 fprintf(stderr, "[DEBUG] affinity for consumer thread is invalid\n");
 #endif
             }
 
             CPU_FREE(cpu);
+
+            pthread_create(&t2, NULL, consume_candidates, qc);
+            pthread_setname_np(t2, PACKAGE_NAME " - Consumer Thread #2");
 
             for (i = 0; i <= length && !(*interrupted); i++) {
 
@@ -259,16 +296,18 @@ int diskfit_get_candidates(DISKFIT_FITEM *array, size_t length, uint64_t total,
 
                     void *ud[2] = { &pa, c };
 
-                    blocking_queue_put(q, createEntry, &ud);
+                    blocking_queue_put(qp, createEntry, &ud);
 
                 } while (gsl_combination_next(c) == GSL_SUCCESS && !(*interrupted));
 
                 gsl_combination_free(c);
             }
 
-            pthread_join(t, NULL);
+            pthread_join(t2, NULL);
+            pthread_join(t1, NULL);
 
-            blocking_queue_destroy(q);
+            blocking_queue_destroy(qp);
+            blocking_queue_destroy(qc);
 
         } else {
 

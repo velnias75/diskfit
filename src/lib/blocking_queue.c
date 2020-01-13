@@ -22,11 +22,12 @@
 #include <stdlib.h>
 #include <pthread.h>
 
+#include "blocking_queue.h"
+
 #ifndef NDEBUG
 #include <stdio.h>
+#pragma GCC diagnostic warning "-Wpadded"
 #endif
-
-#include "blocking_queue.h"
 
 struct blocking_queue_t {
     pthread_mutex_t lock;
@@ -80,7 +81,7 @@ void blocking_queue_put(struct blocking_queue_t *q, DATA dataFn, void *user_data
 struct blocking_queue_t *blocking_queue_create(size_t size, size_t capacity) {
 
 #ifndef NDEBUG
-    fprintf(stderr, "[DEBUG] blocking queue capacity: %zu\n", capacity);
+    fprintf(stderr, "[DEBUG] blocking queue capacity: %zu * %zu\n", capacity, size);
 #endif
 
     struct blocking_queue_t *q =

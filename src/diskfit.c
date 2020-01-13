@@ -42,6 +42,10 @@
 
 #include <libxml/tree.h>
 
+#ifndef NDEBUG
+#pragma GCC diagnostic warning "-Wpadded"
+#endif
+
 #define FITEM_CMP(a, b) ((a)->fsize == (b)->fsize ? ((a)->fname == (b)->fname ? 0 : \
                          ((a)->fname < (b)->fname ? -1 : 1)) : ((a)->fsize < (b)->fsize ? -1 : 0))
 
@@ -56,9 +60,9 @@ typedef struct {
 } FITEMLIST;
 
 typedef struct {
-    const gboolean stripdir;
     const guint64  tg;
     xmlNodePtr     root_node;
+    const gboolean stripdir;
 } DISP_PARAMS;
 
 typedef struct {
@@ -283,15 +287,15 @@ static void addCandidate(DISKFIT_FITEM *array, int len, guint64 total, void *use
 
     if (l) {
 
-        CAND_PARAMS_CAST(user_data)->chunk = l->entries = CAND_PARAMS_CAST(user_data)->chunk != NULL ? CAND_PARAMS_CAST(user_data)->chunk :
-                                 g_try_malloc_n(CAND_PARAMS_CAST(user_data)->nitems, sizeof(DISKFIT_FITEM));
-
+        CAND_PARAMS_CAST(user_data)->chunk = l->entries = CAND_PARAMS_CAST(user_data)->chunk != NULL ?
+            CAND_PARAMS_CAST(user_data)->chunk : g_try_malloc_n(CAND_PARAMS_CAST(user_data)->nitems,
+                                                                sizeof(DISKFIT_FITEM));
         if (l->entries) {
 
             l->size  = len;
             l->total = total;
 
-            memcpy(l->entries, array, l->size * sizeof(DISKFIT_FITEM));
+            __builtin_memcpy(l->entries, array, l->size * sizeof(DISKFIT_FITEM));
 
             if (g_tree_lookup(CAND_PARAMS_CAST(user_data)->candidates, l) == NULL) {
                 g_tree_insert(CAND_PARAMS_CAST(user_data)->candidates, l, l->entries);
@@ -657,11 +661,6 @@ int main(int argc, char *argv[]) {
                     xmlDocSetRootElement(doc, root_node);
                 }
 
-                DISP_PARAMS dp = {
-                    g_environ_getenv(env, "DISKFIT_STRIPDIR") != NULL,
-                    tg, root_node
-                };
-
                 REV_PARAMS rp = { NULL, &cp, rev_cur, rev_tot, rev_div_by };
 
                 g_tree_foreach(cp.candidates, create_rev_list, &rp);
@@ -679,6 +678,11 @@ int main(int argc, char *argv[]) {
                 mpz_clear(rev_tot);
 
                 if(xml) LIBXML_TEST_VERSION;
+
+                DISP_PARAMS dp = {
+                    tg, root_node,
+                    g_environ_getenv(env, "DISKFIT_STRIPDIR") != NULL
+                };
 
                 g_slist_foreach(rp.rl, display_candidates, &dp);
 
