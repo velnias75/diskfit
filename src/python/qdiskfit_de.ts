@@ -141,7 +141,7 @@
     <message>
         <location filename="qdiskfit/mainwindow/mainwindow.ui" line="123"/>
         <source>Input files</source>
-        <translation>Keine Dateien</translation>
+        <translation>Eingabedateien</translation>
     </message>
     <message>
         <location filename="qdiskfit/mainwindow/mainwindow.ui" line="157"/>
